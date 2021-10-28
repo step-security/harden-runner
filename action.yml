@@ -1,0 +1,7 @@
+name: 'Step Security Audit Workflow'
+description: 'GitHub Actions Runtime Security'
+runs:
+  using: 'node12'
+  pre: 'dist/pre/index.js'
+  main: 'dist/index.js'
+  post: 'dist/post/index.js'
