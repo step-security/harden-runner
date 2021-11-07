@@ -1,5 +1,10 @@
 name: 'Step Security Audit Workflow'
 description: 'GitHub Actions Runtime Security'
+inputs:
+  allowed-endpoints:
+    description: 'Allowed endpoints'
+    required: false
+    default: ''
 runs:
   using: 'node12'
   pre: 'dist/pre/index.js'
