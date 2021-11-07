@@ -23,6 +23,7 @@ import { v4 as uuidv4 } from "uuid";
       correlation_id: correlation_id,
       working_directory: process.env["GITHUB_WORKSPACE"],
       api_url: api_url,
+      allowed_endpoints: core.getInput("allowed-endpoints"),
     };
 
     const confgStr = JSON.stringify(confg);
