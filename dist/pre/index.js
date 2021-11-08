@@ -2393,7 +2393,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             return;
         }
         var correlation_id = v4();
-        var env = "int";
+        var env = "beta";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
         const confg = {
             repo: process.env["GITHUB_REPOSITORY"],
