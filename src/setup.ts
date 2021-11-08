@@ -40,7 +40,8 @@ import { v4 as uuidv4 } from "uuid";
           .on("error", (err) => {})
           .on("finish", async () => {
             filePath.close();
-            core.notice(correlation_id, { title: "1234" });
+            //core.notice(correlation_id, { title: "1234" });
+            console.log(`Step Security Job Correlation ID: ${correlation_id}`);
             cp.execSync(`cp ${__dirname}/agent /home/agent/agent`);
             cp.execSync("chmod +x /home/agent/agent");
 

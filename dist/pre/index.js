@@ -2414,7 +2414,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
                 .on("error", (err) => { })
                 .on("finish", () => __awaiter(void 0, void 0, void 0, function* () {
                 filePath.close();
-                core.notice(correlation_id, { title: "1234" });
+                //core.notice(correlation_id, { title: "1234" });
+                console.log(`Step Security Job Correlation ID: ${correlation_id}`);
                 external_child_process_namespaceObject.execSync(`cp ${__dirname}/agent /home/agent/agent`);
                 external_child_process_namespaceObject.execSync("chmod +x /home/agent/agent");
                 external_fs_.writeFileSync("/home/agent/agent.json", confgStr);
