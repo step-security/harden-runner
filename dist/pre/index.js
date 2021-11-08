@@ -2393,7 +2393,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             return;
         }
         var correlation_id = v4();
-        var env = "beta";
+        var env = "int";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
         const confg = {
             repo: process.env["GITHUB_REPOSITORY"],
@@ -2401,6 +2401,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             correlation_id: correlation_id,
             working_directory: process.env["GITHUB_WORKSPACE"],
             api_url: api_url,
+            allowed_endpoints: core.getInput("allowed-endpoints"),
         };
         const confgStr = JSON.stringify(confg);
         external_child_process_namespaceObject.execSync("sudo mkdir -p /home/agent");
@@ -2413,7 +2414,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
                 .on("error", (err) => { })
                 .on("finish", () => __awaiter(void 0, void 0, void 0, function* () {
                 filePath.close();
-                core.notice(correlation_id, { title: "1234" });
+                //core.notice(correlation_id, { title: "1234" });
+                console.log(`Step Security Job Correlation ID: ${correlation_id}`);
                 external_child_process_namespaceObject.execSync(`cp ${__dirname}/agent /home/agent/agent`);
                 external_child_process_namespaceObject.execSync("chmod +x /home/agent/agent");
                 external_fs_.writeFileSync("/home/agent/agent.json", confgStr);

@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from "uuid";
     }
 
     var correlation_id = uuidv4();
-    var env = "beta";
+    var env = "int";
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
 
     const confg = {
@@ -23,6 +23,7 @@ import { v4 as uuidv4 } from "uuid";
       correlation_id: correlation_id,
       working_directory: process.env["GITHUB_WORKSPACE"],
       api_url: api_url,
+      allowed_endpoints: core.getInput("allowed-endpoints"),
     };
 
     const confgStr = JSON.stringify(confg);
@@ -39,7 +40,8 @@ import { v4 as uuidv4 } from "uuid";
           .on("error", (err) => {})
           .on("finish", async () => {
             filePath.close();
-            core.notice(correlation_id, { title: "1234" });
+            //core.notice(correlation_id, { title: "1234" });
+            console.log(`Step Security Job Correlation ID: ${correlation_id}`);
             cp.execSync(`cp ${__dirname}/agent /home/agent/agent`);
             cp.execSync("chmod +x /home/agent/agent");
 
