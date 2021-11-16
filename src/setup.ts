@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from "uuid";
     }
 
     var correlation_id = uuidv4();
-    var env = "beta";
+    var env = "int";
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
 
     const confg = {

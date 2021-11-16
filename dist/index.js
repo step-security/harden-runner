@@ -18,7 +18,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         console.log("Only runs on linux");
         return;
     }
-    var env = "beta";
+    var env = "int";
     console.log(`View security insights and recommended policy at https://${env}.stepsecurity.io/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`);
 }))();
 
