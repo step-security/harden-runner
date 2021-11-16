@@ -1,5 +1,5 @@
 {
-    "name": "step-security-audit-workflow",
+    "name": "step-security-harden-runner",
     "version": "0.0.1",
     "description": "GitHub Actions Runtime Security",
     "main": "index.js",
@@ -12,15 +12,15 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/step-security/audit-workflow.git"
+        "url": "git+https://github.com/step-security/harden-runner.git"
     },
     "keywords": [],
     "author": "Varun Sharma",
     "license": "Apache License 2.0",
     "bugs": {
-        "url": "https://github.com/step-security/audit-workflow/issues"
+        "url": "https://github.com/step-security/harden-runner/issues"
     },
-    "homepage": "https://github.com/step-security/audit-workflow#readme",
+    "homepage": "https://github.com/step-security/harden-runner#readme",
     "dependencies": {
         "@actions/core": "^1.5.0",
         "@actions/exec": "^1.1.0",
