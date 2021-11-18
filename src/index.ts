@@ -4,9 +4,9 @@
     return;
   }
 
-  var env = "beta";
+  var web_url = "https://app.stepsecurity.io";
 
   console.log(
-    `View security insights and recommended policy at https://${env}.stepsecurity.io/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`
+    `View security insights and recommended policy at ${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`
   );
 })();

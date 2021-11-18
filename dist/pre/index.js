@@ -2393,8 +2393,9 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             return;
         }
         var correlation_id = v4();
-        var env = "beta";
+        var env = "agent";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
+        var web_url = "https://app.stepsecurity.io";
         const confg = {
             repo: process.env["GITHUB_REPOSITORY"],
             run_id: process.env["GITHUB_RUN_ID"],
@@ -2415,7 +2416,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
                 .on("finish", () => __awaiter(void 0, void 0, void 0, function* () {
                 filePath.close();
                 console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-                console.log(`View security insights and recommended policy at https://${env}.stepsecurity.io/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`);
+                console.log(`View security insights and recommended policy at ${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`);
                 external_child_process_namespaceObject.execSync(`cp ${__dirname}/agent /home/agent/agent`);
                 external_child_process_namespaceObject.execSync("chmod +x /home/agent/agent");
                 external_fs_.writeFileSync("/home/agent/agent.json", confgStr);
