@@ -2,7 +2,7 @@
   <img src="https://step-security-images.s3.us-west-2.amazonaws.com/Final-Logo-06.png" alt="Step Security Logo" width="340">
 </p>
 
-# Harden GitHub Actions Hosted Runner
+# Harden Runner
 
 This GitHub Action deploys the [Step Security Agent](https://github.com/step-security/agent), which is a purpose-built security agent for hosted runners.
 
