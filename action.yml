@@ -1,10 +1,13 @@
-name: 'Step Security Audit Workflow'
+name: 'Harden Runner'
 description: 'GitHub Actions Runtime Security'
 inputs:
   allowed-endpoints:
     description: 'Allowed endpoints'
     required: false
     default: ''
+branding:
+  icon: 'check-square'  
+  color: 'green'
 runs:
   using: 'node12'
   pre: 'dist/pre/index.js'
