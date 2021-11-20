@@ -2417,10 +2417,17 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
                 filePath.close();
                 console.log(`Step Security Job Correlation ID: ${correlation_id}`);
                 console.log(`View security insights and recommended policy at ${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`);
-                external_child_process_namespaceObject.execSync(`cp ${__dirname}/agent /home/agent/agent`);
+                let cmd = "cp", args = [external_path_.join(__dirname, "agent"), "/home/agent/agent"];
+                external_child_process_namespaceObject.execFileSync(cmd, args);
                 external_child_process_namespaceObject.execSync("chmod +x /home/agent/agent");
                 external_fs_.writeFileSync("/home/agent/agent.json", confgStr);
-                external_child_process_namespaceObject.execSync(`sudo cp ${__dirname}/agent.service /etc/systemd/system/agent.service`);
+                cmd = "sudo";
+                args = [
+                    "cp",
+                    external_path_.join(__dirname, "agent.service"),
+                    "/etc/systemd/system/agent.service",
+                ];
+                external_child_process_namespaceObject.execFileSync(cmd, args);
                 external_child_process_namespaceObject.execSync("sudo systemctl daemon-reload");
                 external_child_process_namespaceObject.execSync("sudo service agent start", { timeout: 15000 });
                 // Check that the file exists locally
