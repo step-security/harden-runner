@@ -14,9 +14,9 @@ import { v4 as uuidv4 } from "uuid";
     }
 
     var correlation_id = uuidv4();
-    var env = "int";
+    var env = "agent";
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
-    var web_url = "https://int1.stepsecurity.io";
+    var web_url = "https://app.stepsecurity.io";
 
     const confg = {
       repo: process.env["GITHUB_REPOSITORY"],

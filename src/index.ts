@@ -4,7 +4,7 @@
     return;
   }
 
-  var web_url = "https://int1.stepsecurity.io";
+  var web_url = "https://app.stepsecurity.io";
 
   console.log(
     `View security insights and recommended policy at ${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`
