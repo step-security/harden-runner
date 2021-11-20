@@ -2393,9 +2393,9 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             return;
         }
         var correlation_id = v4();
-        var env = "agent";
+        var env = "int";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
-        var web_url = "https://app.stepsecurity.io";
+        var web_url = "https://int1.stepsecurity.io";
         const confg = {
             repo: process.env["GITHUB_REPOSITORY"],
             run_id: process.env["GITHUB_RUN_ID"],
