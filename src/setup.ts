@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from "uuid";
     var correlation_id = uuidv4();
     var env = "int";
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
+    var web_url = "https://int1.stepsecurity.io";
 
     const confg = {
       repo: process.env["GITHUB_REPOSITORY"],
@@ -43,16 +44,22 @@ import { v4 as uuidv4 } from "uuid";
 
             console.log(`Step Security Job Correlation ID: ${correlation_id}`);
             console.log(
-              `View security insights and recommended policy at https://${env}.stepsecurity.io/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`
+              `View security insights and recommended policy at ${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`
             );
-            cp.execSync(`cp ${__dirname}/agent /home/agent/agent`);
+            let cmd = "cp",
+              args = [path.join(__dirname, "agent"), "/home/agent/agent"];
+            cp.execFileSync(cmd, args);
             cp.execSync("chmod +x /home/agent/agent");
 
             fs.writeFileSync("/home/agent/agent.json", confgStr);
 
-            cp.execSync(
-              `sudo cp ${__dirname}/agent.service /etc/systemd/system/agent.service`
-            );
+            cmd = "sudo";
+            args = [
+              "cp",
+              path.join(__dirname, "agent.service"),
+              "/etc/systemd/system/agent.service",
+            ];
+            cp.execFileSync(cmd, args);
             cp.execSync("sudo systemctl daemon-reload");
             cp.execSync("sudo service agent start", { timeout: 15000 });
 
