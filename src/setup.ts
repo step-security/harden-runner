@@ -1,10 +1,10 @@
 import * as core from "@actions/core";
-import { context } from "@actions/github/lib/utils";
 import * as cp from "child_process";
 import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
+import { printInfo } from "./common";
 
 (async () => {
   try {
