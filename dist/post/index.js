@@ -48,7 +48,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
     while (true) {
         if (!external_fs_namespaceObject.existsSync(doneFile)) {
             counter++;
-            if (counter > 30) {
+            if (counter > 10) {
                 console.log("timed out");
                 break;
             }
