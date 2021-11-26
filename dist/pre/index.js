@@ -6299,7 +6299,6 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
         const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.1.5/agent_0.1.5_linux_amd64.tar.gz");
         const extractPath = yield tool_cache.extractTar(downloadPath);
-        console.log(`Extracted to ${extractPath}`);
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         printInfo(web_url);
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];

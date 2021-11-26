@@ -36,7 +36,6 @@ import * as tc from "@actions/tool-cache";
       "https://github.com/step-security/agent/releases/download/v0.1.5/agent_0.1.5_linux_amd64.tar.gz"
     );
     const extractPath = await tc.extractTar(downloadPath);
-    console.log(`Extracted to ${extractPath}`);
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
     printInfo(web_url);
