@@ -2416,7 +2416,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
                 .on("finish", () => __awaiter(void 0, void 0, void 0, function* () {
                 filePath.close();
                 console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-                console.log(`View security insights and recommended policy at ${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`);
+                printInfo(web_url);
                 let cmd = "cp", args = [external_path_.join(__dirname, "agent"), "/home/agent/agent"];
                 external_child_process_namespaceObject.execFileSync(cmd, args);
                 external_child_process_namespaceObject.execSync("chmod +x /home/agent/agent");

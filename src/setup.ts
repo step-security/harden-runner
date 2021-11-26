@@ -43,9 +43,8 @@ import { v4 as uuidv4 } from "uuid";
             filePath.close();
 
             console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-            console.log(
-              `View security insights and recommended policy at ${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`
-            );
+            printInfo(web_url);
+
             let cmd = "cp",
               args = [path.join(__dirname, "agent"), "/home/agent/agent"];
             cp.execFileSync(cmd, args);
