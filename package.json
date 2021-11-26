@@ -1,6 +1,6 @@
 {
     "name": "step-security-harden-runner",
-    "version": "0.1.0",
+    "version": "0.3.0",
     "description": "GitHub Actions Runtime Security",
     "main": "index.js",
     "scripts": {
@@ -25,6 +25,7 @@
         "@actions/core": "^1.5.0",
         "@actions/exec": "^1.1.0",
         "@actions/github": "^5.0.0",
+        "@actions/tool-cache": "^1.7.1",
         "node-fetch": "^2.6.1",
         "uuid": "^8.3.2"
     },

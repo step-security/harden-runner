@@ -5,6 +5,7 @@ import * as https from "https";
 import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { printInfo } from "./common";
+import * as tc from "@actions/tool-cache";
 
 (async () => {
   try {
@@ -31,64 +32,55 @@ import { printInfo } from "./common";
     cp.execSync("sudo mkdir -p /home/agent");
     cp.execSync("sudo chown -R $USER /home/agent");
 
-    const filename = path.join(__dirname, "agent");
-    https.get(
-      `https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/${env}/agent`,
-      (res) => {
-        const filePath = fs.createWriteStream(filename);
-        res.pipe(filePath);
-        filePath
-          .on("error", (err) => {})
-          .on("finish", async () => {
-            filePath.close();
-
-            console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-            printInfo(web_url);
-
-            let cmd = "cp",
-              args = [path.join(__dirname, "agent"), "/home/agent/agent"];
-            cp.execFileSync(cmd, args);
-            cp.execSync("chmod +x /home/agent/agent");
-
-            fs.writeFileSync("/home/agent/agent.json", confgStr);
-
-            cmd = "sudo";
-            args = [
-              "cp",
-              path.join(__dirname, "agent.service"),
-              "/etc/systemd/system/agent.service",
-            ];
-            cp.execFileSync(cmd, args);
-            cp.execSync("sudo systemctl daemon-reload");
-            cp.execSync("sudo service agent start", { timeout: 15000 });
-
-            // Check that the file exists locally
-            var statusFile = "/home/agent/agent.status";
-            var logFile = "/home/agent/agent.log";
-            var counter = 0;
-            while (true) {
-              if (!fs.existsSync(statusFile)) {
-                counter++;
-                if (counter > 30) {
-                  console.log("timed out");
-                  if (fs.existsSync(logFile)) {
-                    var content = fs.readFileSync(logFile, "utf-8");
-                    console.log(content);
-                  }
-                  break;
-                }
-                await sleep(300);
-              } // The file *does* exist
-              else {
-                // Read the file
-                var content = fs.readFileSync(statusFile, "utf-8");
-                console.log(content);
-                break;
-              }
-            }
-          });
-      }
+    const downloadPath: string = await tc.downloadTool(
+      "https://github.com/step-security/agent/releases/download/v0.1.5/agent_0.1.5_linux_amd64.tar.gz"
     );
+    const extractPath = await tc.extractTar(downloadPath);
+
+    console.log(`Step Security Job Correlation ID: ${correlation_id}`);
+    printInfo(web_url);
+
+    let cmd = "cp",
+      args = [path.join(extractPath, "agent"), "/home/agent/agent"];
+    cp.execFileSync(cmd, args);
+    cp.execSync("chmod +x /home/agent/agent");
+
+    fs.writeFileSync("/home/agent/agent.json", confgStr);
+
+    cmd = "sudo";
+    args = [
+      "cp",
+      path.join(__dirname, "agent.service"),
+      "/etc/systemd/system/agent.service",
+    ];
+    cp.execFileSync(cmd, args);
+    cp.execSync("sudo systemctl daemon-reload");
+    cp.execSync("sudo service agent start", { timeout: 15000 });
+
+    // Check that the file exists locally
+    var statusFile = "/home/agent/agent.status";
+    var logFile = "/home/agent/agent.log";
+    var counter = 0;
+    while (true) {
+      if (!fs.existsSync(statusFile)) {
+        counter++;
+        if (counter > 30) {
+          console.log("timed out");
+          if (fs.existsSync(logFile)) {
+            var content = fs.readFileSync(logFile, "utf-8");
+            console.log(content);
+          }
+          break;
+        }
+        await sleep(300);
+      } // The file *does* exist
+      else {
+        // Read the file
+        var content = fs.readFileSync(statusFile, "utf-8");
+        console.log(content);
+        break;
+      }
+    }
   } catch (error) {
     core.setFailed(error.message);
   }
