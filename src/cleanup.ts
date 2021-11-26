@@ -16,7 +16,7 @@ import * as fs from "fs";
   while (true) {
     if (!fs.existsSync(doneFile)) {
       counter++;
-      if (counter > 30) {
+      if (counter > 10) {
         console.log("timed out");
 
         break;

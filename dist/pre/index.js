@@ -2370,6 +2370,12 @@ const validate = dist/* validate */.Gu;
 const stringify = dist/* stringify */.Pz;
 const parse = dist/* parse */.Qc;
 
+;// CONCATENATED MODULE: ./src/common.ts
+function printInfo(web_url) {
+    console.log("\x1b[32m%s\x1b[0m", "View security insights and recommended policy at:");
+    console.log(`${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
+}
+
 ;// CONCATENATED MODULE: ./src/setup.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -2380,6 +2386,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -2416,7 +2423,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
                 .on("finish", () => __awaiter(void 0, void 0, void 0, function* () {
                 filePath.close();
                 console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-                console.log(`View security insights and recommended policy at ${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`);
+                printInfo(web_url);
                 let cmd = "cp", args = [external_path_.join(__dirname, "agent"), "/home/agent/agent"];
                 external_child_process_namespaceObject.execFileSync(cmd, args);
                 external_child_process_namespaceObject.execSync("chmod +x /home/agent/agent");
