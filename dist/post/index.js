@@ -71,7 +71,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         var content = external_fs_namespaceObject.readFileSync(status, "utf-8");
         console.log(content);
     }
-    else {
+    if (!external_fs_namespaceObject.existsSync(doneFile)) {
         external_child_process_namespaceObject.execSync("sudo journalctl -u agent.service");
     }
 }))();

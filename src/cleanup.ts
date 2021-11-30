@@ -38,7 +38,9 @@ import * as cp from "child_process";
     console.log("status:");
     var content = fs.readFileSync(status, "utf-8");
     console.log(content);
-  } else {
+  }
+
+  if (!fs.existsSync(doneFile)) {
     cp.execSync("sudo journalctl -u agent.service");
   }
 })();
