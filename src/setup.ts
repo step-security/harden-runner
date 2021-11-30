@@ -1,7 +1,7 @@
 import * as core from "@actions/core";
 import * as cp from "child_process";
 import * as fs from "fs";
-import * as https from "https";
+import * as httpm from "@actions/http-client";
 import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { printInfo } from "./common";
@@ -19,6 +19,11 @@ import * as tc from "@actions/tool-cache";
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
     var web_url = "https://app.stepsecurity.io";
 
+    let _http = new httpm.HttpClient();
+    await _http.get(
+      `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
+    );
+
     const confg = {
       repo: process.env["GITHUB_REPOSITORY"],
       run_id: process.env["GITHUB_RUN_ID"],
@@ -33,7 +38,7 @@ import * as tc from "@actions/tool-cache";
     cp.execSync("sudo chown -R $USER /home/agent");
 
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.1.5/agent_0.1.5_linux_amd64.tar.gz"
+      "https://github.com/step-security/agent/releases/download/v0.2.0/agent_0.2.0_linux_amd64.tar.gz"
     );
     const extractPath = await tc.extractTar(downloadPath);
 
