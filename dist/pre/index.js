@@ -6235,6 +6235,8 @@ var core = __nccwpck_require__(2186);
 var external_child_process_ = __nccwpck_require__(3129);
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __nccwpck_require__(5747);
+// EXTERNAL MODULE: ./node_modules/@actions/http-client/index.js
+var http_client = __nccwpck_require__(9925);
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(5622);
 // EXTERNAL MODULE: ./node_modules/uuid/dist/index.js
@@ -6276,6 +6278,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
 (() => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (process.platform !== "linux") {
@@ -6286,6 +6289,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         var env = "agent";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
         var web_url = "https://app.stepsecurity.io";
+        let _http = new http_client.HttpClient();
+        yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
         const confg = {
             repo: process.env["GITHUB_REPOSITORY"],
             run_id: process.env["GITHUB_RUN_ID"],
@@ -6297,7 +6302,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
-        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.1.5/agent_0.1.5_linux_amd64.tar.gz");
+        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.3.0/agent_0.3.0_linux_amd64.tar.gz");
         const extractPath = yield tool_cache.extractTar(downloadPath);
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         printInfo(web_url);
