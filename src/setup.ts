@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
+import * as httpm from "@actions/http-client";
 
 (async () => {
   try {
@@ -26,6 +27,9 @@ import { v4 as uuidv4 } from "uuid";
       api_url: api_url,
       allowed_endpoints: core.getInput("allowed-endpoints"),
     };
+
+    let _http = new httpm.HttpClient();
+    await _http.get(`${api_url}/v1/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
 
     const confgStr = JSON.stringify(confg);
     cp.execSync("sudo mkdir -p /home/agent");

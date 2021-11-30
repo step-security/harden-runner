@@ -2370,6 +2370,8 @@ const validate = dist/* validate */.Gu;
 const stringify = dist/* stringify */.Pz;
 const parse = dist/* parse */.Qc;
 
+// EXTERNAL MODULE: ./node_modules/@actions/http-client/index.js
+var http_client = __nccwpck_require__(925);
 ;// CONCATENATED MODULE: ./src/setup.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -2380,6 +2382,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -2404,6 +2407,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             api_url: api_url,
             allowed_endpoints: core.getInput("allowed-endpoints"),
         };
+        let _http = new http_client.HttpClient();
+        yield _http.get(`${api_url}/v1/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
         const confgStr = JSON.stringify(confg);
         external_child_process_namespaceObject.execSync("sudo mkdir -p /home/agent");
         external_child_process_namespaceObject.execSync("sudo chown -R $USER /home/agent");
