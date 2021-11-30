@@ -41,7 +41,9 @@ import * as cp from "child_process";
   }
 
   if (!fs.existsSync(doneFile)) {
-    cp.execSync("sudo journalctl -u agent.service");
+    var journalLog = cp.execSync("sudo journalctl -u agent.service");
+    console.log("Service log:");
+    console.log(journalLog);
   }
 })();
 

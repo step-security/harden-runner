@@ -72,7 +72,9 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         console.log(content);
     }
     if (!external_fs_namespaceObject.existsSync(doneFile)) {
-        external_child_process_namespaceObject.execSync("sudo journalctl -u agent.service");
+        var journalLog = external_child_process_namespaceObject.execSync("sudo journalctl -u agent.service");
+        console.log("Service log:");
+        console.log(journalLog);
     }
 }))();
 function sleep(ms) {
