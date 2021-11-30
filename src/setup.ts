@@ -15,7 +15,7 @@ import * as tc from "@actions/tool-cache";
     }
 
     var correlation_id = uuidv4();
-    var env = "agent";
+    var env = "agent123";
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
     var web_url = "https://app.stepsecurity.io";
 
