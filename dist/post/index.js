@@ -26,6 +26,8 @@ __nccwpck_require__.r(__webpack_exports__);
 
 ;// CONCATENATED MODULE: external "fs"
 const external_fs_namespaceObject = require("fs");
+;// CONCATENATED MODULE: external "child_process"
+const external_child_process_namespaceObject = require("child_process");
 ;// CONCATENATED MODULE: ./src/cleanup.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -36,6 +38,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 (() => __awaiter(void 0, void 0, void 0, function* () {
     if (process.platform !== "linux") {
@@ -67,6 +70,13 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         console.log("status:");
         var content = external_fs_namespaceObject.readFileSync(status, "utf-8");
         console.log(content);
+    }
+    if (!external_fs_namespaceObject.existsSync(doneFile)) {
+        var journalLog = external_child_process_namespaceObject.execSync("sudo journalctl -u agent.service", {
+            encoding: "utf8",
+        });
+        console.log("Service log:");
+        console.log(journalLog);
     }
 }))();
 function sleep(ms) {

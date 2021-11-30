@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as cp from "child_process";
 
 (async () => {
   if (process.platform !== "linux") {
@@ -37,6 +38,14 @@ import * as fs from "fs";
     console.log("status:");
     var content = fs.readFileSync(status, "utf-8");
     console.log(content);
+  }
+
+  if (!fs.existsSync(doneFile)) {
+    var journalLog = cp.execSync("sudo journalctl -u agent.service", {
+      encoding: "utf8",
+    });
+    console.log("Service log:");
+    console.log(journalLog);
   }
 })();
 
