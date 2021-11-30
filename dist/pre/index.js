@@ -2408,7 +2408,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             allowed_endpoints: core.getInput("allowed-endpoints"),
         };
         let _http = new http_client.HttpClient();
-        yield _http.get(`${api_url}/v1/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
+        yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
         const confgStr = JSON.stringify(confg);
         external_child_process_namespaceObject.execSync("sudo mkdir -p /home/agent");
         external_child_process_namespaceObject.execSync("sudo chown -R $USER /home/agent");

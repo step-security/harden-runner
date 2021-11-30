@@ -29,7 +29,9 @@ import * as httpm from "@actions/http-client";
     };
 
     let _http = new httpm.HttpClient();
-    await _http.get(`${api_url}/v1/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
+    await _http.get(
+      `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
+    );
 
     const confgStr = JSON.stringify(confg);
     cp.execSync("sudo mkdir -p /home/agent");
