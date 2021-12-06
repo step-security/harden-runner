@@ -2,9 +2,13 @@ name: 'Harden Runner'
 description: 'GitHub Actions Runtime Security'
 inputs:
   allowed-endpoints:
-    description: 'Allowed endpoints'
+    description: 'Only these endpoints will be allowed if egress-policy is set to block'
     required: false
     default: ''
+  egress-policy:
+    description: 'Policy for outbound traffic, can be either audit or block'
+    required: false
+    default: 'block'
 branding:
   icon: 'check-square'  
   color: 'green'

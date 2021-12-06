@@ -2406,6 +2406,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             working_directory: process.env["GITHUB_WORKSPACE"],
             api_url: api_url,
             allowed_endpoints: core.getInput("allowed-endpoints"),
+            egress_policy: core.getInput("egress-policy"),
         };
         let _http = new http_client.HttpClient();
         yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
