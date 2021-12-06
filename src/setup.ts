@@ -26,6 +26,7 @@ import * as httpm from "@actions/http-client";
       working_directory: process.env["GITHUB_WORKSPACE"],
       api_url: api_url,
       allowed_endpoints: core.getInput("allowed-endpoints"),
+      egress_policy: core.getInput("egress-policy"),
     };
 
     let _http = new httpm.HttpClient();
