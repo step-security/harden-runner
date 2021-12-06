@@ -6301,7 +6301,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             egress_policy: core.getInput("egress-policy"),
         };
         if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
-            core.error("egress-policy must be either audit or block");
+            core.setFailed("egress-policy must be either audit or block");
         }
         if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
             core.warning("egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps.");

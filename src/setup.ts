@@ -35,7 +35,7 @@ import * as tc from "@actions/tool-cache";
     };
 
     if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
-      core.error("egress-policy must be either audit or block");
+      core.setFailed("egress-policy must be either audit or block");
     }
 
     if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
