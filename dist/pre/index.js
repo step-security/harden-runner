@@ -6300,6 +6300,12 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             allowed_endpoints: core.getInput("allowed-endpoints"),
             egress_policy: core.getInput("egress-policy"),
         };
+        if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
+            core.error("egress-policy must be either audit or block");
+        }
+        if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
+            core.warning("egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps.");
+        }
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
