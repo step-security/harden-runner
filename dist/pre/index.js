@@ -6298,6 +6298,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             working_directory: process.env["GITHUB_WORKSPACE"],
             api_url: api_url,
             allowed_endpoints: core.getInput("allowed-endpoints"),
+            egress_policy: core.getInput("egress-policy"),
         };
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
