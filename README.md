@@ -4,7 +4,7 @@
 
 # Policy-based Runtime Security for GitHub Actions
 
-First-of-its-kind patent-pending technology that automatically discovers and correlates outbound traffic with each step of a GitHub Actions workflow.
+First-of-its-kind patent-pending technology that automatically correlates outbound traffic with each step of a workflow.
 
 1. Add this code to your GitHub Actions workflow file as the first step. 
 
@@ -22,7 +22,7 @@ steps:
   <img src="https://step-security-images.s3.us-west-2.amazonaws.com/build_log_link.png" alt="Link in build log" >
 </p>
 
-3. Click on the link ([example link](https://app.stepsecurity.io/github/nvm-sh/nvm/actions/runs/1547131792)) to view security insights and recommended egress policy (example below). 
+3. Click on the link ([example link](https://app.stepsecurity.io/github/nvm-sh/nvm/actions/runs/1547131792)). 
 
 <p align="left">
   <img src="https://step-security-images.s3.us-west-2.amazonaws.com/insights.png" alt="Step Security Logo" >
