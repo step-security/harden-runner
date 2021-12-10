@@ -11,8 +11,9 @@ First-of-its-kind patent-pending technology that automatically discovers and cor
 ```
 steps:
   - uses: step-security/harden-runner@v1
-    with:
-      egress-policy: audit
+      with:
+        egress-policy: audit
+  - uses: actions/checkout@v2
 ```
 
 2. In the workflow logs, you will see a link to security insights and recommendations.  
@@ -31,3 +32,14 @@ steps:
 </p>
 
 4. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed.
+
+```
+steps:
+      - uses: step-security/harden-runner@v1
+        with:
+          allowed-endpoints:
+            github.com:443
+            nodejs.org:443
+            registry.npmjs.org:443
+      - uses: actions/checkout@v2
+```
