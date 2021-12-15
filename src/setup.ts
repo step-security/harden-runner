@@ -20,7 +20,7 @@ import * as tc from "@actions/tool-cache";
     var web_url = "https://app.stepsecurity.io";
 
     let _http = new httpm.HttpClient();
-    _http.requestOptions.socketTimeout = 3 * 1000;
+    _http.requestOptions = { socketTimeout: 3 * 1000 };
     try {
       await _http.get(
         `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
