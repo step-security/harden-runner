@@ -15,7 +15,7 @@ import * as tc from "@actions/tool-cache";
     }
 
     var correlation_id = uuidv4();
-    var env = "agent1";
+    var env = "agent";
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
     var web_url = "https://app.stepsecurity.io";
 
@@ -26,7 +26,7 @@ import * as tc from "@actions/tool-cache";
         `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
       );
     } catch (e) {
-      console.log(`Error in connecting to ${api_url}: ${e}`);
+      console.log(`error in connecting to ${api_url}: ${e}`);
     }
 
     const confg = {

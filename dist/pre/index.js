@@ -6286,7 +6286,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             return;
         }
         var correlation_id = v4();
-        var env = "agent1";
+        var env = "agent";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
         var web_url = "https://app.stepsecurity.io";
         let _http = new http_client.HttpClient();
@@ -6295,7 +6295,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
         }
         catch (e) {
-            console.log(`Error in connecting to ${api_url}: ${e}`);
+            console.log(`error in connecting to ${api_url}: ${e}`);
         }
         const confg = {
             repo: process.env["GITHUB_REPOSITORY"],
