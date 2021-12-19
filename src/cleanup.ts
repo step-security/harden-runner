@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as core from "@actions/core";
 
 (async () => {
   if (process.platform !== "linux") {
@@ -37,6 +38,15 @@ import * as fs from "fs";
     console.log("status:");
     var content = fs.readFileSync(status, "utf-8");
     console.log(content);
+  }
+
+  // write annotations
+  var annotationsFile = "/home/agent/annotation.log";
+  if (fs.existsSync(annotationsFile)) {
+    var content = fs.readFileSync(status, "utf-8");
+    content.split(/\r?\n/).forEach((line) => {
+      core.error(line);
+    });
   }
 })();
 
