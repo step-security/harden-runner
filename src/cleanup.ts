@@ -43,7 +43,7 @@ import * as core from "@actions/core";
   // write annotations
   var annotationsFile = "/home/agent/annotation.log";
   if (fs.existsSync(annotationsFile)) {
-    var content = fs.readFileSync(status, "utf-8");
+    var content = fs.readFileSync(annotationsFile, "utf-8");
     content.split(/\r?\n/).forEach((line) => {
       core.error(line);
     });

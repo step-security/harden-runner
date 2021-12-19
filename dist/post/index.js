@@ -1767,7 +1767,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
     // write annotations
     var annotationsFile = "/home/agent/annotation.log";
     if (fs__WEBPACK_IMPORTED_MODULE_0__.existsSync(annotationsFile)) {
-        var content = fs__WEBPACK_IMPORTED_MODULE_0__.readFileSync(status, "utf-8");
+        var content = fs__WEBPACK_IMPORTED_MODULE_0__.readFileSync(annotationsFile, "utf-8");
         content.split(/\r?\n/).forEach((line) => {
             _actions_core__WEBPACK_IMPORTED_MODULE_1__.error(line);
         });
