@@ -1746,7 +1746,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
     // write annotations
     var annotationsFile = "/home/agent/annotation.log";
     if (external_fs_.existsSync(annotationsFile)) {
-        var content = external_fs_.readFileSync(status, "utf-8");
+        var content = external_fs_.readFileSync(annotationsFile, "utf-8");
         content.split(/\r?\n/).forEach((line) => {
             core.error(line);
         });
