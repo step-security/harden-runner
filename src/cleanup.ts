@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as cp from "child_process";
+import * as core from "@actions/core";
 
 (async () => {
   if (process.platform !== "linux") {
@@ -30,14 +31,26 @@ import * as cp from "child_process";
   }
 
   var log = "/home/agent/agent.log";
-  console.log("log:");
-  var content = fs.readFileSync(log, "utf-8");
-  console.log(content);
+  if (fs.existsSync(log)) {
+    console.log("log:");
+    var content = fs.readFileSync(log, "utf-8");
+    console.log(content);
+  }
+
   var status = "/home/agent/agent.status";
   if (fs.existsSync(status)) {
     console.log("status:");
     var content = fs.readFileSync(status, "utf-8");
     console.log(content);
+  }
+
+  // write annotations
+  var annotationsFile = "/home/agent/annotation.log";
+  if (fs.existsSync(annotationsFile)) {
+    var content = fs.readFileSync(status, "utf-8");
+    content.split(/\r?\n/).forEach((line) => {
+      core.error(line);
+    });
   }
 
   if (!fs.existsSync(doneFile)) {
