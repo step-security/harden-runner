@@ -22,10 +22,23 @@ jobs:
     permissions:
       contents: write
     steps:
+    - uses: step-security/harden-runner@v1
+      with:
+        egress-policy: audit
     - uses: actions/checkout@v2
+    - name: Update the rc tag
+      uses: step-security/publish-action@cde4f11ad41e4f61d537fbbb989ea5fe812f8d50
+      with:
+        source-tag: ${{ env.TAG_NAME }}
+        rc: true
+
+    - name: Canary test
+      uses: docker://ghcr.io/step-security/integration-test/int:latest
+      env:
+        PAT: ${{ secrets.PAT }}
+        canary: true
 
     - name: Update the ${{ env.TAG_NAME }} tag
-      id: update-major-tag
-      uses: step-security/publish-action@63abd0d521e21329399edb30e8f577a7ab85443c
+      uses: step-security/publish-action@cde4f11ad41e4f61d537fbbb989ea5fe812f8d50
       with:
         source-tag: ${{ env.TAG_NAME }}
