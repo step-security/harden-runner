@@ -27,10 +27,10 @@ jobs:
         allowed-endpoints: 
           api.github.com:443
           github.com:443
-          
+
     - uses: actions/checkout@v2
     - name: Update the rc tag
-      uses: step-security/publish-action@cde4f11ad41e4f61d537fbbb989ea5fe812f8d50
+      uses: step-security/publish-action@b438f840875fdcb7d1de4fc3d1d30e86cf6acb5d
       with:
         source-tag: ${{ env.TAG_NAME }}
         rc: true
@@ -42,6 +42,6 @@ jobs:
         canary: true
 
     - name: Update the ${{ env.TAG_NAME }} tag
-      uses: step-security/publish-action@cde4f11ad41e4f61d537fbbb989ea5fe812f8d50
+      uses: step-security/publish-action@b438f840875fdcb7d1de4fc3d1d30e86cf6acb5d
       with:
         source-tag: ${{ env.TAG_NAME }}
