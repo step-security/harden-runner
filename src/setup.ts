@@ -54,7 +54,7 @@ import * as tc from "@actions/tool-cache";
     cp.execSync("sudo chown -R $USER /home/agent");
 
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.6.0/agent_0.6.0_linux_amd64.tar.gz"
+      "https://github.com/step-security/agent/releases/download/v0.7.0/agent_0.7.0_linux_amd64.tar.gz"
     );
     const extractPath = await tc.extractTar(downloadPath);
 
