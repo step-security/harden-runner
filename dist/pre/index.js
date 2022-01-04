@@ -6290,7 +6290,13 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
         var web_url = "https://app.stepsecurity.io";
         let _http = new http_client.HttpClient();
-        yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
+        _http.requestOptions = { socketTimeout: 3 * 1000 };
+        try {
+            yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
+        }
+        catch (e) {
+            console.log(`error in connecting to ${api_url}: ${e}`);
+        }
         const confg = {
             repo: process.env["GITHUB_REPOSITORY"],
             run_id: process.env["GITHUB_RUN_ID"],
@@ -6298,11 +6304,18 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             working_directory: process.env["GITHUB_WORKSPACE"],
             api_url: api_url,
             allowed_endpoints: core.getInput("allowed-endpoints"),
+            egress_policy: core.getInput("egress-policy"),
         };
+        if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
+            core.setFailed("egress-policy must be either audit or block");
+        }
+        if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
+            core.warning("egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps.");
+        }
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
-        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.3.0/agent_0.3.0_linux_amd64.tar.gz");
+        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.7.2/agent_0.7.2_linux_amd64.tar.gz");
         const extractPath = yield tool_cache.extractTar(downloadPath);
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         printInfo(web_url);

@@ -20,9 +20,14 @@ import * as tc from "@actions/tool-cache";
     var web_url = "https://app.stepsecurity.io";
 
     let _http = new httpm.HttpClient();
-    await _http.get(
-      `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
-    );
+    _http.requestOptions = { socketTimeout: 3 * 1000 };
+    try {
+      await _http.get(
+        `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
+      );
+    } catch (e) {
+      console.log(`error in connecting to ${api_url}: ${e}`);
+    }
 
     const confg = {
       repo: process.env["GITHUB_REPOSITORY"],
@@ -31,14 +36,25 @@ import * as tc from "@actions/tool-cache";
       working_directory: process.env["GITHUB_WORKSPACE"],
       api_url: api_url,
       allowed_endpoints: core.getInput("allowed-endpoints"),
+      egress_policy: core.getInput("egress-policy"),
     };
+
+    if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
+      core.setFailed("egress-policy must be either audit or block");
+    }
+
+    if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
+      core.warning(
+        "egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps."
+      );
+    }
 
     const confgStr = JSON.stringify(confg);
     cp.execSync("sudo mkdir -p /home/agent");
     cp.execSync("sudo chown -R $USER /home/agent");
 
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.3.0/agent_0.3.0_linux_amd64.tar.gz"
+      "https://github.com/step-security/agent/releases/download/v0.7.2/agent_0.7.2_linux_amd64.tar.gz"
     );
     const extractPath = await tc.extractTar(downloadPath);
 
