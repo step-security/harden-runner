@@ -6315,7 +6315,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
-        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.8.1/agent_0.8.1_linux_amd64.tar.gz");
+        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.8.2/agent_0.8.2_linux_amd64.tar.gz");
         const extractPath = yield tool_cache.extractTar(downloadPath);
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         printInfo(web_url);
