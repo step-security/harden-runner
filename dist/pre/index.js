@@ -6261,6 +6261,23 @@ function printInfo(web_url) {
 
 // EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
 var tool_cache = __nccwpck_require__(7784);
+// EXTERNAL MODULE: external "crypto"
+var external_crypto_ = __nccwpck_require__(6417);
+;// CONCATENATED MODULE: ./src/checksum_verify.ts
+
+
+
+function checksumVerify(downloadPath) {
+    const fileBuffer = external_fs_.readFileSync(downloadPath);
+    const checksum = external_crypto_.createHash("sha256").update(fileBuffer).digest('hex'); // checksum of downloaded file
+    const expectedChecksum = core.getInput("expected_checksum"); // default checksum
+    if (checksum !== expectedChecksum) {
+        core.error(`Checksum verification failed.`);
+        core.setFailed(`Checksum expected ${expectedChecksum} instead got ${checksum}`);
+    }
+    core.debug("Checksum verification passed.");
+}
+
 ;// CONCATENATED MODULE: ./src/setup.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -6271,6 +6288,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -6316,6 +6334,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
         const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.8.6/agent_0.8.6_linux_amd64.tar.gz");
+        checksumVerify(downloadPath); // NOTE: verifying agent's checksum, before extracting
         const extractPath = yield tool_cache.extractTar(downloadPath);
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         printInfo(web_url);
