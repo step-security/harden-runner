@@ -2,7 +2,7 @@
   <img src="https://step-security-images.s3.us-west-2.amazonaws.com/Final-Logo-06.png" alt="Step Security Logo" width="340">
 </p>
 
-# Security monitoring for the GitHub-hosted build server (runner)
+# Security monitoring for the GitHub-hosted runner
 
 If you have a self-hosted build server (e.g. Cloud VM), you may have security monitoring implemented on it. When you use GitHub Actions hosted-runner, you can use `harden-runner` to add security controls and monitoring to the build server (Ubuntu VM) on which GitHub Actions runs your workflows.
 
