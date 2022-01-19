@@ -9,10 +9,6 @@ inputs:
     description: 'Policy for outbound traffic, can be either audit or block'
     required: false
     default: 'block'
-  expected_checksum:
-    description: 'Expected sha256 checksum of latest agent.tar.gz file'
-    default: "a5f466fc5c8a9b809afd421e0f32903da98908feab5a245c734d3775e2e10032"
-    required: true
 branding:
   icon: 'check-square'  
   color: 'green'
