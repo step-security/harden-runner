@@ -6263,17 +6263,16 @@ function printInfo(web_url) {
 var tool_cache = __nccwpck_require__(7784);
 // EXTERNAL MODULE: external "crypto"
 var external_crypto_ = __nccwpck_require__(6417);
-;// CONCATENATED MODULE: ./src/checksum_verify.ts
+;// CONCATENATED MODULE: ./src/checksum.ts
 
 
 
-function checksumVerify(downloadPath) {
+function verifyChecksum(downloadPath) {
     const fileBuffer = external_fs_.readFileSync(downloadPath);
     const checksum = external_crypto_.createHash("sha256").update(fileBuffer).digest('hex'); // checksum of downloaded file
-    const expectedChecksum = core.getInput("expected_checksum"); // default checksum
+    const expectedChecksum = "a5f466fc5c8a9b809afd421e0f32903da98908feab5a245c734d3775e2e10032"; // default checksum
     if (checksum !== expectedChecksum) {
-        core.error(`Checksum verification failed.`);
-        core.setFailed(`Checksum expected ${expectedChecksum} instead got ${checksum}`);
+        core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
     }
     core.debug("Checksum verification passed.");
 }
@@ -6334,7 +6333,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
         const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.8.6/agent_0.8.6_linux_amd64.tar.gz");
-        checksumVerify(downloadPath); // NOTE: verifying agent's checksum, before extracting
+        verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
         const extractPath = yield tool_cache.extractTar(downloadPath);
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         printInfo(web_url);
