@@ -6,7 +6,7 @@ import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { printInfo } from "./common";
 import * as tc from "@actions/tool-cache";
-
+import {verifyChecksum} from "./checksum"
 (async () => {
   try {
     if (process.platform !== "linux") {
@@ -56,6 +56,8 @@ import * as tc from "@actions/tool-cache";
     const downloadPath: string = await tc.downloadTool(
       "https://github.com/step-security/agent/releases/download/v0.8.6/agent_0.8.6_linux_amd64.tar.gz"
     );
+    
+    verifyChecksum(downloadPath) // NOTE: verifying agent's checksum, before extracting
     const extractPath = await tc.extractTar(downloadPath);
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
