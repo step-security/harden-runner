@@ -9,6 +9,9 @@ inputs:
     description: 'Policy for outbound traffic, can be either audit or block'
     required: false
     default: 'block'
+  token:
+    description: 'Used to avoid github rate limiting'
+    default: ${{ github.token }}
 branding:
   icon: 'check-square'  
   color: 'green'
