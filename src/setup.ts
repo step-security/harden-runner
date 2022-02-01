@@ -55,6 +55,7 @@ import {verifyChecksum} from "./checksum"
     cp.execSync("sudo mkdir -p /home/agent");
     cp.execSync("sudo chown -R $USER /home/agent");
 
+    // Note: to avoid github rate limiting
     const downloadPath: string = await tc.downloadTool(
       "https://github.com/step-security/agent/releases/download/v0.8.6/agent_0.8.6_linux_amd64.tar.gz", undefined, auth
     );
