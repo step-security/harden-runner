@@ -44,9 +44,9 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
         with:
           egress-policy: block
           allowed-endpoints: 
-            api.github.com:443
+            codecov.io:443
             github.com:443
-            pypi.org:443
+
     ```
 
 ## Try it out
