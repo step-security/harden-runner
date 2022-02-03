@@ -23,16 +23,17 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
 2. In the workflow logs, you will see a link to security insights and recommendations.  
 
     <p align="left">
-      <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/InsightsLink.png" alt="Link in build log" >
+      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/main/images/harden-runner/ActionLog.png" alt="Link in build log" >
     </p>
 
 3. Click on the link ([example link](https://app.stepsecurity.io/github/jauderho/dockerfiles/actions/runs/1736506434)). You will see outbound traffic made by each step.
 
     <p align="left">
-      <img src="https://step-security-images.s3.us-west-2.amazonaws.com/insights3.png" alt="Insights from harden-runner" >
+      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/main/images/harden-runner/OnlineTool.png" alt="Insights from harden-runner" >
     </p>
+    Below the insights, you will see the recommended policy.
     <p align="left">
-      <img src="https://step-security-images.s3.us-west-2.amazonaws.com/recommended-policy.png" alt="Policy recommended by harden-runner" >
+      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/main/images/harden-runner/RecommendedPolicy.png" alt="Policy recommended by harden-runner" >
     </p>
 
 4. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed.
