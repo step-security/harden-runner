@@ -33,7 +33,7 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
     </p>
     Below the insights, you will see the recommended policy.
     <p align="left">
-      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/main/images/harden-runner/RecPolicy.png" alt="Policy recommended by harden-runner" >
+      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/main/images/harden-runner/RecomPolicy.png" alt="Policy recommended by harden-runner" >
     </p>
 
 4. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed.
