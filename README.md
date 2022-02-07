@@ -47,7 +47,6 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
             api.github.com:443
             github.com:443
             pypi.org:443
-
     ```
 
 ## Try it out
