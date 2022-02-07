@@ -23,7 +23,7 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
 2. In the workflow logs, you will see a link to security insights and recommendations.  
 
     <p align="left">
-      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/main/images/harden-runner/WorkflowLog.png" alt="Link in build log" >
+      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/main/images/harden-runner/ActionLog.png" alt="Link in build log" >
     </p>
 
 3. Click on the link ([example link](https://app.stepsecurity.io/github/jauderho/dockerfiles/actions/runs/1736506434)). You will see outbound traffic made by each step.
