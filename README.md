@@ -29,7 +29,7 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
 3. Click on the link ([example link](https://app.stepsecurity.io/github/jauderho/dockerfiles/actions/runs/1736506434)). You will see outbound traffic made by each step.
 
     <p align="left">
-      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/main/images/harden-runner/OutboundCalls.png" alt="Insights from harden-runner" >
+      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/main/images/harden-runner/OutboundCall.png" alt="Insights from harden-runner" >
     </p>
     Below the insights, you will see the recommended policy.
     <p align="left">
