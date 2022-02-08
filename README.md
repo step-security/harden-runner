@@ -4,14 +4,12 @@
 
 # Security monitoring for the GitHub-hosted runner
 
-[![Slack](https://img.shields.io/badge/Join%20the%20Community-Slack-blue)](https://join.slack.com/t/stepsecuritygroup/shared_invite/zt-11q5o2icy-9xuW51dJWQffFVl3DX98BQ)
-
 If you have a self-hosted build server (e.g. Cloud VM), you may have security monitoring implemented on it. When you use GitHub Actions hosted-runner, you can use `harden-runner` to add security controls and monitoring to the build server (Ubuntu VM) on which GitHub Actions runs your workflows. Unlike traditional monitoring for Cloud VMs, `harden-runner` insights and policy are granular per job of a workflow. 
 
 ## Prevent DNS exfiltration and exfiltration of credentials
 First-of-its-kind patent-pending technology that automatically correlates outbound traffic with each step of a workflow.
 
-1. Add `step-security/harden-runner` to your GitHub Actions workflow file as the first step. 
+1. Add `step-security/harden-runner` to your GitHub Actions workflow file as the first step. Use [StepSecurity's online tool](http://app.stepsecurity.io/) to quickly add this and fix additional security issues.
 
     ```
     steps:
@@ -31,27 +29,19 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
     <p align="left">
       <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/OutboundCall.png" alt="Insights from harden-runner" >
     </p>
-    Below the insights, you will see the recommended policy.
+    
+4. Below the insights, you will see the recommended policy. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed.
+    
     <p align="left">
       <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/RecomPolicy.png" alt="Policy recommended by harden-runner" >
     </p>
 
-4. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed.
-
-   ```
-    steps:
-      - uses: step-security/harden-runner@14dc64f30986eaa2ad2dddcec073f5aab18e5a24 # v1
-        with:
-          egress-policy: block
-          allowed-endpoints: 
-            api.github.com:443
-            github.com:443
-            pypi.org:443
-    ```
-
 ## Try it out
 
 [Hands-on tutorials](https://github.com/step-security/supply-chain-goat) to learn how `harden-runner` would have prevented past software supply chain attacks, such as the Codecov breach.
+
+## Support for private repositories
+Support for private repositories is now in `Preview`. Install the [Harden Runner App](https://github.com/apps/harden-runner-app) if you want to use `harden-runner` for `Private` repositories or if you want the insights to show up instantly after the workflow run completes for `Public` repositories. This App only needs `actions: read` permissions on your repositories. You can install it on selected repositories, or all repositories in your organization. 
 
 ## Workflows using harden-runner
 
@@ -64,6 +54,12 @@ Workflows using harden-runner:
 
 ## Discussions
 
-If you have questions, please use [discussions](https://github.com/step-security/harden-runner/discussions). 
+If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions). 
 1. [Support for private repositories](https://github.com/step-security/harden-runner/discussions/74)
 2. [Generation of accurate SBOM (software bill of materials)](https://github.com/step-security/harden-runner/discussions/75)
+
+## FAQ
+
+### Why do I see calls to `api.snapcraft.io`?
+
+During workflow runs, it was observed that unnecessary outbound calls were being made to some domains. All of the outbound calls were due to unnecessary services running on the GitHub Actions hosted-runner VM. These services have been stopped, except for `snapd`, which makes calls to `api.snapcraft.io`. You can read more about this issue [here](https://github.com/actions/virtual-environments/issues/4867). `api.snapcraft.io` is not needed for your workflow, and does not need to be added to the `allowed-endpoints` list. 
