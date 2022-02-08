@@ -39,6 +39,7 @@ import {verifyChecksum} from "./checksum"
       api_url: api_url,
       allowed_endpoints: core.getInput("allowed-endpoints"),
       egress_policy: core.getInput("egress-policy"),
+      send_insights: core.getInput("send-insights"),
     };
 
     if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
@@ -49,6 +50,10 @@ import {verifyChecksum} from "./checksum"
       core.warning(
         "egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps."
       );
+    }
+
+    if (confg.send_insights !== 'true' && confg.send_insights !== 'false') {
+      core.setFailed("send-insights must be either true or false");
     }
 
     const confgStr = JSON.stringify(confg);
@@ -64,7 +69,10 @@ import {verifyChecksum} from "./checksum"
     const extractPath = await tc.extractTar(downloadPath);
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-    printInfo(web_url);
+    
+    if (confg.send_insights === 'true'){
+      printInfo(web_url);
+    }
 
     let cmd = "cp",
       args = [path.join(extractPath, "agent"), "/home/agent/agent"];
