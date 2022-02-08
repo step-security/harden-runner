@@ -1,4 +1,5 @@
 import { printInfo } from "./common";
+import * as core from "@actions/core";
 
 (async () => {
   if (process.platform !== "linux") {
@@ -6,6 +7,11 @@ import { printInfo } from "./common";
     return;
   }
 
-  var web_url = "https://app.stepsecurity.io";
-  printInfo(web_url);
+  if (core.getInput("send-insights") === 'true'){
+    var web_url = "https://app.stepsecurity.io";
+    printInfo(web_url);
+  }
+  else{
+    core.warning("Insights will not be sent to StepSecurity API as send-insights is set to false");
+  }
 })();
