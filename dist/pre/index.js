@@ -6324,7 +6324,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             api_url: api_url,
             allowed_endpoints: core.getInput("allowed-endpoints"),
             egress_policy: core.getInput("egress-policy"),
-            send_insights: core.getInput("send-insights"),
+            disable_telemetry: core.getBooleanInput("disable-telemetry"),
         };
         if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
             core.setFailed("egress-policy must be either audit or block");
@@ -6332,8 +6332,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
             core.warning("egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps.");
         }
-        if (confg.send_insights !== 'true' && confg.send_insights !== 'false') {
-            core.setFailed("send-insights must be either true or false");
+        if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
+            core.setFailed("disable-telemetry must be a boolean value");
         }
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
@@ -6343,8 +6343,13 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
         const extractPath = yield tool_cache.extractTar(downloadPath);
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-        if (confg.send_insights === 'true') {
+        if (confg.disable_telemetry === false) {
             printInfo(web_url);
+        }
+        else {
+            if (confg.egress_policy === "audit") {
+                printInfo(web_url);
+            }
         }
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
