@@ -7,11 +7,11 @@ import * as core from "@actions/core";
     return;
   }
 
-  if (core.getInput("send-insights") === 'true'){
-    var web_url = "https://app.stepsecurity.io";
-    printInfo(web_url);
+  if (core.getBooleanInput("disable-telemetry") === true && core.getInput("egress-policy") === "block"){
+    core.warning("Insights will not be sent to StepSecurity API as disable-telemetry is set to true");
   }
   else{
-    core.warning("Insights will not be sent to StepSecurity API as send-insights is set to false");
+    var web_url = "https://app.stepsecurity.io";
+    printInfo(web_url);
   }
 })();

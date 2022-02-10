@@ -39,7 +39,7 @@ import {verifyChecksum} from "./checksum"
       api_url: api_url,
       allowed_endpoints: core.getInput("allowed-endpoints"),
       egress_policy: core.getInput("egress-policy"),
-      send_insights: core.getInput("send-insights"),
+      disable_telemetry: core.getBooleanInput("disable-telemetry"),
     };
 
     if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
@@ -52,8 +52,8 @@ import {verifyChecksum} from "./checksum"
       );
     }
 
-    if (confg.send_insights !== 'true' && confg.send_insights !== 'false') {
-      core.setFailed("send-insights must be either true or false");
+    if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
+      core.setFailed("disable-telemetry must be a boolean value");
     }
 
     const confgStr = JSON.stringify(confg);
@@ -70,8 +70,13 @@ import {verifyChecksum} from "./checksum"
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
     
-    if (confg.send_insights === 'true'){
+    if (confg.disable_telemetry === false){
       printInfo(web_url);
+    }
+    else{
+      if(confg.egress_policy === "audit"){
+        printInfo(web_url);
+      }
     }
 
     let cmd = "cp",
