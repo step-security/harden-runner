@@ -12,10 +12,10 @@ inputs:
   token:
     description: 'Used to avoid github rate limiting'
     default: ${{ github.token }}
-  send-insights:
-    description: 'Send insights to StepSecurity API, can be set to true or false'
+  disable-telemetry:
+    description: 'Disable sending insights to StepSecurity API, can be set to true or false'
     required: false
-    default: 'true'
+    default: 'false'
 branding:
   icon: 'check-square'  
   color: 'green'
