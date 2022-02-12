@@ -39,6 +39,7 @@ import {verifyChecksum} from "./checksum"
       api_url: api_url,
       allowed_endpoints: core.getInput("allowed-endpoints"),
       egress_policy: core.getInput("egress-policy"),
+      disable_telemetry: core.getBooleanInput("disable-telemetry"),
     };
 
     if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
@@ -49,6 +50,10 @@ import {verifyChecksum} from "./checksum"
       core.warning(
         "egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps."
       );
+    }
+
+    if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
+      core.setFailed("disable-telemetry must be a boolean value");
     }
 
     const confgStr = JSON.stringify(confg);
@@ -64,7 +69,15 @@ import {verifyChecksum} from "./checksum"
     const extractPath = await tc.extractTar(downloadPath);
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-    printInfo(web_url);
+    
+    if (confg.disable_telemetry === false){
+      printInfo(web_url);
+    }
+    else{
+      if(confg.egress_policy === "audit"){
+        printInfo(web_url);
+      }
+    }
 
     let cmd = "cp",
       args = [path.join(extractPath, "agent"), "/home/agent/agent"];
