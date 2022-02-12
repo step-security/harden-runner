@@ -1716,8 +1716,9 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         console.log("Only runs on linux");
         return;
     }
-    if (core.getBooleanInput("disable-telemetry") === true && core.getInput("egress-policy") === "block") {
-        core.warning("Insights will not be sent to StepSecurity API as disable-telemetry is set to true");
+    if (core.getBooleanInput("disable-telemetry") &&
+        core.getInput("egress-policy") === "block") {
+        console.log("Telemetry will not be sent to StepSecurity API as disable-telemetry is set to true");
     }
     else {
         var web_url = "https://app.stepsecurity.io";

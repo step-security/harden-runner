@@ -1,47 +1,47 @@
 {
-    "name": "step-security-harden-runner",
-    "version": "1.1.0",
-    "description": "GitHub Actions Runtime Security",
-    "main": "index.js",
-    "scripts": {
-        "build": "npm run main && npm run pre && npm run post",
-        "main": "ncc build src/index.ts --source-map",
-        "pre": "ncc build src/setup.ts --source-map -o dist/pre",
-        "post": "ncc build src/cleanup.ts --source-map -o dist/post",
-        "lint": "eslint src/**/*.ts"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/step-security/harden-runner.git"
-    },
-    "keywords": [],
-    "author": "Varun Sharma",
-    "license": "Apache License 2.0",
-    "bugs": {
-        "url": "https://github.com/step-security/harden-runner/issues"
-    },
-    "homepage": "https://github.com/step-security/harden-runner#readme",
-    "dependencies": {
-        "@actions/core": "^1.5.0",
-        "@actions/exec": "^1.1.0",
-        "@actions/github": "^5.0.0",
-        "@actions/http-client": "^1.0.11",
-        "@actions/tool-cache": "^1.7.1",
-        "node-fetch": ">=3.2.0",
-        "uuid": "^8.3.2",
-        "ansi-regex": ">=5.0.1"
-    },
-    "devDependencies": {
-        "@types/jest": "^27.0.1",
-        "@types/node": "^16.9.0",
-        "@typescript-eslint/eslint-plugin": "^4.29.2",
-        "@typescript-eslint/parser": "^4.29.2",
-        "@vercel/ncc": "^0.30.0",
-        "eslint": "^7.32.0",
-        "eslint-config-google": "^0.14.0",
-        "jest": ">=27.4.7",
-        "jest-junit": ">=13.0.0",
-        "ts-jest": ">=27.1.3",
-        "typescript": "^4.3.5"
-    }
+  "name": "step-security-harden-runner",
+  "version": "1.4.0",
+  "description": "GitHub Actions Runtime Security",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run main && npm run pre && npm run post",
+    "main": "ncc build src/index.ts --source-map",
+    "pre": "ncc build src/setup.ts --source-map -o dist/pre",
+    "post": "ncc build src/cleanup.ts --source-map -o dist/post",
+    "lint": "eslint src/**/*.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/step-security/harden-runner.git"
+  },
+  "keywords": [],
+  "author": "Varun Sharma",
+  "license": "Apache License 2.0",
+  "bugs": {
+    "url": "https://github.com/step-security/harden-runner/issues"
+  },
+  "homepage": "https://github.com/step-security/harden-runner#readme",
+  "dependencies": {
+    "@actions/core": "^1.5.0",
+    "@actions/exec": "^1.1.0",
+    "@actions/github": "^5.0.0",
+    "@actions/http-client": "^1.0.11",
+    "@actions/tool-cache": "^1.7.1",
+    "node-fetch": ">=3.2.0",
+    "uuid": "^8.3.2",
+    "ansi-regex": ">=5.0.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.1",
+    "@types/node": "^16.9.0",
+    "@typescript-eslint/eslint-plugin": "^4.29.2",
+    "@typescript-eslint/parser": "^4.29.2",
+    "@vercel/ncc": "^0.30.0",
+    "eslint": "^7.32.0",
+    "eslint-config-google": "^0.14.0",
+    "jest": ">=27.4.7",
+    "jest-junit": ">=13.0.0",
+    "ts-jest": ">=27.1.3",
+    "typescript": "^4.3.5"
+  }
 }
