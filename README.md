@@ -11,7 +11,7 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
 
 1. Add `step-security/harden-runner` to your GitHub Actions workflow file as the first step. Use [StepSecurity's online tool](http://app.stepsecurity.io/) to quickly add this and fix additional security issues.
 
-    ```
+    ```yaml
     steps:
       - uses: step-security/harden-runner@14dc64f30986eaa2ad2dddcec073f5aab18e5a24 # v1
         with:
@@ -43,6 +43,20 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
 ## Support for private repositories
 Support for private repositories is now in `Preview`. Install the [Harden Runner App](https://github.com/apps/harden-runner-app) if you want to use `harden-runner` for `Private` repositories or if you want the insights to show up instantly after the workflow run completes for `Public` repositories. This App only needs `actions: read` permissions on your repositories. You can install it on selected repositories, or all repositories in your organization. 
 
+## Discussions
+
+If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions). 
+1. [Support for private repositories](https://github.com/step-security/harden-runner/discussions/74)
+2. [Generation of accurate SBOM (software bill of materials)](https://github.com/step-security/harden-runner/discussions/75)
+3. [SLSA Level 1](https://github.com/step-security/harden-runner/discussions/93)
+4. [Cryptographically verify tools run as part of the CI/ CD pipeline](https://github.com/step-security/harden-runner/discussions/94)
+
+## FAQ
+
+### Why do I see calls to `api.snapcraft.io`?
+
+During workflow runs, it was observed that unnecessary outbound calls were being made to some domains. All of the outbound calls were due to unnecessary services running on the GitHub Actions hosted-runner VM. These services have been stopped, except for `snapd`, which makes calls to `api.snapcraft.io`. You can read more about this issue [here](https://github.com/actions/virtual-environments/issues/4867). `api.snapcraft.io` is not needed for your workflow, and does not need to be added to the `allowed-endpoints` list. 
+
 ## Workflows using harden-runner
 
 Workflows using harden-runner:
@@ -51,15 +65,3 @@ Workflows using harden-runner:
 3. https://github.com/Automattic/vip-go-mu-plugins/blob/master/.github/workflows/e2e.yml ([link to insights](https://app.stepsecurity.io/github/Automattic/vip-go-mu-plugins/actions/runs/1758760957))
 4. https://github.com/MTRNord/matrix-art/tree/main/.github/workflows ([link to insights](https://app.stepsecurity.io/github/MTRNord/matrix-art/actions/runs/1758933417))
 5. https://github.com/jauderho/dockerfiles/blob/main/.github/workflows/age.yml ([link to insights](https://app.stepsecurity.io/github/jauderho/dockerfiles/actions/runs/1758047950))
-
-## Discussions
-
-If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions). 
-1. [Support for private repositories](https://github.com/step-security/harden-runner/discussions/74)
-2. [Generation of accurate SBOM (software bill of materials)](https://github.com/step-security/harden-runner/discussions/75)
-
-## FAQ
-
-### Why do I see calls to `api.snapcraft.io`?
-
-During workflow runs, it was observed that unnecessary outbound calls were being made to some domains. All of the outbound calls were due to unnecessary services running on the GitHub Actions hosted-runner VM. These services have been stopped, except for `snapd`, which makes calls to `api.snapcraft.io`. You can read more about this issue [here](https://github.com/actions/virtual-environments/issues/4867). `api.snapcraft.io` is not needed for your workflow, and does not need to be added to the `allowed-endpoints` list. 
