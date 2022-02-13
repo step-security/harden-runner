@@ -6,7 +6,7 @@ import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { printInfo } from "./common";
 import * as tc from "@actions/tool-cache";
-
+import { verifyChecksum } from "./checksum";
 (async () => {
   try {
     if (process.platform !== "linux") {
@@ -19,16 +19,6 @@ import * as tc from "@actions/tool-cache";
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
     var web_url = "https://app.stepsecurity.io";
 
-    let _http = new httpm.HttpClient();
-    _http.requestOptions = { socketTimeout: 3 * 1000 };
-    try {
-      await _http.get(
-        `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
-      );
-    } catch (e) {
-      console.log(`error in connecting to ${api_url}: ${e}`);
-    }
-
     const confg = {
       repo: process.env["GITHUB_REPOSITORY"],
       run_id: process.env["GITHUB_RUN_ID"],
@@ -37,6 +27,7 @@ import * as tc from "@actions/tool-cache";
       api_url: api_url,
       allowed_endpoints: core.getInput("allowed-endpoints"),
       egress_policy: core.getInput("egress-policy"),
+      disable_telemetry: core.getBooleanInput("disable-telemetry"),
     };
 
     if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
@@ -49,17 +40,44 @@ import * as tc from "@actions/tool-cache";
       );
     }
 
+    if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
+      core.setFailed("disable-telemetry must be a boolean value");
+    }
+
+    if (!confg.disable_telemetry) {
+      let _http = new httpm.HttpClient();
+      _http.requestOptions = { socketTimeout: 3 * 1000 };
+      try {
+        await _http.get(
+          `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
+        );
+      } catch (e) {
+        console.log(`error in connecting to ${api_url}: ${e}`);
+      }
+    }
+
     const confgStr = JSON.stringify(confg);
     cp.execSync("sudo mkdir -p /home/agent");
     cp.execSync("sudo chown -R $USER /home/agent");
 
+    // Note: to avoid github rate limiting
+    let token = core.getInput("token");
+    let auth = `token ${token}`;
+
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.8.6/agent_0.8.6_linux_amd64.tar.gz"
+      "https://github.com/step-security/agent/releases/download/v0.9.0/agent_0.9.0_linux_amd64.tar.gz",
+      undefined,
+      auth
     );
+
+    verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
     const extractPath = await tc.extractTar(downloadPath);
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-    printInfo(web_url);
+
+    if (!confg.disable_telemetry || confg.egress_policy === "audit") {
+      printInfo(web_url);
+    }
 
     let cmd = "cp",
       args = [path.join(extractPath, "agent"), "/home/agent/agent"];

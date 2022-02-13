@@ -6261,6 +6261,24 @@ function printInfo(web_url) {
 
 // EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
 var tool_cache = __nccwpck_require__(7784);
+// EXTERNAL MODULE: external "crypto"
+var external_crypto_ = __nccwpck_require__(6417);
+;// CONCATENATED MODULE: ./src/checksum.ts
+
+
+
+function verifyChecksum(downloadPath) {
+    const fileBuffer = external_fs_.readFileSync(downloadPath);
+    const checksum = external_crypto_.createHash("sha256")
+        .update(fileBuffer)
+        .digest("hex"); // checksum of downloaded file
+    const expectedChecksum = "28427e325c00f49e391af0899f49fe34e73b36b113a9f095660b73da88c43280"; // checksum for v0.9.0
+    if (checksum !== expectedChecksum) {
+        core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
+    }
+    core.debug("Checksum verification passed.");
+}
+
 ;// CONCATENATED MODULE: ./src/setup.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -6279,6 +6297,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
 (() => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (process.platform !== "linux") {
@@ -6289,14 +6308,6 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         var env = "agent";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
         var web_url = "https://app.stepsecurity.io";
-        let _http = new http_client.HttpClient();
-        _http.requestOptions = { socketTimeout: 3 * 1000 };
-        try {
-            yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
-        }
-        catch (e) {
-            console.log(`error in connecting to ${api_url}: ${e}`);
-        }
         const confg = {
             repo: process.env["GITHUB_REPOSITORY"],
             run_id: process.env["GITHUB_RUN_ID"],
@@ -6305,6 +6316,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             api_url: api_url,
             allowed_endpoints: core.getInput("allowed-endpoints"),
             egress_policy: core.getInput("egress-policy"),
+            disable_telemetry: core.getBooleanInput("disable-telemetry"),
         };
         if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
             core.setFailed("egress-policy must be either audit or block");
@@ -6312,13 +6324,32 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
             core.warning("egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps.");
         }
+        if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
+            core.setFailed("disable-telemetry must be a boolean value");
+        }
+        if (!confg.disable_telemetry) {
+            let _http = new http_client.HttpClient();
+            _http.requestOptions = { socketTimeout: 3 * 1000 };
+            try {
+                yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
+            }
+            catch (e) {
+                console.log(`error in connecting to ${api_url}: ${e}`);
+            }
+        }
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
-        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.8.6/agent_0.8.6_linux_amd64.tar.gz");
+        // Note: to avoid github rate limiting
+        let token = core.getInput("token");
+        let auth = `token ${token}`;
+        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.9.0/agent_0.9.0_linux_amd64.tar.gz", undefined, auth);
+        verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
         const extractPath = yield tool_cache.extractTar(downloadPath);
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-        printInfo(web_url);
+        if (!confg.disable_telemetry || confg.egress_policy === "audit") {
+            printInfo(web_url);
+        }
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
         external_child_process_.execSync("chmod +x /home/agent/agent");
