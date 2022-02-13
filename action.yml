@@ -1,5 +1,5 @@
 name: "Harden Runner"
-description: "GitHub Actions Runtime Security"
+description: "Security monitoring for the GitHub-hosted runner"
 inputs:
   allowed-endpoints:
     description: "Only these endpoints will be allowed if egress-policy is set to block"

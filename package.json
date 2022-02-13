@@ -1,7 +1,7 @@
 {
   "name": "step-security-harden-runner",
   "version": "1.4.0",
-  "description": "GitHub Actions Runtime Security",
+  "description": "Security monitoring for the GitHub-hosted runner",
   "main": "index.js",
   "scripts": {
     "build": "npm run main && npm run pre && npm run post",
