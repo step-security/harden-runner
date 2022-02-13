@@ -13,7 +13,7 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
 
     ```yaml
     steps:
-      - uses: step-security/harden-runner@14dc64f30986eaa2ad2dddcec073f5aab18e5a24 # v1
+      - uses: step-security/harden-runner@bdb12b622a910dfdc99a31fdfe6f45a16bc287a4 # v1
         with:
           egress-policy: audit
     ```
@@ -30,7 +30,7 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
       <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/OutboundCall.png" alt="Insights from harden-runner" >
     </p>
     
-4. Below the insights, you will see the recommended policy. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed.
+4. Below the insights, you will see the recommended policy. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed. When you use `egress-policy: block` mode, you can also set `disable-telemetry: true` to not send telemetry to the StepSecurity API. 
     
     <p align="left">
       <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/RecomPolicy.png" alt="Policy recommended by harden-runner" >
