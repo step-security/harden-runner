@@ -33,7 +33,7 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
 4. Below the insights, you will see the recommended policy. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed. When you use `egress-policy: block` mode, you can also set `disable-telemetry: true` to not send telemetry to the StepSecurity API. 
     
     <p align="left">
-      <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/RecomPolicy.png" alt="Policy recommended by harden-runner" >
+      <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/RecomPolicy1.png" alt="Policy recommended by harden-runner" >
     </p>
 
 ## Try it out
