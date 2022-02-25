@@ -41,7 +41,7 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
 [Hands-on tutorials](https://github.com/step-security/supply-chain-goat) to learn how `harden-runner` would have prevented past software supply chain attacks, such as the Codecov breach.
 
 ## Support for private repositories
-Support for private repositories is now in `Preview`. Install the [Harden Runner App](https://github.com/apps/harden-runner-app) if you want to use `harden-runner` for `Private` repositories or if you want the insights to show up instantly after the workflow run completes for `Public` repositories. This App only needs `actions: read` permissions on your repositories. You can install it on selected repositories, or all repositories in your organization. 
+Support for private repositories is now in `Preview`. Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) from the Marketplace if you want to use `harden-runner` for `Private` repositories or if you want the insights to show up instantly after the workflow run completes for `Public` repositories. This App only needs `actions: read` permissions on your repositories. You can install it on selected repositories, or all repositories in your organization. 
 
 ## Discussions
 
