@@ -2,14 +2,17 @@
   <img src="https://step-security-images.s3.us-west-2.amazonaws.com/Final-Logo-06.png" alt="Step Security Logo" width="340">
 </p>
 
-# Security monitoring for the GitHub-hosted runner
+# Prevent Software Supply Chain Attacks
 
-If you have a self-hosted build server (e.g. Cloud VM), you may have security monitoring implemented on it. When you use GitHub Actions hosted-runner, you can use `harden-runner` to add security controls and monitoring to the build server (Ubuntu VM) on which GitHub Actions runs your workflows. Unlike traditional monitoring for Cloud VMs, `harden-runner` insights and policy are granular per job of a workflow. 
+This GitHub Action can be used to prevent software supply chain attacks.  
 
-## Prevent DNS exfiltration and exfiltration of credentials
+## Problem
+Hijacked dependencies and compromised build tools typically make outbound requests during the build process to exfiltrate data or credentials. This was the case in the [Codecov breach](https://www.bleepingcomputer.com/news/security/popular-codecov-code-coverage-tool-hacked-to-steal-dev-credentials/), in the [dependency confusion attacks](https://medium.com/@alex.birsan/dependency-confusion-4a5d60fec610), and the recent [npm package hijacks](https://github.com/faisalman/ua-parser-js/issues/536).
+
+## Solution
 First-of-its-kind patent-pending technology that automatically correlates outbound traffic with each step of a workflow.
 
-1. Add `step-security/harden-runner` to your GitHub Actions workflow file as the first step. Use [StepSecurity's online tool](http://app.stepsecurity.io/) to quickly add this and fix additional security issues.
+1. Add `step-security/harden-runner` to your GitHub Actions workflow file as the first step. 
 
     ```yaml
     steps:
@@ -30,13 +33,15 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
       <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/OutboundCall.png" alt="Insights from harden-runner" >
     </p>
     
-4. Below the insights, you will see the recommended policy. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed. When you use `egress-policy: block` mode, you can also set `disable-telemetry: true` to not send telemetry to the StepSecurity API. 
+4. Below the insights, you will see the recommended policy. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed.  
     
     <p align="left">
       <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/RecomPolicy1.png" alt="Policy recommended by harden-runner" >
     </p>
-
-## Try it out
+  
+  When you use `egress-policy: block` mode, you can also set `disable-telemetry: true` to not send telemetry to the StepSecurity API.
+  
+## How past supply chain attacks would have been prevented
 
 [Hands-on tutorials](https://github.com/step-security/supply-chain-goat) to learn how `harden-runner` would have prevented past software supply chain attacks, such as the Codecov breach.
 
