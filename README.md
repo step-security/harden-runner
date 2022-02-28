@@ -2,14 +2,17 @@
   <img src="https://step-security-images.s3.us-west-2.amazonaws.com/Final-Logo-06.png" alt="Step Security Logo" width="340">
 </p>
 
-# Security monitoring for the GitHub-hosted runner
+# Software Supply Chain Security
 
-If you have a self-hosted build server (e.g. Cloud VM), you may have security monitoring implemented on it. When you use GitHub Actions hosted-runner, you can use `harden-runner` to add security controls and monitoring to the build server (Ubuntu VM) on which GitHub Actions runs your workflows. Unlike traditional monitoring for Cloud VMs, `harden-runner` insights and policy are granular per job of a workflow. 
+This GitHub Action can be used to prevent certain types of software supply chain attacks.  
 
-## Prevent DNS exfiltration and exfiltration of credentials
+## Problem
+Hijacked dependencies and compromised build tools typically make outbound requests during the build process to exfiltrate data or credentials. This was the case in the [Codecov breach](https://www.bleepingcomputer.com/news/security/popular-codecov-code-coverage-tool-hacked-to-steal-dev-credentials/), in the [dependency confusion attacks](https://medium.com/@alex.birsan/dependency-confusion-4a5d60fec610), and the recent [npm package hijacks](https://github.com/faisalman/ua-parser-js/issues/536).
+
+## Solution
 First-of-its-kind patent-pending technology that automatically correlates outbound traffic with each step of a workflow.
 
-1. Add `step-security/harden-runner` to your GitHub Actions workflow file as the first step. Use [StepSecurity's online tool](http://app.stepsecurity.io/) to quickly add this and fix additional security issues.
+1. Add `step-security/harden-runner` to your GitHub Actions workflow file as the first step. 
 
     ```yaml
     steps:
@@ -30,18 +33,20 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
       <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/OutboundCall.png" alt="Insights from harden-runner" >
     </p>
     
-4. Below the insights, you will see the recommended policy. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed. When you use `egress-policy: block` mode, you can also set `disable-telemetry: true` to not send telemetry to the StepSecurity API. 
+4. Below the insights, you will see the recommended policy. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed.  
     
     <p align="left">
       <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/RecomPolicy1.png" alt="Policy recommended by harden-runner" >
     </p>
+  
+  When you use `egress-policy: block` mode, you can also set `disable-telemetry: true` to not send telemetry to the StepSecurity API.
+  
+## How past attacks would have been prevented
 
-## Try it out
-
-[Hands-on tutorials](https://github.com/step-security/supply-chain-goat) to learn how `harden-runner` would have prevented past software supply chain attacks, such as the Codecov breach.
+[Hands-on tutorials](https://github.com/step-security/supply-chain-goat) to learn how `harden-runner` would have prevented past software supply chain attacks.
 
 ## Support for private repositories
-Support for private repositories is now in `Preview`. Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) from the Marketplace if you want to use `harden-runner` for `Private` repositories or if you want the insights to show up instantly after the workflow run completes for `Public` repositories. This App only needs `actions: read` permissions on your repositories. You can install it on selected repositories, or all repositories in your organization. 
+Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) if you want to use `harden-runner` for `Private` repositories. This App only needs `actions: read` permissions on your repositories. You can install it on selected repositories, or all repositories in your organization. 
 
 ## Discussions
 
@@ -51,11 +56,13 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 3. [SLSA Level 1](https://github.com/step-security/harden-runner/discussions/93)
 4. [Cryptographically verify tools run as part of the CI/ CD pipeline](https://github.com/step-security/harden-runner/discussions/94)
 
-## FAQ
+## Testimonials
 
-### Why do I see calls to `api.snapcraft.io`?
+> *I think this is a great idea and for the threat model of build-time, an immediate network egress request monitoring makes a lot of sense* - [Liran Tal](https://stars.github.com/profiles/lirantal/), GitHub Star, and Author of Essential Node.js Security
 
-During workflow runs, it was observed that unnecessary outbound calls were being made to some domains. All of the outbound calls were due to unnecessary services running on the GitHub Actions hosted-runner VM. These services have been stopped, except for `snapd`, which makes calls to `api.snapcraft.io`. You can read more about this issue [here](https://github.com/actions/virtual-environments/issues/4867). `api.snapcraft.io` is not needed for your workflow, and does not need to be added to the `allowed-endpoints` list. 
+> *Harden-Runner strikes an elegant balance between ease-of-use, maintainability, and mitigation that I intend to apply to all of my 300+ npm packages. I look forward to the tool’s improvement over time* - [Jordan Harband](https://github.com/ljharb), Open Source Maintainer
+
+> *Harden runner from Step security is such a nice solution, it is another piece of the puzzle in helping treat the CI environment like production and solving supply chain security. I look forward to seeing it evolve.* - Cam Parry, Senior Site Reliability Engineer, Kapiche
 
 ## Workflows using harden-runner
 
@@ -65,3 +72,14 @@ Workflows using harden-runner:
 3. https://github.com/Automattic/vip-go-mu-plugins/blob/master/.github/workflows/e2e.yml ([link to insights](https://app.stepsecurity.io/github/Automattic/vip-go-mu-plugins/actions/runs/1758760957))
 4. https://github.com/MTRNord/matrix-art/tree/main/.github/workflows ([link to insights](https://app.stepsecurity.io/github/MTRNord/matrix-art/actions/runs/1758933417))
 5. https://github.com/jauderho/dockerfiles/blob/main/.github/workflows/age.yml ([link to insights](https://app.stepsecurity.io/github/jauderho/dockerfiles/actions/runs/1758047950))
+
+## 1-minute Demo Video
+
+https://user-images.githubusercontent.com/25015917/156026587-79356450-9b35-4254-9c2e-7f2cc8d81059.mp4
+
+## FAQ
+
+### Why do I see calls to `api.snapcraft.io`?
+
+During pilot, it was observed that unnecessary outbound calls were being made to some domains. All of the outbound calls were due to unnecessary services running on the GitHub Actions hosted-runner VM. These services have been stopped, except for `snapd`, which makes calls to `api.snapcraft.io`. You can read more about this issue [here](https://github.com/actions/virtual-environments/issues/4867). `api.snapcraft.io` is not needed for your workflow, and does not need to be added to the `allowed-endpoints` list. 
+
