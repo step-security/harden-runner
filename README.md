@@ -43,7 +43,7 @@ First-of-its-kind patent-pending technology that automatically correlates outbou
   
 ## How past attacks would have been prevented
 
-[Hands-on tutorials](https://github.com/step-security/supply-chain-goat) to learn how `harden-runner` would have prevented past software supply chain attacks, such as the Codecov breach.
+[Hands-on tutorials](https://github.com/step-security/supply-chain-goat) to learn how `harden-runner` would have prevented past software supply chain attacks.
 
 ## Support for private repositories
 Support for private repositories is now in `Preview`. Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) from the Marketplace if you want to use `harden-runner` for `Private` repositories or if you want the insights to show up instantly after the workflow run completes for `Public` repositories. This App only needs `actions: read` permissions on your repositories. You can install it on selected repositories, or all repositories in your organization. 
@@ -56,6 +56,14 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 3. [SLSA Level 1](https://github.com/step-security/harden-runner/discussions/93)
 4. [Cryptographically verify tools run as part of the CI/ CD pipeline](https://github.com/step-security/harden-runner/discussions/94)
 
+## Testimonials
+
+> *I think this is a great idea and for the threat model of build-time, an immediate network egress request monitoring makes a lot of sense* - [Liran Tal](https://stars.github.com/profiles/lirantal/), GitHub Star, and Author of Essential Node.js Security
+
+> *Harden-Runner strikes an elegant balance between ease-of-use, maintainability, and mitigation that I intend to apply to all of my 300+ npm packages. I look forward to the tool’s improvement over time* - [Jordan Harband](https://github.com/ljharb), Open Source Maintainer
+
+> *Harden runner from Step security is such a nice solution, it is another piece of the puzzle in helping treat the CI environment like production and solving supply chain security. I look forward to seeing it evolve.* - Cam Parry, Senior Site Reliability Engineer, Kapiche
+
 ## Workflows using harden-runner
 
 Workflows using harden-runner:
@@ -65,7 +73,7 @@ Workflows using harden-runner:
 4. https://github.com/MTRNord/matrix-art/tree/main/.github/workflows ([link to insights](https://app.stepsecurity.io/github/MTRNord/matrix-art/actions/runs/1758933417))
 5. https://github.com/jauderho/dockerfiles/blob/main/.github/workflows/age.yml ([link to insights](https://app.stepsecurity.io/github/jauderho/dockerfiles/actions/runs/1758047950))
 
-## Demo Video
+## 1-minute Demo Video
 
 https://user-images.githubusercontent.com/25015917/156026587-79356450-9b35-4254-9c2e-7f2cc8d81059.mp4
 
