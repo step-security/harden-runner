@@ -4,7 +4,7 @@
 
 # Software Supply Chain Security
 
-This GitHub Action can be used to prevent certain types of software supply chain attacks.  
+This GitHub Action can be used to visualize process, file, and network activity from your GitHub Actions workflows in a web UI. It can also be used to restrict outbound traffic to allowed endpoints.  
 
 ## Problem
 Hijacked dependencies and compromised build tools typically make outbound requests during the build process to exfiltrate data or credentials. This was the case in the [Codecov breach](https://www.bleepingcomputer.com/news/security/popular-codecov-code-coverage-tool-hacked-to-steal-dev-credentials/), in the [dependency confusion attacks](https://medium.com/@alex.birsan/dependency-confusion-4a5d60fec610), and the recent [npm package hijacks](https://github.com/faisalman/ua-parser-js/issues/536).
@@ -55,6 +55,7 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 2. [Generation of accurate SBOM (software bill of materials)](https://github.com/step-security/harden-runner/discussions/75)
 3. [SLSA Level 1](https://github.com/step-security/harden-runner/discussions/93)
 4. [Cryptographically verify tools run as part of the CI/ CD pipeline](https://github.com/step-security/harden-runner/discussions/94)
+5. [Performance insights and recommendations](https://github.com/step-security/harden-runner/discussions/106)
 
 ## Testimonials
 
@@ -66,12 +67,14 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 
 ## Workflows using harden-runner
 
-Workflows using harden-runner:
-1. https://github.com/nvm-sh/nvm/tree/master/.github/workflows ([link to insights](https://app.stepsecurity.io/github/nvm-sh/nvm/actions/runs/1757959262))
-2. https://github.com/microsoft/msquic/tree/main/.github/workflows ([link to insights](https://app.stepsecurity.io/github/microsoft/msquic/actions/runs/1759010243))
-3. https://github.com/Automattic/vip-go-mu-plugins/blob/master/.github/workflows/e2e.yml ([link to insights](https://app.stepsecurity.io/github/Automattic/vip-go-mu-plugins/actions/runs/1758760957))
-4. https://github.com/MTRNord/matrix-art/tree/main/.github/workflows ([link to insights](https://app.stepsecurity.io/github/MTRNord/matrix-art/actions/runs/1758933417))
-5. https://github.com/jauderho/dockerfiles/blob/main/.github/workflows/age.yml ([link to insights](https://app.stepsecurity.io/github/jauderho/dockerfiles/actions/runs/1758047950))
+Some important workflows using harden-runner:
+| |Repository |Link to insights|
+|--|----------|----------------|
+|1.|[nvm-sh/nvm](https://github.com/nvm-sh/nvm/blob/master/.github/workflows/lint.yml)|[Link to insights](https://app.stepsecurity.io/github/nvm-sh/nvm/actions/runs/1757959262)|
+|2.|[yannickcr/eslint-plugin-react](https://github.com/yannickcr/eslint-plugin-react/blob/master/.github/workflows/release.yml)|[Link to insights](https://app.stepsecurity.io/github/yannickcr/eslint-plugin-react/actions/runs/1930818585)
+|3.|[microsoft/msquic](https://github.com/microsoft/msquic/blob/main/.github/workflows/docker-publish.yml)|[Link to insights](https://app.stepsecurity.io/github/microsoft/msquic/actions/runs/1759010243)
+|4.|[Automattic/vip-go-mu-plugins](https://github.com/Automattic/vip-go-mu-plugins/blob/master/.github/workflows/e2e.yml)|[Link to insights](https://app.stepsecurity.io/github/Automattic/vip-go-mu-plugins/actions/runs/1758760957)
+|5.|[Kapiche/vue-segment-analytics](https://github.com/Kapiche/vue-segment-analytics/blob/master/.github/workflows/bump.yaml)|[Link to insights](https://app.stepsecurity.io/github/Kapiche/vue-segment-analytics/actions/runs/1921765664)
 
 ## 1-minute Demo Video
 
