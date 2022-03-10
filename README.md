@@ -1,6 +1,9 @@
 # Security agent for Github-hosted runner
 
 Harden-Runner GitHub Action installs a security agent on the Github-hosted runner to prevent exfiltration of credentials, monitor the build process, and detect compromised dependencies.  
+<p align="left">
+      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/patch-2/images/harden-runner/HardenRunnerGIF.gif" alt="Link in build log" >
+    </p>
 
 ## Problem
 Hijacked dependencies and compromised build tools typically make outbound requests during the build process to exfiltrate data or credentials. There is also a risk that a compromised dependency or build tool may modify source code, dependencies, or artifacts during the build process. 
