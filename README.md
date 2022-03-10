@@ -2,7 +2,7 @@
 
 Harden-Runner GitHub Action installs a security agent on the Github-hosted runner to prevent exfiltration of credentials, monitor the build process, and detect compromised dependencies.  
 <p align="left">
-      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/patch-2/images/harden-runner/HardenRunnerGIF.gif" alt="Link in build log" >
+      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/patch-2/images/harden-runner/HardenRunnerGIFV.gif" alt="Link in build log" >
     </p>
 
 ## Problem
