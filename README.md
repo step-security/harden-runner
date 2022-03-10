@@ -1,11 +1,16 @@
-# Security agent for Github-hosted runner
+# Harden-Runner: Security agent for GitHub-hosted runner
 
-Harden-Runner GitHub Action installs a security agent on the Github-hosted runner to prevent exfiltration of credentials, monitor the build process, and detect compromised dependencies.  
+Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runner to prevent exfiltration of credentials, monitor the build process, and detect compromised dependencies.  
+<p align="left">
+      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/patch-2/images/harden-runner/HardenRunnerGIFV.gif" alt="Link in build log" width="1440" >
+    </p>
 
-## Problem
+## Why use Harden-Runner?
 Hijacked dependencies and compromised build tools typically make outbound requests during the build process to exfiltrate data or credentials. There is also a risk that a compromised dependency or build tool may modify source code, dependencies, or artifacts during the build process. 
 
-## Solution
+Harden-Runner is a first-of-its-kind technology that automatically correlates outbound traffic, file modifications, and process activity with each step of a workflow. You can also set a policy per job of a workflow to restrict outbound traffic.
+
+## Using Harden-Runner
 1. Add `step-security/harden-runner` to your GitHub Actions workflow file as the first step in each job. In the pre step, the GitHub Actions installs a daemon that monitors process, file, and network activity. 
 
     ```yaml
@@ -35,7 +40,7 @@ Hijacked dependencies and compromised build tools typically make outbound reques
   
   When you use `egress-policy: block` mode, you can also set `disable-telemetry: true` to not send telemetry to the StepSecurity API.
   
-## How past attacks would have been prevented
+## How Harden-Runner mitigates threats?
 
 [Hands-on tutorials](https://github.com/step-security/supply-chain-goat) to learn how `harden-runner` would have prevented past software supply chain attacks.
 
