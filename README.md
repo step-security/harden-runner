@@ -1,10 +1,6 @@
-<p align="left">
-  <img src="https://step-security-images.s3.us-west-2.amazonaws.com/Final-Logo-06.png" alt="Step Security Logo" width="340">
-</p>
+# Security agent for Github-hosted runner
 
-# Software Supply Chain Security
-
-This GitHub Action can be used to visualize process, file, and network activity from your GitHub Actions workflows in a web UI. It can also be used to restrict outbound traffic to allowed endpoints.  
+Harden-Runner GitHub Action installs a security agent on the Github-hosted runner to prevent exfiltration of credentials, monitor the build process, and detect compromised dependencies.  
 
 ## Problem
 Hijacked dependencies and compromised build tools typically make outbound requests during the build process to exfiltrate data or credentials. This was the case in the [Codecov breach](https://www.bleepingcomputer.com/news/security/popular-codecov-code-coverage-tool-hacked-to-steal-dev-credentials/), in the [dependency confusion attacks](https://medium.com/@alex.birsan/dependency-confusion-4a5d60fec610), and the recent [npm package hijacks](https://github.com/faisalman/ua-parser-js/issues/536).
