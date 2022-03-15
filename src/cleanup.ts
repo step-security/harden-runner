@@ -49,7 +49,9 @@ import * as core from "@actions/core";
   if (fs.existsSync(annotationsFile)) {
     var content = fs.readFileSync(annotationsFile, "utf-8");
     content.split(/\r?\n/).forEach((line) => {
-      core.error(line);
+      if(line.indexOf("api.snapcraft.io") === -1){
+        core.error(line);
+      }
     });
   }
 

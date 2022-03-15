@@ -1748,7 +1748,9 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
     if (external_fs_.existsSync(annotationsFile)) {
         var content = external_fs_.readFileSync(annotationsFile, "utf-8");
         content.split(/\r?\n/).forEach((line) => {
-            core.error(line);
+            if (line.indexOf("api.snapcraft.io") === -1) {
+                core.error(line);
+            }
         });
     }
     if (!external_fs_.existsSync(doneFile)) {
