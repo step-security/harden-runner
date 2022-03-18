@@ -2577,7 +2577,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports._readLinuxVersionFile = exports._getOsVersion = exports._findMatch = void 0;
-const semver = __importStar(__nccwpck_require__(562));
+const semver = __importStar(__nccwpck_require__(5911));
 const core_1 = __nccwpck_require__(2186);
 // needs to be require for core node modules to be mocked
 /* eslint @typescript-eslint/no-require-imports: 0 */
@@ -2812,7 +2812,7 @@ const mm = __importStar(__nccwpck_require__(2473));
 const os = __importStar(__nccwpck_require__(2087));
 const path = __importStar(__nccwpck_require__(5622));
 const httpm = __importStar(__nccwpck_require__(9925));
-const semver = __importStar(__nccwpck_require__(562));
+const semver = __importStar(__nccwpck_require__(5911));
 const stream = __importStar(__nccwpck_require__(2413));
 const util = __importStar(__nccwpck_require__(1669));
 const v4_1 = __importDefault(__nccwpck_require__(7468));
@@ -3439,7 +3439,91 @@ function _unique(values) {
 
 /***/ }),
 
-/***/ 562:
+/***/ 7701:
+/***/ ((module) => {
+
+/**
+ * Convert array of 16 byte values to UUID string format of the form:
+ * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+ */
+var byteToHex = [];
+for (var i = 0; i < 256; ++i) {
+  byteToHex[i] = (i + 0x100).toString(16).substr(1);
+}
+
+function bytesToUuid(buf, offset) {
+  var i = offset || 0;
+  var bth = byteToHex;
+  // join used to fix memory issue caused by concatenation: https://bugs.chromium.org/p/v8/issues/detail?id=3175#c4
+  return ([
+    bth[buf[i++]], bth[buf[i++]],
+    bth[buf[i++]], bth[buf[i++]], '-',
+    bth[buf[i++]], bth[buf[i++]], '-',
+    bth[buf[i++]], bth[buf[i++]], '-',
+    bth[buf[i++]], bth[buf[i++]], '-',
+    bth[buf[i++]], bth[buf[i++]],
+    bth[buf[i++]], bth[buf[i++]],
+    bth[buf[i++]], bth[buf[i++]]
+  ]).join('');
+}
+
+module.exports = bytesToUuid;
+
+
+/***/ }),
+
+/***/ 7269:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+// Unique ID creation requires a high quality random # generator.  In node.js
+// this is pretty straight-forward - we use the crypto API.
+
+var crypto = __nccwpck_require__(6417);
+
+module.exports = function nodeRNG() {
+  return crypto.randomBytes(16);
+};
+
+
+/***/ }),
+
+/***/ 7468:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var rng = __nccwpck_require__(7269);
+var bytesToUuid = __nccwpck_require__(7701);
+
+function v4(options, buf, offset) {
+  var i = buf && offset || 0;
+
+  if (typeof(options) == 'string') {
+    buf = options === 'binary' ? new Array(16) : null;
+    options = null;
+  }
+  options = options || {};
+
+  var rnds = options.random || (options.rng || rng)();
+
+  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+  rnds[6] = (rnds[6] & 0x0f) | 0x40;
+  rnds[8] = (rnds[8] & 0x3f) | 0x80;
+
+  // Copy bytes to buffer, if provided
+  if (buf) {
+    for (var ii = 0; ii < 16; ++ii) {
+      buf[i + ii] = rnds[ii];
+    }
+  }
+
+  return buf || bytesToUuid(rnds);
+}
+
+module.exports = v4;
+
+
+/***/ }),
+
+/***/ 5911:
 /***/ ((module, exports) => {
 
 exports = module.exports = SemVer
@@ -5042,90 +5126,6 @@ function coerce (version, options) {
 
 /***/ }),
 
-/***/ 7701:
-/***/ ((module) => {
-
-/**
- * Convert array of 16 byte values to UUID string format of the form:
- * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
- */
-var byteToHex = [];
-for (var i = 0; i < 256; ++i) {
-  byteToHex[i] = (i + 0x100).toString(16).substr(1);
-}
-
-function bytesToUuid(buf, offset) {
-  var i = offset || 0;
-  var bth = byteToHex;
-  // join used to fix memory issue caused by concatenation: https://bugs.chromium.org/p/v8/issues/detail?id=3175#c4
-  return ([
-    bth[buf[i++]], bth[buf[i++]],
-    bth[buf[i++]], bth[buf[i++]], '-',
-    bth[buf[i++]], bth[buf[i++]], '-',
-    bth[buf[i++]], bth[buf[i++]], '-',
-    bth[buf[i++]], bth[buf[i++]], '-',
-    bth[buf[i++]], bth[buf[i++]],
-    bth[buf[i++]], bth[buf[i++]],
-    bth[buf[i++]], bth[buf[i++]]
-  ]).join('');
-}
-
-module.exports = bytesToUuid;
-
-
-/***/ }),
-
-/***/ 7269:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-// Unique ID creation requires a high quality random # generator.  In node.js
-// this is pretty straight-forward - we use the crypto API.
-
-var crypto = __nccwpck_require__(6417);
-
-module.exports = function nodeRNG() {
-  return crypto.randomBytes(16);
-};
-
-
-/***/ }),
-
-/***/ 7468:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var rng = __nccwpck_require__(7269);
-var bytesToUuid = __nccwpck_require__(7701);
-
-function v4(options, buf, offset) {
-  var i = buf && offset || 0;
-
-  if (typeof(options) == 'string') {
-    buf = options === 'binary' ? new Array(16) : null;
-    options = null;
-  }
-  options = options || {};
-
-  var rnds = options.random || (options.rng || rng)();
-
-  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-  rnds[6] = (rnds[6] & 0x0f) | 0x40;
-  rnds[8] = (rnds[8] & 0x3f) | 0x80;
-
-  // Copy bytes to buffer, if provided
-  if (buf) {
-    for (var ii = 0; ii < 16; ++ii) {
-      buf[i + ii] = rnds[ii];
-    }
-  }
-
-  return buf || bytesToUuid(rnds);
-}
-
-module.exports = v4;
-
-
-/***/ }),
-
 /***/ 4294:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -6272,7 +6272,7 @@ function verifyChecksum(downloadPath) {
     const checksum = external_crypto_.createHash("sha256")
         .update(fileBuffer)
         .digest("hex"); // checksum of downloaded file
-    const expectedChecksum = "28427e325c00f49e391af0899f49fe34e73b36b113a9f095660b73da88c43280"; // checksum for v0.9.0
+    const expectedChecksum = "8a8d304cb1e413f0fd2c1dffacefc0d91ba693eee2040f4ea7893ef29f3f10b1"; // checksum for v0.9.1
     if (checksum !== expectedChecksum) {
         core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
     }
@@ -6343,7 +6343,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         // Note: to avoid github rate limiting
         let token = core.getInput("token");
         let auth = `token ${token}`;
-        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.9.0/agent_0.9.0_linux_amd64.tar.gz", undefined, auth);
+        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.9.1/agent_0.9.1_linux_amd64.tar.gz", undefined, auth);
         verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
         const extractPath = yield tool_cache.extractTar(downloadPath);
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
