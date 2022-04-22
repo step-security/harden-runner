@@ -1699,6 +1699,39 @@ function printInfo(web_url) {
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(186);
+;// CONCATENATED MODULE: external "node:fs"
+const external_node_fs_namespaceObject = require("node:fs");
+;// CONCATENATED MODULE: ./node_modules/is-docker/index.js
+
+
+let isDockerCached;
+
+function hasDockerEnv() {
+	try {
+		external_node_fs_namespaceObject.statSync('/.dockerenv');
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+function hasDockerCGroup() {
+	try {
+		return external_node_fs_namespaceObject.readFileSync('/proc/self/cgroup', 'utf8').includes('docker');
+	} catch {
+		return false;
+	}
+}
+
+function isDocker() {
+	// TODO: Use `??=` when targeting Node.js 16.
+	if (isDockerCached === undefined) {
+		isDockerCached = hasDockerEnv() || hasDockerCGroup();
+	}
+
+	return isDockerCached;
+}
+
 ;// CONCATENATED MODULE: ./src/index.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -1711,9 +1744,14 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 };
 
 
+
 (() => __awaiter(void 0, void 0, void 0, function* () {
     if (process.platform !== "linux") {
         console.log("Only runs on linux");
+        return;
+    }
+    if (isDocker()) {
+        console.log("StepSecurity Harden Runner does not run inside a Docker container");
         return;
     }
     if (core.getBooleanInput("disable-telemetry") &&

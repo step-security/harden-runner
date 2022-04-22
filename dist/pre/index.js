@@ -6272,11 +6272,44 @@ function verifyChecksum(downloadPath) {
     const checksum = external_crypto_.createHash("sha256")
         .update(fileBuffer)
         .digest("hex"); // checksum of downloaded file
-    const expectedChecksum = "8a8d304cb1e413f0fd2c1dffacefc0d91ba693eee2040f4ea7893ef29f3f10b1"; // checksum for v0.9.1
+    const expectedChecksum = "fe2d9c22b10981aefc694525f2f4529e69bf5c30677e90387c26df7aad3f1b8f"; // checksum for v0.9.2
     if (checksum !== expectedChecksum) {
         core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
     }
     core.debug("Checksum verification passed.");
+}
+
+;// CONCATENATED MODULE: external "node:fs"
+const external_node_fs_namespaceObject = require("node:fs");
+;// CONCATENATED MODULE: ./node_modules/is-docker/index.js
+
+
+let isDockerCached;
+
+function hasDockerEnv() {
+	try {
+		external_node_fs_namespaceObject.statSync('/.dockerenv');
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+function hasDockerCGroup() {
+	try {
+		return external_node_fs_namespaceObject.readFileSync('/proc/self/cgroup', 'utf8').includes('docker');
+	} catch {
+		return false;
+	}
+}
+
+function isDocker() {
+	// TODO: Use `??=` when targeting Node.js 16.
+	if (isDockerCached === undefined) {
+		isDockerCached = hasDockerEnv() || hasDockerCGroup();
+	}
+
+	return isDockerCached;
 }
 
 ;// CONCATENATED MODULE: ./src/setup.ts
@@ -6298,10 +6331,15 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
 (() => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (process.platform !== "linux") {
             console.log("Only runs on linux");
+            return;
+        }
+        if (isDocker()) {
+            console.log("StepSecurity Harden Runner does not run inside a Docker container");
             return;
         }
         var correlation_id = v4();
@@ -6343,7 +6381,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         // Note: to avoid github rate limiting
         let token = core.getInput("token");
         let auth = `token ${token}`;
-        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.9.1/agent_0.9.1_linux_amd64.tar.gz", undefined, auth);
+        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.9.2/agent_0.9.2_linux_amd64.tar.gz", undefined, auth);
         verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
         const extractPath = yield tool_cache.extractTar(downloadPath);
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
