@@ -24,7 +24,7 @@ Check out the [hands-on tutorials](https://github.com/step-security/supply-chain
 
    ```yaml
    steps:
-     - uses: step-security/harden-runner@9b0655f430fba8c7001d4e38f8d4306db5c6e0ab # v1
+     - uses: step-security/harden-runner@34cbc43f0b10c9dda284e663cf43c2ebaf83e956
        with:
          egress-policy: audit
    ```
