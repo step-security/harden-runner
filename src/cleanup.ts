@@ -1,10 +1,17 @@
 import * as fs from "fs";
 import * as cp from "child_process";
 import * as core from "@actions/core";
+import isDocker from "is-docker";
 
 (async () => {
   if (process.platform !== "linux") {
     console.log("Only runs on linux");
+    return;
+  }
+  if (isDocker()) {
+    console.log(
+      "StepSecurity Harden Runner does not run inside a Docker container"
+    );
     return;
   }
 

@@ -7,10 +7,18 @@ import { v4 as uuidv4 } from "uuid";
 import { printInfo } from "./common";
 import * as tc from "@actions/tool-cache";
 import { verifyChecksum } from "./checksum";
+import isDocker from "is-docker";
+
 (async () => {
   try {
     if (process.platform !== "linux") {
       console.log("Only runs on linux");
+      return;
+    }
+    if (isDocker()) {
+      console.log(
+        "StepSecurity Harden Runner does not run inside a Docker container"
+      );
       return;
     }
 
