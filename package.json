@@ -1,7 +1,7 @@
 {
   "name": "step-security-harden-runner",
-  "version": "1.4.0",
-  "description": "Security monitoring for the GitHub-hosted runner",
+  "version": "1.4.2",
+  "description": "Security agent for GitHub-hosted runner to monitor the build process",
   "main": "index.js",
   "scripts": {
     "build": "npm run main && npm run pre && npm run post",
@@ -28,6 +28,7 @@
     "@actions/http-client": "^1.0.11",
     "@actions/tool-cache": "^1.7.1",
     "ansi-regex": ">=5.0.1",
+    "is-docker": "^3.0.0",
     "node-fetch": ">=3.2.0",
     "uuid": "^8.3.2"
   },

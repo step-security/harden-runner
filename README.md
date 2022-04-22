@@ -2,8 +2,8 @@
 
 Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runner (Ubuntu VM) to
 
-1. Monitor the build process,
-2. Prevent exfiltration of credentials, and
+1. Monitor the build process
+2. Prevent exfiltration of credentials
 3. Detect compromised dependencies or build tools
 
 <p align="left">
@@ -12,11 +12,11 @@ Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runne
 
 ## Why
 
-Hijacked dependencies and compromised build tools typically make outbound requests during the build process to exfiltrate data or credentials. There is also a risk that a compromised dependency or build tool may modify source code, dependencies, or artifacts.
+Hijacked dependencies and compromised build tools typically make outbound requests to exfiltrate data or credentials, or may modify source code, dependencies, or artifacts during the build.
 
 Harden-Runner automatically correlates outbound traffic, file modifications, and process activity with each step of a workflow. You can also set a policy to restrict outbound traffic.
 
-Check out the [hands-on tutorials](https://github.com/step-security/supply-chain-goat) to learn how `harden-runner` would have prevented past software supply chain attacks.
+Check out the [hands-on tutorials](https://github.com/step-security/supply-chain-goat) to learn how Harden-Runner would have prevented past supply chain attacks and read this [blog post](https://infosecwriteups.com/detecting-malware-packages-in-github-actions-7b93a9985635) on how Harden-Runner detected malicious packages. 
 
 ## How
 
@@ -62,6 +62,12 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 3. [SLSA Level 1](https://github.com/step-security/harden-runner/discussions/93)
 4. [Cryptographically verify tools run as part of the CI/ CD pipeline](https://github.com/step-security/harden-runner/discussions/94)
 5. [Automatic signing](https://github.com/step-security/harden-runner/discussions/77)
+
+## Limitations
+
+1. Harden-Runner GitHub Action only works for GitHub-hosted runners. Self-hosted runners are not supported. 
+2. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
+3. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. 
 
 ## Testimonials
 

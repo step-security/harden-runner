@@ -1696,9 +1696,44 @@ function printInfo(web_url) {
     console.log("\x1b[32m%s\x1b[0m", "View security insights and recommended policy at:");
     console.log(`${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
 }
+const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
+const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(186);
+;// CONCATENATED MODULE: external "node:fs"
+const external_node_fs_namespaceObject = require("node:fs");
+;// CONCATENATED MODULE: ./node_modules/is-docker/index.js
+
+
+let isDockerCached;
+
+function hasDockerEnv() {
+	try {
+		external_node_fs_namespaceObject.statSync('/.dockerenv');
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+function hasDockerCGroup() {
+	try {
+		return external_node_fs_namespaceObject.readFileSync('/proc/self/cgroup', 'utf8').includes('docker');
+	} catch {
+		return false;
+	}
+}
+
+function isDocker() {
+	// TODO: Use `??=` when targeting Node.js 16.
+	if (isDockerCached === undefined) {
+		isDockerCached = hasDockerEnv() || hasDockerCGroup();
+	}
+
+	return isDockerCached;
+}
+
 ;// CONCATENATED MODULE: ./src/index.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -1711,9 +1746,14 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 };
 
 
+
 (() => __awaiter(void 0, void 0, void 0, function* () {
     if (process.platform !== "linux") {
-        console.log("Only runs on linux");
+        console.log(UBUNTU_MESSAGE);
+        return;
+    }
+    if (isDocker()) {
+        console.log(CONTAINER_MESSAGE);
         return;
     }
     if (core.getBooleanInput("disable-telemetry") &&
