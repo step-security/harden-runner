@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as httpm from "@actions/http-client";
 import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { printInfo } from "./common";
+import * as common from "./common";
 import * as tc from "@actions/tool-cache";
 import { verifyChecksum } from "./checksum";
 import isDocker from "is-docker";
@@ -12,13 +12,11 @@ import isDocker from "is-docker";
 (async () => {
   try {
     if (process.platform !== "linux") {
-      console.log("Only runs on linux");
+      console.log(common.UBUNTU_MESSAGE);
       return;
     }
     if (isDocker()) {
-      console.log(
-        "StepSecurity Harden Runner does not run inside a Docker container"
-      );
+      console.log(common.CONTAINER_MESSAGE);
       return;
     }
 
@@ -84,7 +82,7 @@ import isDocker from "is-docker";
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
 
     if (!confg.disable_telemetry || confg.egress_policy === "audit") {
-      printInfo(web_url);
+      common.printInfo(web_url);
     }
 
     let cmd = "cp",

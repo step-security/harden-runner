@@ -1,16 +1,14 @@
-import { printInfo } from "./common";
+import * as common from "./common";
 import * as core from "@actions/core";
 import isDocker from "is-docker";
 
 (async () => {
   if (process.platform !== "linux") {
-    console.log("Only runs on linux");
+    console.log(common.UBUNTU_MESSAGE);
     return;
   }
   if (isDocker()) {
-    console.log(
-      "StepSecurity Harden Runner does not run inside a Docker container"
-    );
+    console.log(common.CONTAINER_MESSAGE);
     return;
   }
 
@@ -23,6 +21,6 @@ import isDocker from "is-docker";
     );
   } else {
     var web_url = "https://app.stepsecurity.io";
-    printInfo(web_url);
+    common.printInfo(web_url);
   }
 })();
