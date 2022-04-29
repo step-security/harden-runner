@@ -51,7 +51,13 @@ When you use `egress-policy: block` mode, you can also set `disable-telemetry: t
 
 ## Support for private repositories
 
-Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) if you want to use `harden-runner` for `Private` repositories. This App only needs `actions: read` permissions on your repositories. You can install it on selected repositories, or all repositories in your organization.
+Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) if you want to use Harden-Runner GitHub Action for `Private` repositories.  
+
+If you use Harden-Runner GitHub Action in a private repository, the generated insights URL is NOT public. You need to authenticate first to access it for private repository. Only those who have access to the repository can view it.  
+
+This is an example of a non-sensitive private repository in step-security org. You can try it out to see the experience. You will first be asked to authenticate, and then will see a forbidden error message, since you do not have access to the repo: https://app.stepsecurity.io/github/step-security/harden-runner-repro/actions/runs/2236232495. 
+
+[Harden Runner App](https://github.com/marketplace/harden-runner-app) only needs `actions: read` permissions on your repositories. You can install it on selected repositories, or all repositories in your organization. 
 
 ## Discussions
 
