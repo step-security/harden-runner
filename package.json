@@ -1,6 +1,6 @@
 {
   "name": "step-security-harden-runner",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Security agent for GitHub-hosted runner to monitor the build process",
   "main": "index.js",
   "scripts": {

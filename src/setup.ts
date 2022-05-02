@@ -71,7 +71,7 @@ import isDocker from "is-docker";
     let auth = `token ${token}`;
 
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.9.3/agent_0.9.3_linux_amd64.tar.gz",
+      "https://github.com/step-security/agent/releases/download/v0.9.4/agent_0.9.4_linux_amd64.tar.gz",
       undefined,
       auth
     );
