@@ -2,7 +2,7 @@
 
 Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runner (Ubuntu VM) to
 
-1. Monitor the build process
+1. Detect tampering of source code during build
 2. Prevent exfiltration of credentials
 3. Detect compromised dependencies or build tools
 
@@ -14,9 +14,9 @@ Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runne
 
 Hijacked dependencies and compromised build tools typically make outbound requests to exfiltrate data or credentials, or may modify source code, dependencies, or artifacts during the build.
 
-Harden-Runner automatically correlates outbound traffic, file modifications, and process activity with each step of a workflow. You can also set a policy to restrict outbound traffic.
-
-Check out the [hands-on tutorials](https://github.com/step-security/supply-chain-goat) to learn how Harden-Runner would have prevented past supply chain attacks and read this [blog post](https://infosecwriteups.com/detecting-malware-packages-in-github-actions-7b93a9985635) on how Harden-Runner detected malicious packages. 
+Harden-Runner helps you answer these two important questions:
+1. Is source code being overwritten during the build process to inject a backdoor? ([SolarWinds incident scenario](https://github.com/step-security/supply-chain-goat/blob/main/MonitorSourceCode.md))
+2. Are unexpected outbound network calls being made during the workflow? ([Codecov breach](https://github.com/step-security/supply-chain-goat/blob/main/RestrictOutboundTraffic.md), [Dependency confusion](https://github.com/step-security/supply-chain-goat/blob/main/DNSExfiltration.md), [Malicious dependency](https://github.com/step-security/supply-chain-goat/blob/main/CompromisedDependency.md) scenarios)
 
 ## How
 
@@ -35,19 +35,24 @@ Check out the [hands-on tutorials](https://github.com/step-security/supply-chain
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/ActionLog.png" alt="Link in build log" >
 </p>
 
-3. Click on the link ([example link](https://app.stepsecurity.io/github/jauderho/dockerfiles/actions/runs/1736506434)). You will see a process monitor view of what activities happened as part of each step. This currently includes the programs that made outbound calls and did file writes to source code or dependencies.
+3. Click on the link ([example link](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2265028928)). You will see a process monitor view of what activities happened as part of each step. This currently includes the programs that made outbound calls and did file writes to source code or dependencies.
 
 <p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/OutboundCall.png" alt="Insights from harden-runner" >
+  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/OutboundCalls2.png" alt="Insights from harden-runner" >
 </p>
 
-4. Below the insights, you will see the recommended policy. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed.
+4. Below the insights, you will see the recommended policy. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed. When you use `egress-policy: block` mode, you can also set `disable-telemetry: true` to not send telemetry to the StepSecurity API.
 
 <p align="left">
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/RecomPolicy1.png" alt="Policy recommended by harden-runner" >
 </p>
+ 
 
-When you use `egress-policy: block` mode, you can also set `disable-telemetry: true` to not send telemetry to the StepSecurity API.
+5. If outbound network call is made to an endpoint not in the allowed list or if source code is tampered, you will see an annotation in the workflow run.
+
+<p align="left">
+  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/SourceCodeOverwrite.png" alt="Policy recommended by harden-runner" >
+</p>
 
 ## Support for private repositories
 
@@ -64,10 +69,8 @@ This is an example of a non-sensitive private repository in step-security org. Y
 If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions).
 
 1. [Support for private repositories](https://github.com/step-security/harden-runner/discussions/74)
-2. [Generation of accurate SBOM (software bill of materials)](https://github.com/step-security/harden-runner/discussions/75)
-3. [SLSA Level 1](https://github.com/step-security/harden-runner/discussions/93)
-4. [Cryptographically verify tools run as part of the CI/ CD pipeline](https://github.com/step-security/harden-runner/discussions/94)
-5. [Automatic signing](https://github.com/step-security/harden-runner/discussions/77)
+2. [Where should allowed-endpoints be stored?](https://github.com/step-security/harden-runner/discussions/84)
+3. [Cryptographically verify tools run as part of the CI/ CD pipeline](https://github.com/step-security/harden-runner/discussions/94)
 
 ## Limitations
 
