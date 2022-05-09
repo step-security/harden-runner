@@ -58,9 +58,9 @@ Harden-Runner helps you answer these two important questions:
 
 Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) if you want to use Harden-Runner GitHub Action for `Private` repositories.  
 
-If you use Harden-Runner GitHub Action in a private repository, the generated insights URL is NOT public. You need to authenticate first to access it for private repository. Only those who have access to the repository can view it.  
+If you use Harden-Runner GitHub Action in a private repository, the generated insights URL is NOT public. You need to authenticate first to access it for private repository. Only those who have access to the repository can view it. 
 
-This is an example of a non-sensitive private repository in step-security org. You can try it out to see the experience. You will first be asked to authenticate, and then will see a forbidden error message, since you do not have access to the repo: https://app.stepsecurity.io/github/step-security/harden-runner-repro/actions/runs/2236232495. 
+Read this [case study on how Kapiche uses Harden Runner](https://www.stepsecurity.io/case-studies/kapiche/) to improve software supply chain security in their open source and private repositories. 
 
 [Harden Runner App](https://github.com/marketplace/harden-runner-app) only needs `actions: read` permissions on your repositories. You can install it on selected repositories, or all repositories in your organization. 
 
@@ -84,7 +84,7 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 
 > _Harden-Runner strikes an elegant balance between ease-of-use, maintainability, and mitigation that I intend to apply to all of my 300+ npm packages. I look forward to the tool’s improvement over time_ - [Jordan Harband](https://github.com/ljharb), Open Source Maintainer
 
-> _Harden runner from Step security is such a nice solution, it is another piece of the puzzle in helping treat the CI environment like production and solving supply chain security. I look forward to seeing it evolve._ - Cam Parry, Senior Site Reliability Engineer, Kapiche
+> _Harden runner from Step security is such a nice solution, it is another piece of the puzzle in helping treat the CI environment like production and solving supply chain security. I look forward to seeing it evolve._ - Cam Parry, Staff Site Reliability Engineer, Kapiche
 
 ## Workflows using harden-runner
 
