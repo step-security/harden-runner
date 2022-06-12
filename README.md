@@ -1,4 +1,6 @@
-# Security agent for GitHub-hosted runner
+
+# Harden-Runner
+[![harden-runner](images/banner.png)](#)
 
 Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runner (Ubuntu VM) to
 
