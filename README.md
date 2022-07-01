@@ -1,12 +1,14 @@
-
-# Harden-Runner
 [![harden-runner](images/banner.png)](#)
+[![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=harden-runner)
+[![License: Apache 2](https://img.shields.io/badge/License-Apache%202-blue.svg)](https://raw.githubusercontent.com/step-security/harden-runner/main/LICENSE)
+
+---
 
 Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runner (Ubuntu VM) to
 
-1. Detect tampering of source code during build
-2. Prevent exfiltration of credentials
-3. Detect compromised dependencies or build tools
+1. Prevent exfiltration of credentials
+2. Detect compromised dependencies and build tools
+3. Detect tampering of source code during build
 
 <p align="left">
       <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/HardenRunnerGIFV.gif" alt="Demo using GIF" width="1440" >
@@ -14,15 +16,21 @@ Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runne
 
 ## Why
 
-Hijacked dependencies and compromised build tools typically make outbound requests to exfiltrate data or credentials, or may modify source code, dependencies, or artifacts during the build.
+Compromised dependencies and build tools typically make outbound calls to exfiltrate data or credentials, or may modify source code, dependencies, or artifacts during the build.
 
-Harden-Runner helps you answer these two important questions:
-1. Is source code being overwritten during the build process to inject a backdoor? ([SolarWinds incident scenario](https://github.com/step-security/supply-chain-goat/blob/main/MonitorSourceCode.md))
-2. Are unexpected outbound network calls being made during the workflow? ([Codecov breach](https://github.com/step-security/supply-chain-goat/blob/main/RestrictOutboundTraffic.md), [Dependency confusion](https://github.com/step-security/supply-chain-goat/blob/main/DNSExfiltration.md), [Malicious dependency](https://github.com/step-security/supply-chain-goat/blob/main/CompromisedDependency.md) scenarios)
+Harden-Runner GitHub Actions installs a daemon that monitors process, file, and network activity. 
+
+1. Blocks outbound calls that are not in the allowed list to prevent exfiltration of credentials (to prevent [Codecov breach](https://github.com/step-security/supply-chain-goat/blob/main/RestrictOutboundTraffic.md) scenario)
+
+2. Detects if source code is being overwritten during the build process to inject a backdoor (to detect [SolarWinds incident scenario](https://github.com/step-security/supply-chain-goat/blob/main/MonitorSourceCode.md))
+
+3. Detects compromised dependencies that make unexpected outbound network calls (to detect [Dependency confusion](https://github.com/step-security/supply-chain-goat/blob/main/DNSExfiltration.md) and [Malicious dependencies](https://github.com/step-security/supply-chain-goat/blob/main/CompromisedDependency.md))
+
+Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in-github-actions-7b93a9985635) on how Harden-Runner detected malicious packages in the NPM registry. 
 
 ## How
 
-1. Add `step-security/harden-runner` to your GitHub Actions workflow file as the first step in each job. In the pre step, the GitHub Actions installs a daemon that monitors process, file, and network activity.
+1. Add `step-security/harden-runner` to your GitHub Actions workflow file as the first step in each job. 
 
    ```yaml
    steps:
@@ -37,7 +45,7 @@ Harden-Runner helps you answer these two important questions:
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/ActionLog.png" alt="Link in build log" >
 </p>
 
-3. Click on the link ([example link](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2265028928)). You will see a process monitor view of what activities happened as part of each step. This currently includes the programs that made outbound calls and did file writes to source code or dependencies.
+3. Click on the link ([example link](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2265028928)). You will see a process monitor view of what activities happened as part of each step. 
 
 <p align="left">
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/OutboundCalls2.png" alt="Insights from harden-runner" >
@@ -48,7 +56,6 @@ Harden-Runner helps you answer these two important questions:
 <p align="left">
   <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/RecomPolicy1.png" alt="Policy recommended by harden-runner" >
 </p>
- 
 
 5. If outbound network call is made to an endpoint not in the allowed list or if source code is tampered, you will see an annotation in the workflow run.
 
@@ -58,13 +65,15 @@ Harden-Runner helps you answer these two important questions:
 
 ## Support for private repositories
 
-Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) if you want to use Harden-Runner GitHub Action for `Private` repositories.  
+Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) to use Harden-Runner GitHub Action for `Private` repositories.
 
-If you use Harden-Runner GitHub Action in a private repository, the generated insights URL is NOT public. You need to authenticate first to access it for private repository. Only those who have access to the repository can view it. 
+- If you use Harden-Runner GitHub Action in a private repository, the generated insights URL is NOT public. 
+- You need to authenticate first to access insights URL for private repository. Only those who have access to the repository can view it.
+- [Harden Runner App](https://github.com/marketplace/harden-runner-app) only needs `actions: read` permissions on your repositories. 
 
-Read this [case study on how Kapiche uses Harden Runner](https://www.stepsecurity.io/case-studies/kapiche/) to improve software supply chain security in their open source and private repositories. 
+Read this [case study on how Kapiche uses Harden Runner](https://www.stepsecurity.io/case-studies/kapiche/) to improve software supply chain security in their open source and private repositories.
 
-[Harden Runner App](https://github.com/marketplace/harden-runner-app) only needs `actions: read` permissions on your repositories. You can install it on selected repositories, or all repositories in your organization. 
+
 
 ## Discussions
 
@@ -76,7 +85,7 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 
 ## Limitations
 
-1. Harden-Runner GitHub Action only works for GitHub-hosted runners. Self-hosted runners are not supported. 
+1. Harden-Runner GitHub Action only works for GitHub-hosted runners. Self-hosted runners are not supported.
 2. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
 3. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
 
@@ -98,6 +107,13 @@ Some important workflows using harden-runner:
 |3.|[microsoft/msquic](https://github.com/microsoft/msquic/blob/main/.github/workflows/docker-publish.yml)|[Link to insights](https://app.stepsecurity.io/github/microsoft/msquic/actions/runs/1759010243)
 |4.|[ossf/scorecard](https://github.com/ossf/scorecard/blob/main/.github/workflows/codeql-analysis.yml)|[Link to insights](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2006162141)
 |5.|[Automattic/vip-go-mu-plugins](https://github.com/Automattic/vip-go-mu-plugins/blob/master/.github/workflows/e2e.yml)|[Link to insights](https://app.stepsecurity.io/github/Automattic/vip-go-mu-plugins/actions/runs/1758760957)
+
+## How does it work?
+
+Harden-Runner GitHub Action downloads and installs the StepSecurity Agent. 
+- The code to monitor file, process, and network activity is in the Agent. 
+- The agent is written in Go and is open source at https://github.com/step-security/agent
+- The agent's build is reproducible. You can view the steps to reproduce the build [here](http://app.stepsecurity.io/github/step-security/agent/releases/latest). 
 
 ## 1-minute Demo Video
 
