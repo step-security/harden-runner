@@ -25,9 +25,7 @@ Compromised dependencies and build tools typically make outbound calls to exfilt
 Harden-Runner GitHub Actions installs a daemon that monitors process, file, and network activity.
 
 1. Blocks outbound calls that are not in the allowed list to prevent exfiltration of credentials (to prevent [Codecov breach](https://github.com/step-security/supply-chain-goat/blob/main/RestrictOutboundTraffic.md) scenario)
-
 2. Detects if source code is being overwritten during the build process to inject a backdoor (to detect [SolarWinds incident scenario](https://github.com/step-security/supply-chain-goat/blob/main/MonitorSourceCode.md))
-
 3. Detects compromised dependencies that make unexpected outbound network calls (to detect [Dependency confusion](https://github.com/step-security/supply-chain-goat/blob/main/DNSExfiltration.md) and [Malicious dependencies](https://github.com/step-security/supply-chain-goat/blob/main/CompromisedDependency.md))
 
 Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in-github-actions-7b93a9985635) on how Harden-Runner detected malicious packages in the NPM registry.
