@@ -6353,8 +6353,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             printInfo(web_url);
         }
         // TODO: uncomment after checking
-        // cp.execSync("sudo chmod 777 /etc/docker/daemon.json");
-        // persistsDockerRestart()
+        external_child_process_.execSync("sudo chmod 777 /etc/docker/daemon.json");
+        persistsDockerRestart();
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
         external_child_process_.execSync("chmod +x /home/agent/agent");
@@ -6406,10 +6406,10 @@ function sleep(ms) {
 }
 function persistsDockerRestart() {
     const conf = "/etc/docker/daemon.json";
-    let buffer = JSON.parse(readFileSync(conf).toString());
+    let buffer = JSON.parse((0,external_fs_.readFileSync)(conf).toString());
     buffer["live-restore"] = true;
     console.log("Making docker persist restarts");
-    writeFileSync(conf, JSON.stringify(buffer), { flag: "w" });
+    (0,external_fs_.writeFileSync)(conf, JSON.stringify(buffer), { flag: "w" });
 }
 
 })();

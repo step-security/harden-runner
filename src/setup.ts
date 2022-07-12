@@ -82,8 +82,8 @@ import { readFileSync, writeFileSync } from "fs";
       printInfo(web_url);
     }
     // TODO: uncomment after checking
-    // cp.execSync("sudo chmod 777 /etc/docker/daemon.json");
-    // persistsDockerRestart()
+    cp.execSync("sudo chmod 777 /etc/docker/daemon.json");
+    persistsDockerRestart()
 
     let cmd = "cp",
       args = [path.join(extractPath, "agent"), "/home/agent/agent"];
