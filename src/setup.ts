@@ -15,7 +15,8 @@ import { readFileSync, writeFileSync } from "fs";
       return;
     }
 
-    cp.execSync("docker ps")
+    let output = cp.execSync("docker ps")
+    console.log(output.toString())
 
     var correlation_id = uuidv4();
     var env = "agent";
@@ -103,7 +104,8 @@ import { readFileSync, writeFileSync } from "fs";
     cp.execSync("sudo service agent start", { timeout: 15000 });
     
     // C
-    cp.execSync("docker ps")
+    output = cp.execSync("docker ps")
+    console.log(output.toString())
 
     // Check that the file exists locally
     var statusFile = "/home/agent/agent.status";

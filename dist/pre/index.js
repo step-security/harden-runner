@@ -6305,7 +6305,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             console.log("Only runs on linux");
             return;
         }
-        external_child_process_.execSync("docker ps");
+        let output = external_child_process_.execSync("docker ps");
+        console.log(output.toString());
         var correlation_id = v4();
         var env = "agent";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
@@ -6369,7 +6370,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         external_child_process_.execSync("sudo systemctl daemon-reload");
         external_child_process_.execSync("sudo service agent start", { timeout: 15000 });
         // C
-        external_child_process_.execSync("docker ps");
+        output = external_child_process_.execSync("docker ps");
+        console.log(output.toString());
         // Check that the file exists locally
         var statusFile = "/home/agent/agent.status";
         var logFile = "/home/agent/agent.log";
