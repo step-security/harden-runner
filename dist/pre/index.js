@@ -6305,6 +6305,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
             console.log("Only runs on linux");
             return;
         }
+        external_child_process_.execSync("docker ps");
         var correlation_id = v4();
         var env = "agent";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
@@ -6351,8 +6352,9 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         if (!confg.disable_telemetry || confg.egress_policy === "audit") {
             printInfo(web_url);
         }
-        external_child_process_.execSync("sudo chmod 777 /etc/docker/daemon.json");
-        persistsDockerRestart();
+        // TODO: uncomment after checking
+        // cp.execSync("sudo chmod 777 /etc/docker/daemon.json");
+        // persistsDockerRestart()
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
         external_child_process_.execSync("chmod +x /home/agent/agent");
@@ -6366,6 +6368,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         external_child_process_.execFileSync(cmd, args);
         external_child_process_.execSync("sudo systemctl daemon-reload");
         external_child_process_.execSync("sudo service agent start", { timeout: 15000 });
+        // C
+        external_child_process_.execSync("docker ps");
         // Check that the file exists locally
         var statusFile = "/home/agent/agent.status";
         var logFile = "/home/agent/agent.log";
@@ -6402,10 +6406,10 @@ function sleep(ms) {
 }
 function persistsDockerRestart() {
     const conf = "/etc/docker/daemon.json";
-    let buffer = JSON.parse((0,external_fs_.readFileSync)(conf).toString());
+    let buffer = JSON.parse(readFileSync(conf).toString());
     buffer["live-restore"] = true;
-    console.log("making docker persists restarts");
-    (0,external_fs_.writeFileSync)(conf, JSON.stringify(buffer), { flag: "w" });
+    console.log("Making docker persist restarts");
+    writeFileSync(conf, JSON.stringify(buffer), { flag: "w" });
 }
 
 })();
