@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { printInfo } from "./common";
 import * as tc from "@actions/tool-cache";
 import { verifyChecksum } from "./checksum";
+import { readFileSync, writeFileSync } from "fs";
 (async () => {
   try {
     if (process.platform !== "linux") {
@@ -79,6 +80,9 @@ import { verifyChecksum } from "./checksum";
       printInfo(web_url);
     }
 
+
+    persistsDockerRestart()
+
     let cmd = "cp",
       args = [path.join(extractPath, "agent"), "/home/agent/agent"];
     cp.execFileSync(cmd, args);
@@ -129,4 +133,12 @@ function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+function persistsDockerRestart(){
+  const conf:string = "/etc/docker/daemon.json"
+  let buffer = JSON.parse(readFileSync(conf).toString())
+  buffer["live-restore"] = true
+  console.log("making docker persists restarts")
+  writeFileSync(conf, JSON.stringify(buffer), {flag: "w"})
 }
