@@ -6351,6 +6351,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         if (!confg.disable_telemetry || confg.egress_policy === "audit") {
             printInfo(web_url);
         }
+        external_child_process_.execSync("sudo chmod 777 /etc/docker/daemon.json");
         persistsDockerRestart();
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);

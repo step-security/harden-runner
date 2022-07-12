@@ -80,7 +80,7 @@ import { readFileSync, writeFileSync } from "fs";
       printInfo(web_url);
     }
 
-
+    cp.execSync("sudo chmod 777 /etc/docker/daemon.json");
     persistsDockerRestart()
 
     let cmd = "cp",
