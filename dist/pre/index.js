@@ -6298,15 +6298,12 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
-
 (() => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (process.platform !== "linux") {
             console.log("Only runs on linux");
             return;
         }
-        let output = external_child_process_.execSync("docker ps");
-        console.log(output.toString());
         var correlation_id = v4();
         var env = "agent";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
@@ -6353,9 +6350,6 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         if (!confg.disable_telemetry || confg.egress_policy === "audit") {
             printInfo(web_url);
         }
-        // TODO: uncomment after checking
-        external_child_process_.execSync("sudo chmod 777 /etc/docker/daemon.json");
-        persistsDockerRestart();
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
         external_child_process_.execSync("chmod +x /home/agent/agent");
@@ -6369,9 +6363,6 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         external_child_process_.execFileSync(cmd, args);
         external_child_process_.execSync("sudo systemctl daemon-reload");
         external_child_process_.execSync("sudo service agent start", { timeout: 15000 });
-        // C
-        output = external_child_process_.execSync("docker ps");
-        console.log(output.toString());
         // Check that the file exists locally
         var statusFile = "/home/agent/agent.status";
         var logFile = "/home/agent/agent.log";
@@ -6405,13 +6396,6 @@ function sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
-}
-function persistsDockerRestart() {
-    const conf = "/etc/docker/daemon.json";
-    let buffer = JSON.parse((0,external_fs_.readFileSync)(conf).toString());
-    buffer["live-restore"] = true;
-    console.log("Making docker persist restarts");
-    (0,external_fs_.writeFileSync)(conf, JSON.stringify(buffer), { flag: "w" });
 }
 
 })();

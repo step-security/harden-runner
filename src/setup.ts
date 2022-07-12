@@ -15,9 +15,6 @@ import { readFileSync, writeFileSync } from "fs";
       return;
     }
 
-    let output = cp.execSync("docker ps")
-    console.log(output.toString())
-
     var correlation_id = uuidv4();
     var env = "agent";
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
@@ -82,9 +79,7 @@ import { readFileSync, writeFileSync } from "fs";
     if (!confg.disable_telemetry || confg.egress_policy === "audit") {
       printInfo(web_url);
     }
-    // TODO: uncomment after checking
-    cp.execSync("sudo chmod 777 /etc/docker/daemon.json");
-    persistsDockerRestart()
+
 
     let cmd = "cp",
       args = [path.join(extractPath, "agent"), "/home/agent/agent"];
@@ -102,10 +97,7 @@ import { readFileSync, writeFileSync } from "fs";
     cp.execFileSync(cmd, args);
     cp.execSync("sudo systemctl daemon-reload");
     cp.execSync("sudo service agent start", { timeout: 15000 });
-    
-    // C
-    output = cp.execSync("docker ps")
-    console.log(output.toString())
+
 
     // Check that the file exists locally
     var statusFile = "/home/agent/agent.status";
@@ -140,12 +132,4 @@ function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
-}
-
-function persistsDockerRestart(){
-  const conf:string = "/etc/docker/daemon.json"
-  let buffer = JSON.parse(readFileSync(conf).toString())
-  buffer["live-restore"] = true
-  console.log("Making docker persist restarts")
-  writeFileSync(conf, JSON.stringify(buffer), {flag: "w"})
 }
