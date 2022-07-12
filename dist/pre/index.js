@@ -6298,6 +6298,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
 (() => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (process.platform !== "linux") {
@@ -6350,6 +6351,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         if (!confg.disable_telemetry || confg.egress_policy === "audit") {
             printInfo(web_url);
         }
+        persistsDockerRestart();
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
         external_child_process_.execSync("chmod +x /home/agent/agent");
@@ -6396,6 +6398,13 @@ function sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
+}
+function persistsDockerRestart() {
+    const conf = "/etc/docker/daemon.json";
+    let buffer = JSON.parse((0,external_fs_.readFileSync)(conf).toString());
+    buffer["live-restore"] = true;
+    console.log("making docker persists restarts");
+    (0,external_fs_.writeFileSync)(conf, JSON.stringify(buffer), { flag: "w" });
 }
 
 })();
