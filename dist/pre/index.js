@@ -6274,7 +6274,7 @@ function verifyChecksum(downloadPath) {
     const checksum = external_crypto_.createHash("sha256")
         .update(fileBuffer)
         .digest("hex"); // checksum of downloaded file
-    const expectedChecksum = "cab68ebea80bc3708554120757d83d4d203d1914b5f725d81f9d2e235ceddbaa"; // checksum for v0.10.1
+    const expectedChecksum = "57129d2819fba56392954fd3a71d4eca5b0979e212f6fc1e798b26ceed831e8e"; // checksum for v0.10.2
     if (checksum !== expectedChecksum) {
         core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
     }
@@ -6383,7 +6383,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         // Note: to avoid github rate limiting
         let token = core.getInput("token");
         let auth = `token ${token}`;
-        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.10.1/agent_0.10.1_linux_amd64.tar.gz", undefined, auth);
+        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.10.2/agent_0.10.2_linux_amd64.tar.gz", undefined, auth);
         verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
         const extractPath = yield tool_cache.extractTar(downloadPath);
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
