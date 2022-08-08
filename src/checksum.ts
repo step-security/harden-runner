@@ -10,7 +10,7 @@ export function verifyChecksum(downloadPath: string) {
     .digest("hex"); // checksum of downloaded file
 
   const expectedChecksum: string =
-    "1edce693c412a8a1d6a3d72eec2e7af6de384cfa3320b7c051bb0bd260974725"; // checksum for v0.10.0
+    "cab68ebea80bc3708554120757d83d4d203d1914b5f725d81f9d2e235ceddbaa"; // checksum for v0.10.1
 
   if (checksum !== expectedChecksum) {
     core.setFailed(
