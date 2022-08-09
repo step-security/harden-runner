@@ -1,0 +1,19 @@
+name: Recurring INT tests
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */2 * * *' # every other hour
+
+permissions:
+  contents: read
+      
+jobs:
+  int-tests:
+    name: int tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Canary test
+      uses: docker://ghcr.io/step-security/integration-test/int:latest
+      env:
+        PAT: ${{ secrets.PAT }}
+        canary: true
