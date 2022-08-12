@@ -38,7 +38,7 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 
    ```yaml
    steps:
-     - uses: step-security/harden-runner@74b568e8591fbb3115c70f3436a0c6b0909a8504
+     - uses: step-security/harden-runner@dd2c410b088af7c0dc8046f3ac9a8f4148492a95
        with:
          egress-policy: audit
    ```
