@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: step-security/harden-runner@74b568e8591fbb3115c70f3436a0c6b0909a8504
+    - uses: step-security/harden-runner@dd2c410b088af7c0dc8046f3ac9a8f4148492a95
       with:
         allowed-endpoints: 
           api.github.com:443
