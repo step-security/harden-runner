@@ -20,6 +20,9 @@ on:
   schedule:
     - cron: '17 0 * * 2'
 
+permissions:  # added using https://github.com/step-security/secure-workflows
+  contents: read
+
 jobs:
   analyze:
     name: Analyze
@@ -37,12 +40,17 @@ jobs:
         # Learn more about CodeQL language support at https://git.io/codeql-language-support
 
     steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@dd2c410b088af7c0dc8046f3ac9a8f4148492a95
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@d171c3b028d844f2bf14e9fdec0c58114451e4bf
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@bec8c2936a0da74f16c19cedb1e9efb2b53a7e7b
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -53,7 +61,7 @@ jobs:
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
+      uses: github/codeql-action/autobuild@bec8c2936a0da74f16c19cedb1e9efb2b53a7e7b
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 https://git.io/JvXDl
@@ -67,4 +75,4 @@ jobs:
     #   make release
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@bec8c2936a0da74f16c19cedb1e9efb2b53a7e7b
