@@ -30,7 +30,7 @@ jobs:
 
     - uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
     - name: Update the rc tag
-      uses: step-security/publish-action@b438f840875fdcb7d1de4fc3d1d30e86cf6acb5d
+      uses: step-security/publish-action@63abd0d521e21329399edb30e8f577a7ab85443c
       with:
         rc-sha: ${{ env.COMMIT_SHA }}
         rc: true
