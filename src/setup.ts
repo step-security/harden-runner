@@ -8,6 +8,7 @@ import * as common from "./common";
 import * as tc from "@actions/tool-cache";
 import { verifyChecksum } from "./checksum";
 import isDocker from "is-docker";
+import { cacheFile, cacheKey, CompressionMethod, getCacheEntry } from "./cache";
 
 (async () => {
   try {
@@ -35,6 +36,24 @@ import isDocker from "is-docker";
       egress_policy: core.getInput("egress-policy"),
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
     };
+
+    try {
+      const cacheEntry = await getCacheEntry([cacheKey], [cacheFile], {
+        compressionMethod: CompressionMethod.ZstdWithoutLong,
+      });
+      const url = new URL(cacheEntry.archiveLocation);
+      core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
+      confg.allowed_endpoints += ` ${url.hostname}:443`;
+    } catch (exception) {
+      // some exception has occurred.
+      core.info("Unable to fetch cacheURL");
+      if (confg.egress_policy === "block") {
+        core.warning(
+          "Unable to fetch cacheURL switching egress-policy to audit mode"
+        );
+        confg.egress_policy = "audit";
+      }
+    }
 
     if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
       core.setFailed("egress-policy must be either audit or block");
