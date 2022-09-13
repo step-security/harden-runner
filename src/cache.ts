@@ -10,6 +10,7 @@ import * as crypto from 'crypto'
 
 const versionSalt = '1.0'
 export const cacheKey = "harden-runner-cacheKey"
+export const cacheFile = "/home/agent/cache.txt";
 
 function getCacheApiUrl(resource: string): string {
   const baseUrl: string = process.env['ACTIONS_CACHE_URL'] || ''
@@ -81,7 +82,7 @@ export async function getCacheEntry(
 
   const response = await httpClient.getJson<ArtifactCacheEntry>(getCacheApiUrl(resource))
   if (response.statusCode === 204) {
-    return null
+    throw new Error("Request returned 204 status")
   }
   if (!isSuccessStatusCode(response.statusCode)) {
     throw new Error(`Cache service responded with ${response.statusCode}`)
@@ -92,9 +93,6 @@ export async function getCacheEntry(
   if (!cacheDownloadUrl) {
     throw new Error('Cache still be done, but  not found.')
   }
-//   console.log("Cache Download URL: ", cacheDownloadUrl)
-  // console.log(`Cache Result:`)
-  // console.log(JSON.stringify(cacheResult))
 
   return cacheResult
 }
