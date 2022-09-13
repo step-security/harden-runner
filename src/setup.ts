@@ -37,13 +37,13 @@ import { cacheFile, cacheKey, getCacheEntry, CompressionMethod } from "./cache";
         compressionMethod: CompressionMethod.ZstdWithoutLong,
       });
       const url = new URL(cacheEntry.archiveLocation);
-      core.info(`Adding cacheHost: ${url.hostname} to allowed-endpoints`);
+      core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
       confg.allowed_endpoints += ` ${url.hostname}:443`;
     } catch (exception) {
       // some exception has occurred.
       core.info("Unable to fetch cacheURL");
       if (confg.egress_policy === "block") {
-        core.warning("Switching egress-policy to audit mode");
+        core.warning("Unable to fetch cacheURL switching egress-policy to audit mode");
         confg.egress_policy = "audit";
       }
     }
