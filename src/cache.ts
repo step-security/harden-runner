@@ -9,6 +9,7 @@ import * as crypto from 'crypto'
 
 
 const versionSalt = '1.0'
+export const cacheKey = "harden-runner-cacheKey"
 
 function getCacheApiUrl(resource: string): string {
   const baseUrl: string = process.env['ACTIONS_CACHE_URL'] || ''
