@@ -89,9 +89,9 @@ export async function getCacheEntry(
   const cacheResult = response.result
   const cacheDownloadUrl = cacheResult?.archiveLocation
   if (!cacheDownloadUrl) {
-    throw new Error('Cachestill be done, but t not found.')
+    throw new Error('Cache still be done, but  not found.')
   }
-  console.log("Cache Download URL: ", cacheDownloadUrl)
+//   console.log("Cache Download URL: ", cacheDownloadUrl)
   // console.log(`Cache Result:`)
   // console.log(JSON.stringify(cacheResult))
 
