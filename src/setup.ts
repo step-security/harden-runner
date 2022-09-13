@@ -8,6 +8,7 @@ import { printInfo } from "./common";
 import * as tc from "@actions/tool-cache";
 import { verifyChecksum } from "./checksum";
 import { readFileSync, writeFileSync } from "fs";
+import { cacheFile, cacheKey, getCacheEntry, CompressionMethod } from "./cache";
 (async () => {
   try {
     if (process.platform !== "linux") {
@@ -31,14 +32,21 @@ import { readFileSync, writeFileSync } from "fs";
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
     };
 
-    // TODO: 
-    // 1. Fetch cache archiveLocation's domain
-    // 2. If success: add it to allowed_endpoints
-    // 3. If failure: 
-    //      if egress-policy is blocked: change it to audit & log about change and unable to fetch archiveLocation
-    //      if               is audit: log that we are unable to fetch the cache location
-
-
+    try {
+      const cacheEntry = await getCacheEntry([cacheKey], [cacheFile], {
+        compressionMethod: CompressionMethod.ZstdWithoutLong,
+      });
+      const url = new URL(cacheEntry.archiveLocation);
+      core.info(`Adding cacheHost: ${url.hostname} to allowed-endpoints`);
+      confg.allowed_endpoints += ` ${url.hostname}:443`;
+    } catch (exception) {
+      // some exception has occurred.
+      core.info("Unable to fetch cacheURL");
+      if (confg.egress_policy === "block") {
+        core.warning("Switching egress-policy to audit mode");
+        confg.egress_policy = "audit";
+      }
+    }
 
     if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
       core.setFailed("egress-policy must be either audit or block");
@@ -89,7 +97,6 @@ import { readFileSync, writeFileSync } from "fs";
       printInfo(web_url);
     }
 
-
     let cmd = "cp",
       args = [path.join(extractPath, "agent"), "/home/agent/agent"];
     cp.execFileSync(cmd, args);
@@ -106,7 +113,6 @@ import { readFileSync, writeFileSync } from "fs";
     cp.execFileSync(cmd, args);
     cp.execSync("sudo systemctl daemon-reload");
     cp.execSync("sudo service agent start", { timeout: 15000 });
-
 
     // Check that the file exists locally
     var statusFile = "/home/agent/agent.status";
