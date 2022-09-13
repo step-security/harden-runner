@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as cp from "child_process";
 import * as core from "@actions/core";
 import * as cache from "@actions/cache";
-import { cacheKey } from "./cache";
+import { cacheKey, cacheFile } from "./cache";
 import path from "path";
 
 (async () => {
@@ -65,9 +65,11 @@ import path from "path";
   }
 
   // TODO: Log __dirname
-  const cacheResult = await cache.saveCache([`${path.join(__dirname, "cache.txt")}`], cacheKey)
-  console.log(cacheResult)
-
+  const cmd = "sudo";
+  const args = ["cp", path.join(__dirname, "cache.txt"), cacheFile];
+  cp.execFileSync(cmd, args);
+  const cacheResult = await cache.saveCache([cacheFile], cacheKey);
+  console.log(cacheResult);
 })();
 
 function sleep(ms) {
