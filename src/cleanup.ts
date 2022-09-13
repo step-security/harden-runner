@@ -1,6 +1,9 @@
 import * as fs from "fs";
 import * as cp from "child_process";
 import * as core from "@actions/core";
+import * as cache from "@actions/cache";
+import { cacheKey } from "./cache";
+import path from "path";
 
 (async () => {
   if (process.platform !== "linux") {
@@ -60,6 +63,11 @@ import * as core from "@actions/core";
     console.log("Service log:");
     console.log(journalLog);
   }
+
+  // TODO: Log __dirname
+  const cacheResult = await cache.saveCache([`${path.join(__dirname, "cache.txt")}`], cacheKey)
+  console.log(cacheResult)
+
 })();
 
 function sleep(ms) {
