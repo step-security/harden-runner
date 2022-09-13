@@ -31,6 +31,15 @@ import { readFileSync, writeFileSync } from "fs";
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
     };
 
+    // TODO: 
+    // 1. Fetch cache archiveLocation's domain
+    // 2. If success: add it to allowed_endpoints
+    // 3. If failure: 
+    //      if egress-policy is blocked: change it to audit & log about change and unable to fetch archiveLocation
+    //      if               is audit: log that we are unable to fetch the cache location
+
+
+
     if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
       core.setFailed("egress-policy must be either audit or block");
     }
