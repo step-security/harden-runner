@@ -66,15 +66,15 @@ import path from "path";
     var journalLog = cp.execSync("sudo journalctl -u agent.service", {
       encoding: "utf8",
     });
+
     console.log("Service log:");
     console.log(journalLog);
-
-    const cmd = "sudo";
-    const args = ["cp", path.join(__dirname, "cache.txt"), cacheFile];
-    cp.execFileSync(cmd, args);
-    const cacheResult = await cache.saveCache([cacheFile], cacheKey);
-    console.log(cacheResult);
   }
+  const cmd = "sudo";
+  const args = ["cp", path.join(__dirname, "cache.txt"), cacheFile];
+  cp.execFileSync(cmd, args);
+  const cacheResult = await cache.saveCache([cacheFile], cacheKey);
+  console.log(cacheResult);
 })();
 
 function sleep(ms) {
