@@ -61495,11 +61495,16 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         console.log("Service log:");
         console.log(journalLog);
     }
-    const cmd = "sudo";
-    const args = ["cp", external_path_default().join(__dirname, "cache.txt"), cacheFile];
-    external_child_process_.execFileSync(cmd, args);
-    const cacheResult = yield cache.saveCache([cacheFile], cacheKey);
-    console.log(cacheResult);
+    try {
+        const cmd = "sudo";
+        const args = ["cp", external_path_default().join(__dirname, "cache.txt"), cacheFile];
+        external_child_process_.execFileSync(cmd, args);
+        const cacheResult = yield cache.saveCache([cacheFile], cacheKey);
+        console.log(cacheResult);
+    }
+    catch (exception) {
+        console.log(exception);
+    }
 }))();
 function sleep(ms) {
     return new Promise((resolve) => {
