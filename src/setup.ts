@@ -90,7 +90,7 @@ import { cacheFile, cacheKey, CompressionMethod, getCacheEntry } from "./cache";
     let auth = `token ${token}`;
 
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.10.3/agent_0.10.3_linux_amd64.tar.gz",
+      "https://github.com/step-security/agent/releases/download/v0.11.0/agent_0.11.0_linux_amd64.tar.gz",
       undefined,
       auth
     );
