@@ -62,14 +62,13 @@ import path from "path";
     });
   }
 
-  if (!fs.existsSync(doneFile)) {
-    var journalLog = cp.execSync("sudo journalctl -u agent.service", {
-      encoding: "utf8",
-    });
+  // Always log the service log
+  var journalLog = cp.execSync("sudo journalctl -u agent.service", {
+    encoding: "utf8",
+  });
+  console.log("Service log:");
+  console.log(journalLog);
 
-    console.log("Service log:");
-    console.log(journalLog);
-  }
   try {
     const cmd = "sudo";
     const args = ["cp", path.join(__dirname, "cache.txt"), cacheFile];

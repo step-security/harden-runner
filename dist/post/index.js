@@ -61488,13 +61488,12 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
             lib_core.error(line);
         });
     }
-    if (!external_fs_.existsSync(doneFile)) {
-        var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service", {
-            encoding: "utf8",
-        });
-        console.log("Service log:");
-        console.log(journalLog);
-    }
+    // Always log the service log
+    var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service", {
+        encoding: "utf8",
+    });
+    console.log("Service log:");
+    console.log(journalLog);
     try {
         const cmd = "sudo";
         const args = ["cp", external_path_default().join(__dirname, "cache.txt"), cacheFile];
