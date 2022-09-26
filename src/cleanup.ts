@@ -4,7 +4,7 @@ import * as core from "@actions/core";
 import * as common from "./common";
 import isDocker from "is-docker";
 import * as cache from "@actions/cache";
-import { cacheFile, cacheKey } from "./cache";
+import { cacheFile, cacheKey, isValidEvent } from "./cache";
 import path from "path";
 
 (async () => {
@@ -69,14 +69,16 @@ import path from "path";
   console.log("Service log:");
   console.log(journalLog);
 
-  try {
-    const cmd = "sudo";
-    const args = ["cp", path.join(__dirname, "cache.txt"), cacheFile];
-    cp.execFileSync(cmd, args);
-    const cacheResult = await cache.saveCache([cacheFile], cacheKey);
-    console.log(cacheResult);
-  } catch (exception) {
-    console.log(exception);
+  if (isValidEvent()) {
+    try {
+      const cmd = "cp";
+      const args = [path.join(__dirname, "cache.txt"), cacheFile];
+      cp.execFileSync(cmd, args);
+      const cacheResult = await cache.saveCache([cacheFile], cacheKey);
+      console.log(cacheResult);
+    } catch (exception) {
+      console.log(exception);
+    }
   }
 })();
 
