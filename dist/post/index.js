@@ -61421,6 +61421,11 @@ var CompressionMethod;
     CompressionMethod["ZstdWithoutLong"] = "zstd-without-long";
     CompressionMethod["Zstd"] = "zstd";
 })(CompressionMethod || (CompressionMethod = {}));
+// Refer: https://github.com/actions/cache/blob/12681847c623a9274356751fdf0a63576ff3f846/src/utils/actionUtils.ts#L53
+const RefKey = "GITHUB_REF";
+function isValidEvent() {
+    return RefKey in process.env && Boolean(process.env[RefKey]);
+}
 
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(5622);
@@ -61495,15 +61500,17 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         console.log("Service log:");
         console.log(journalLog);
     }
-    try {
-        const cmd = "sudo";
-        const args = ["cp", external_path_default().join(__dirname, "cache.txt"), cacheFile];
-        external_child_process_.execFileSync(cmd, args);
-        const cacheResult = yield cache.saveCache([cacheFile], cacheKey);
-        console.log(cacheResult);
-    }
-    catch (exception) {
-        console.log(exception);
+    if (isValidEvent()) {
+        try {
+            const cmd = "cp";
+            const args = [external_path_default().join(__dirname, "cache.txt"), cacheFile];
+            external_child_process_.execFileSync(cmd, args);
+            const cacheResult = yield cache.saveCache([cacheFile], cacheKey);
+            console.log(cacheResult);
+        }
+        catch (exception) {
+            console.log(exception);
+        }
     }
 }))();
 function sleep(ms) {

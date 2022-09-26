@@ -7780,6 +7780,11 @@ var CompressionMethod;
     CompressionMethod["ZstdWithoutLong"] = "zstd-without-long";
     CompressionMethod["Zstd"] = "zstd";
 })(CompressionMethod || (CompressionMethod = {}));
+// Refer: https://github.com/actions/cache/blob/12681847c623a9274356751fdf0a63576ff3f846/src/utils/actionUtils.ts#L53
+const RefKey = "GITHUB_REF";
+function isValidEvent() {
+    return RefKey in process.env && Boolean(process.env[RefKey]);
+}
 
 ;// CONCATENATED MODULE: ./src/setup.ts
 var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -7826,20 +7831,23 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             egress_policy: core.getInput("egress-policy"),
             disable_telemetry: core.getBooleanInput("disable-telemetry"),
         };
-        try {
-            const cacheEntry = yield getCacheEntry([cacheKey], [cacheFile], {
-                compressionMethod: CompressionMethod.ZstdWithoutLong,
-            });
-            const url = new URL(cacheEntry.archiveLocation);
-            core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
-            confg.allowed_endpoints += ` ${url.hostname}:443`;
-        }
-        catch (exception) {
-            // some exception has occurred.
-            core.info("Unable to fetch cacheURL");
-            if (confg.egress_policy === "block") {
-                core.warning("Unable to fetch cacheURL switching egress-policy to audit mode");
-                confg.egress_policy = "audit";
+        console.log(`Step Security Job Correlation ID: ${correlation_id}`);
+        if (isValidEvent()) {
+            try {
+                const cacheEntry = yield getCacheEntry([cacheKey], [cacheFile], {
+                    compressionMethod: CompressionMethod.ZstdWithoutLong,
+                });
+                const url = new URL(cacheEntry.archiveLocation);
+                core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
+                confg.allowed_endpoints += ` ${url.hostname}:443`;
+            }
+            catch (exception) {
+                // some exception has occurred.
+                core.info("Unable to fetch cacheURL");
+                if (confg.egress_policy === "block") {
+                    core.info("Unable to fetch cacheURL switching egress-policy to audit mode");
+                    confg.egress_policy = "audit";
+                }
             }
         }
         if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
@@ -7870,7 +7878,6 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.10.3/agent_0.10.3_linux_amd64.tar.gz", undefined, auth);
         verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
         const extractPath = yield tool_cache.extractTar(downloadPath);
-        console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         if (!confg.disable_telemetry || confg.egress_policy === "audit") {
             printInfo(web_url);
         }
