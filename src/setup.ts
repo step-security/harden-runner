@@ -37,6 +37,8 @@ import { cacheFile, cacheKey, CompressionMethod, getCacheEntry } from "./cache";
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
     };
 
+    console.log(`Step Security Job Correlation ID: ${correlation_id}`);
+
     try {
       const cacheEntry = await getCacheEntry([cacheKey], [cacheFile], {
         compressionMethod: CompressionMethod.ZstdWithoutLong,
@@ -97,8 +99,6 @@ import { cacheFile, cacheKey, CompressionMethod, getCacheEntry } from "./cache";
 
     verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
     const extractPath = await tc.extractTar(downloadPath);
-
-    console.log(`Step Security Job Correlation ID: ${correlation_id}`);
 
     if (!confg.disable_telemetry || confg.egress_policy === "audit") {
       common.printInfo(web_url);
