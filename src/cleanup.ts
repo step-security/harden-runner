@@ -71,8 +71,8 @@ import path from "path";
     console.log(journalLog);
   }
   try {
-    const cmd = "sudo";
-    const args = ["cp", path.join(__dirname, "cache.txt"), cacheFile];
+    const cmd = "cp";
+    const args = [path.join(__dirname, "cache.txt"), cacheFile];
     cp.execFileSync(cmd, args);
     const cacheResult = await cache.saveCache([cacheFile], cacheKey);
     console.log(cacheResult);
