@@ -114,3 +114,9 @@ export enum CompressionMethod {
   ZstdWithoutLong = "zstd-without-long",
   Zstd = "zstd",
 }
+
+// Refer: https://github.com/actions/cache/blob/12681847c623a9274356751fdf0a63576ff3f846/src/utils/actionUtils.ts#L53
+const RefKey = "GITHUB_REF";
+export function isValidEvent(): boolean {
+  return RefKey in process.env && Boolean(process.env[RefKey]);
+}
