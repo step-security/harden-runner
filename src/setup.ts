@@ -26,6 +26,8 @@ import { cacheFile, cacheKey, CompressionMethod, getCacheEntry } from "./cache";
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
     var web_url = "https://app.stepsecurity.io";
 
+    console.log(`Step Security Job Correlation ID: ${correlation_id}`);
+
     const confg = {
       repo: process.env["GITHUB_REPOSITORY"],
       run_id: process.env["GITHUB_RUN_ID"],
@@ -97,8 +99,6 @@ import { cacheFile, cacheKey, CompressionMethod, getCacheEntry } from "./cache";
 
     verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
     const extractPath = await tc.extractTar(downloadPath);
-
-    console.log(`Step Security Job Correlation ID: ${correlation_id}`);
 
     if (!confg.disable_telemetry || confg.egress_policy === "audit") {
       common.printInfo(web_url);
