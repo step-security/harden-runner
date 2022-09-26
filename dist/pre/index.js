@@ -7845,7 +7845,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                 // some exception has occurred.
                 core.info("Unable to fetch cacheURL");
                 if (confg.egress_policy === "block") {
-                    core.info("Unable to fetch cacheURL switching egress-policy to audit mode");
+                    core.info("Switching egress-policy to audit mode");
                     confg.egress_policy = "audit";
                 }
             }
