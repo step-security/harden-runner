@@ -50,7 +50,7 @@ import { cacheFile, cacheKey, CompressionMethod, getCacheEntry } from "./cache";
       // some exception has occurred.
       core.info("Unable to fetch cacheURL");
       if (confg.egress_policy === "block") {
-        core.warning(
+        core.info(
           "Unable to fetch cacheURL switching egress-policy to audit mode"
         );
         confg.egress_policy = "audit";
