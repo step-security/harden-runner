@@ -38,7 +38,7 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 
    ```yaml
    steps:
-     - uses: step-security/harden-runner@dd2c410b088af7c0dc8046f3ac9a8f4148492a95
+     - uses: step-security/harden-runner@2e205a28d0e1da00c5f53b161f4067b052c61f34
        with:
          egress-policy: audit
    ```
@@ -89,7 +89,8 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 
 1. Harden-Runner GitHub Action only works for GitHub-hosted runners. Self-hosted runners are not supported.
 2. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
-3. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
+3. Detecting overwriting of source code only checks for a subset of file extensions right now. These files extensions are ".c", ".cpp", ".cs", ".go", ".java". We will be adding more extensions and options around detecting overwriting of source code in future releases. 
+4. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
 
 ## Testimonials
 
