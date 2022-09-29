@@ -8,6 +8,13 @@ import * as common from "./common";
 import * as tc from "@actions/tool-cache";
 import { verifyChecksum } from "./checksum";
 import isDocker from "is-docker";
+import {
+  cacheFile,
+  cacheKey,
+  CompressionMethod,
+  getCacheEntry,
+  isValidEvent,
+} from "./cache";
 
 (async () => {
   try {
@@ -25,6 +32,8 @@ import isDocker from "is-docker";
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
     var web_url = "https://app.stepsecurity.io";
 
+    console.log(`Step Security Job Correlation ID: ${correlation_id}`);
+
     const confg = {
       repo: process.env["GITHUB_REPOSITORY"],
       run_id: process.env["GITHUB_RUN_ID"],
@@ -35,6 +44,24 @@ import isDocker from "is-docker";
       egress_policy: core.getInput("egress-policy"),
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
     };
+
+    if (isValidEvent()) {
+      try {
+        const cacheEntry = await getCacheEntry([cacheKey], [cacheFile], {
+          compressionMethod: CompressionMethod.ZstdWithoutLong,
+        });
+        const url = new URL(cacheEntry.archiveLocation);
+        core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
+        confg.allowed_endpoints += ` ${url.hostname}:443`;
+      } catch (exception) {
+        // some exception has occurred.
+        core.info("Unable to fetch cacheURL");
+        if (confg.egress_policy === "block") {
+          core.info("Switching egress-policy to audit mode");
+          confg.egress_policy = "audit";
+        }
+      }
+    }
 
     if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
       core.setFailed("egress-policy must be either audit or block");
@@ -71,15 +98,13 @@ import isDocker from "is-docker";
     let auth = `token ${token}`;
 
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.10.3/agent_0.10.3_linux_amd64.tar.gz",
+      "https://github.com/step-security/agent/releases/download/v0.11.0/agent_0.11.0_linux_amd64.tar.gz",
       undefined,
       auth
     );
 
     verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
     const extractPath = await tc.extractTar(downloadPath);
-
-    console.log(`Step Security Job Correlation ID: ${correlation_id}`);
 
     if (!confg.disable_telemetry || confg.egress_policy === "audit") {
       common.printInfo(web_url);

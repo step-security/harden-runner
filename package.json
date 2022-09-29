@@ -1,6 +1,6 @@
 {
   "name": "step-security-harden-runner",
-  "version": "1.4.3",
+  "version": "1.5.0",
   "description": "Security agent for GitHub-hosted runner to monitor the build process",
   "main": "index.js",
   "scripts": {
@@ -22,10 +22,11 @@
   },
   "homepage": "https://github.com/step-security/harden-runner#readme",
   "dependencies": {
+    "@actions/cache": "^3.0.4",
     "@actions/core": "^1.5.0",
     "@actions/exec": "^1.1.0",
     "@actions/github": "^5.0.0",
-    "@actions/http-client": "^1.0.11",
+    "@actions/http-client": "^2.0.1",
     "@actions/tool-cache": "^1.7.1",
     "ansi-regex": ">=5.0.1",
     "is-docker": "^3.0.0",
