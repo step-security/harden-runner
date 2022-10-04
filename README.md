@@ -4,6 +4,7 @@
 </picture>
 
 [![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=harden-runner)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/step-security/harden-runner/badge)](https://api.securityscorecards.dev/projects/github.com/step-security/harden-runner)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://raw.githubusercontent.com/step-security/harden-runner/main/LICENSE)
 
 ---
@@ -24,11 +25,11 @@ Compromised dependencies and build tools typically make outbound calls to exfilt
 
 Harden-Runner GitHub Actions installs a daemon that monitors process, file, and network activity to:
 
-| |Countermeasure |Threat|
-|--|----------|----------------|
-|1.| Block outbound calls that are not in the allowed list to prevent exfiltration of credentials |To prevent [Codecov breach](https://github.com/step-security/supply-chain-goat/blob/main/RestrictOutboundTraffic.md) scenario|
-|2.| Detect if source code is being overwritten during the build process to inject a backdoor | To detect [SolarWinds incident scenario](https://github.com/step-security/supply-chain-goat/blob/main/MonitorSourceCode.md)|
-|3.| Detect compromised dependencies that make unexpected outbound network calls | To detect [Dependency confusion](https://github.com/step-security/supply-chain-goat/blob/main/DNSExfiltration.md) and [Malicious dependencies](https://github.com/step-security/supply-chain-goat/blob/main/CompromisedDependency.md)
+|     | Countermeasure                                                                               | Threat                                                                                                                                                                                                                                |
+| --- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.  | Block outbound calls that are not in the allowed list to prevent exfiltration of credentials | To prevent [Codecov breach](https://github.com/step-security/supply-chain-goat/blob/main/RestrictOutboundTraffic.md) scenario                                                                                                         |
+| 2.  | Detect if source code is being overwritten during the build process to inject a backdoor     | To detect [SolarWinds incident scenario](https://github.com/step-security/supply-chain-goat/blob/main/MonitorSourceCode.md)                                                                                                           |
+| 3.  | Detect compromised dependencies that make unexpected outbound network calls                  | To detect [Dependency confusion](https://github.com/step-security/supply-chain-goat/blob/main/DNSExfiltration.md) and [Malicious dependencies](https://github.com/step-security/supply-chain-goat/blob/main/CompromisedDependency.md) |
 
 Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in-github-actions-7b93a9985635) on how Harden-Runner detected malicious packages in the NPM registry.
 
@@ -89,7 +90,7 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 
 1. Harden-Runner GitHub Action only works for GitHub-hosted runners. Self-hosted runners are not supported.
 2. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
-3. Detecting overwriting of source code only checks for a subset of file extensions right now. These files extensions are ".c", ".cpp", ".cs", ".go", ".java". We will be adding more extensions and options around detecting overwriting of source code in future releases. 
+3. Detecting overwriting of source code only checks for a subset of file extensions right now. These files extensions are ".c", ".cpp", ".cs", ".go", ".java". We will be adding more extensions and options around detecting overwriting of source code in future releases.
 4. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
 
 ## Testimonials
