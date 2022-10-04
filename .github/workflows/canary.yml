@@ -28,7 +28,7 @@ jobs:
           api.github.com:443
           github.com:443
 
-    - uses: actions/checkout@629c2de402a417ea7690ca6ce3f33229e27606a5 # v2
+    - uses: actions/checkout@6a84743051be17cee477b0a26bd866b5dba996e4 # v2
     - name: Update the rc tag
       uses: step-security/publish-action@b438f840875fdcb7d1de4fc3d1d30e86cf6acb5d
       with:
