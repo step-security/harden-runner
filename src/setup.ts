@@ -27,8 +27,8 @@ import * as httpm from "@actions/http-client";
       api_url: api_url,
       allowed_endpoints: core.getInput("allowed-endpoints"),
       egress_policy: core.getInput("egress-policy"),
-      disable_sudo: core.getInput("disable-sudo"),
-      disable_file_monitoring: core.getInput("disable-file-monitoring"),
+      disable_sudo: core.getBooleanInput("disable-sudo"),
+      disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
       private: context.payload.repository.private,
     };
 
