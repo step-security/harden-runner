@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import { context } from "@actions/github/lib/utils";
+import { context } from "@actions/github";
 import * as cp from "child_process";
 import * as fs from "fs";
 import * as https from "https";
@@ -27,6 +27,9 @@ import * as httpm from "@actions/http-client";
       api_url: api_url,
       allowed_endpoints: core.getInput("allowed-endpoints"),
       egress_policy: core.getInput("egress-policy"),
+      disable_sudo: core.getInput("disable-sudo"),
+      disable_file_monitoring: core.getInput("disable-file-monitoring"),
+      private: context.payload.repository.private,
     };
 
     let _http = new httpm.HttpClient();
