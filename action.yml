@@ -16,6 +16,14 @@ inputs:
     description: "Disable sending telemetry to StepSecurity API, can be set to true or false. This can only be set to true when egress-policy is set to block"
     required: false
     default: "false"
+  disable-sudo:
+    description: "Disable sudo access for the runner account"
+    required: false
+    default: "false"
+  disable-file-monitoring:
+    description: "Disable file monitoring"
+    required: false
+    default: "false"
 branding:
   icon: "check-square"
   color: "green"
