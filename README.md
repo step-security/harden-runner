@@ -1,11 +1,17 @@
+<p align="center">
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="images/banner.png" width="400">
   <img src="images/banner.png" width="400">
 </picture>
+</p>
+
+<div align="center">
 
 [![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=harden-runner)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/step-security/harden-runner/badge)](https://api.securityscorecards.dev/projects/github.com/step-security/harden-runner)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://raw.githubusercontent.com/step-security/harden-runner/main/LICENSE)
+
+</div>
 
 ---
 
