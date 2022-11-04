@@ -22,7 +22,7 @@ Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runne
 3. Detect tampering of source code during build
 
 <p align="left">
-      <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/HardenRunnerGIFV.gif" alt="Demo using GIF" >
+      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/patch-2/images/harden-runner/HardenRunnerGIFV.gif" alt="Demo using GIF" >
     </p>
 
 ## Why
