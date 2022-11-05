@@ -22,7 +22,7 @@ Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runne
 3. Detect tampering of source code during build
 
 <p align="left">
-      <img src="https://github.com/arjundashrath/supply-chain-goat/blob/patch-2/images/harden-runner/HardenRunnerGIFV.gif" alt="Demo using GIF" >
+      <img src="images/demo.gif" alt="Demo using GIF" >
     </p>
 
 ## Why
@@ -53,28 +53,71 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 2. In the workflow logs, you will see a link to security insights and recommendations.
 
 <p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/ActionLog.png" alt="Link in build log" >
+  <img src="images/ActionLog.png" alt="Link in build log" >
 </p>
 
-3. Click on the link ([example link](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2265028928)). You will see a process monitor view of what activities happened as part of each step.
+3. Click on the link ([example link](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2265028928)). You will see a process monitor view of file and network activities correlated with each step of the job.
 
 <p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/OutboundCalls2.png" alt="Insights from harden-runner" >
+  <img src="images/insights.png" alt="Insights from harden-runner" >
 </p>
 
-4. Below the insights, you will see the recommended policy. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed. When you use `egress-policy: block` mode, you can also set `disable-telemetry: true` to not send telemetry to the StepSecurity API.
+3. Below the insights, you will see the recommended policy. Update your workflow file with the recommended policy.
 
 <p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/RecomPolicy1.png" alt="Policy recommended by harden-runner" >
+  <img src="images/policy-recommendation.png" alt="Policy recommended by harden-runner" >
 </p>
 
-5. If outbound network call is made to an endpoint not in the allowed list or if source code is tampered, you will see an annotation in the workflow run.
+## Features at a glance
+
+For details, check out the documentation at https://docs.stepsecurity.io
 
 <p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/SourceCodeOverwrite.png" alt="Policy recommended by harden-runner" >
+  <img src="images/main-screenshot.png" alt="Policy recommended by harden-runner" >
 </p>
+
+### Restrict egress traffic to allowed endpoints
+
+Once allowed endpoints are set in the workflow file,
+
+- Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4).
+- It blocks DNS exfiltration, where attacker tries to send data out using a DNS query, and
+- Blocking outbound traffic using IP tables
+
+<p align="left">
+  <img src="images/block-outbound-call.png" alt="Policy recommended by harden-runner" >
+</p>
+
+### Detect tampering of source code during build
+
+Harden-Runner monitors file writes and can detect if a file is overwritten by a different process.
+
+- All source code files are monitored, which means even changes to IaC files (Kubernetes manifest, Terraform) are detected
+- You can enable notifications to get one-time alert when source code is overwritten
+
+<p align="left">
+  <img src="images/fileoverwrite.png" alt="Policy recommended by harden-runner" >
+</p>
+
+### Run your job without sudo access
+
+GitHub-hosted runner uses passwordless sudo for running jobs.
+
+- With Harden-Runner, you can disable sudo, if you don't need it.
+- If your job does not need sudo access, you see a policy recommendation to disable sudo in the insights page.
+- When you set `disable-sudo` to `true`, the job steps run without sudo access to the Ubuntu VM.
+
+### Get security alerts
+
+Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) to get security alerts.
+
+- Email and Slack notifications are supported
+- Notifications sent when outbound traffic is blocked or source code is overwritten
+- Notifications are not repeated for the same alert for a given workflow.
 
 ## Support for private repositories
+
+Private repositories are supported if they have a commercial license. Check out the [documentation](https://docs.stepsecurity.io/harden-runner/installation/business-enterprise-license) for more details.
 
 Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) to use Harden-Runner GitHub Action for `Private` repositories.
 
@@ -96,8 +139,7 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 
 1. Harden-Runner GitHub Action only works for GitHub-hosted runners. Self-hosted runners are not supported.
 2. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
-3. Detecting overwriting of source code only checks for a subset of file extensions right now. These files extensions are ".c", ".cpp", ".cs", ".go", ".java". We will be adding more extensions and options around detecting overwriting of source code in future releases.
-4. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
+3. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
 
 ## Testimonials
 
@@ -113,7 +155,7 @@ Some important workflows using harden-runner:
 | |Repository |Link to insights|
 |--|----------|----------------|
 |1.|[nvm-sh/nvm](https://github.com/nvm-sh/nvm/blob/master/.github/workflows/lint.yml)|[Link to insights](https://app.stepsecurity.io/github/nvm-sh/nvm/actions/runs/1757959262)|
-|2.|[yannickcr/eslint-plugin-react](https://github.com/yannickcr/eslint-plugin-react/blob/master/.github/workflows/release.yml)|[Link to insights](https://app.stepsecurity.io/github/yannickcr/eslint-plugin-react/actions/runs/1930818585)
+|2.|[jsx-eslint/eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react/blob/master/.github/workflows/release.yml)|[Link to insights](https://app.stepsecurity.io/github/yannickcr/eslint-plugin-react/actions/runs/1930818585)
 |3.|[microsoft/msquic](https://github.com/microsoft/msquic/blob/main/.github/workflows/docker-publish.yml)|[Link to insights](https://app.stepsecurity.io/github/microsoft/msquic/actions/runs/1759010243)
 |4.|[ossf/scorecard](https://github.com/ossf/scorecard/blob/main/.github/workflows/codeql-analysis.yml)|[Link to insights](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2006162141)
 |5.|[Automattic/vip-go-mu-plugins](https://github.com/Automattic/vip-go-mu-plugins/blob/master/.github/workflows/e2e.yml)|[Link to insights](https://app.stepsecurity.io/github/Automattic/vip-go-mu-plugins/actions/runs/1758760957)
