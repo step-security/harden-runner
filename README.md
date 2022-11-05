@@ -22,8 +22,8 @@ Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runne
 3. Detect tampering of source code during build
 
 <p align="left">
-      <img src="images/demo.gif" alt="Demo using GIF" >
-    </p>
+  <img src="images/main-screenshot.png" alt="Policy recommended by harden-runner" >
+</p>
 
 ## Why
 
@@ -71,10 +71,6 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 ## Features at a glance
 
 For details, check out the documentation at https://docs.stepsecurity.io
-
-<p align="left">
-  <img src="images/main-screenshot.png" alt="Policy recommended by harden-runner" >
-</p>
 
 ### Restrict egress traffic to allowed endpoints
 
@@ -167,7 +163,3 @@ Harden-Runner GitHub Action downloads and installs the StepSecurity Agent.
 - The code to monitor file, process, and network activity is in the Agent.
 - The agent is written in Go and is open source at https://github.com/step-security/agent
 - The agent's build is reproducible. You can view the steps to reproduce the build [here](http://app.stepsecurity.io/github/step-security/agent/releases/latest).
-
-## 1-minute Demo Video
-
-https://user-images.githubusercontent.com/25015917/156026587-79356450-9b35-4254-9c2e-7f2cc8d81059.mp4
