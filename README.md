@@ -53,19 +53,19 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 2. In the workflow logs, you will see a link to security insights and recommendations.
 
 <p align="left">
-  <img src="images/ActionLog.png" alt="Link in build log" >
+  <img src="images/buildlog.png" alt="Link in build log" >
 </p>
 
 3. Click on the link ([example link](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2265028928)). You will see a process monitor view of file and network activities correlated with each step of the job.
 
 <p align="left">
-  <img src="images/insights.png" alt="Insights from harden-runner" >
+  <img src="images/insights1.png" alt="Insights from harden-runner" >
 </p>
 
 4. Below the insights, you will see the recommended policy. Update your workflow file with the recommended policy.
 
 <p align="left">
-  <img src="images/policy-recommendation.png" alt="Policy recommended by harden-runner" >
+  <img src="images/rec-policy.png" alt="Policy recommended by harden-runner" >
 </p>
 
 ## Features at a glance
