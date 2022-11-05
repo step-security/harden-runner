@@ -18,8 +18,8 @@
 Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runner (Ubuntu VM) to
 
 1. Prevent exfiltration of credentials
-2. Detect compromised dependencies and build tools
-3. Detect tampering of source code during build
+2. Detect tampering of source code during build
+3. Detect compromised dependencies and build tools
 
 <p align="left">
   <img src="images/main-screenshot.png" alt="Policy recommended by harden-runner" >
@@ -27,7 +27,7 @@ Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runne
 
 ## Why
 
-Compromised dependencies and build tools typically make outbound calls to exfiltrate data or credentials, or may tamper source code, dependencies, or artifacts during the build.
+Compromised dependencies and build tools typically make outbound calls to exfiltrate credentials, or may tamper source code, dependencies, or artifacts during the build.
 
 Harden-Runner GitHub Actions installs a daemon that monitors process, file, and network activity to:
 
@@ -62,7 +62,7 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
   <img src="images/insights.png" alt="Insights from harden-runner" >
 </p>
 
-3. Below the insights, you will see the recommended policy. Update your workflow file with the recommended policy.
+4. Below the insights, you will see the recommended policy. Update your workflow file with the recommended policy.
 
 <p align="left">
   <img src="images/policy-recommendation.png" alt="Policy recommended by harden-runner" >
@@ -77,8 +77,8 @@ For details, check out the documentation at https://docs.stepsecurity.io
 Once allowed endpoints are set in the workflow file,
 
 - Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4).
-- It blocks DNS exfiltration, where attacker tries to send data out using a DNS query, and
-- Blocking outbound traffic using IP tables
+- It blocks DNS exfiltration, where attacker tries to send data out using DNS resolution
+- Blocks outbound traffic using IP tables
 
 <p align="left">
   <img src="images/block-outbound-call.png" alt="Policy recommended by harden-runner" >
@@ -86,8 +86,9 @@ Once allowed endpoints are set in the workflow file,
 
 ### Detect tampering of source code during build
 
-Harden-Runner monitors file writes and can detect if a file is overwritten by a different process.
+Harden-Runner monitors file writes and can detect if a file is overwritten.
 
+- Source code overwrite is not expected in a release build
 - All source code files are monitored, which means even changes to IaC files (Kubernetes manifest, Terraform) are detected
 - You can enable notifications to get one-time alert when source code is overwritten
 
@@ -99,17 +100,18 @@ Harden-Runner monitors file writes and can detect if a file is overwritten by a 
 
 GitHub-hosted runner uses passwordless sudo for running jobs.
 
-- With Harden-Runner, you can disable sudo, if you don't need it.
-- If your job does not need sudo access, you see a policy recommendation to disable sudo in the insights page.
-- When you set `disable-sudo` to `true`, the job steps run without sudo access to the Ubuntu VM.
+- This means compromised build tools or dependencies can install attack tools
+- If your job does not need sudo access, you see a policy
+  recommendation to disable sudo in the insights page
+- When you set `disable-sudo` to `true`, the job steps run without sudo access to the Ubuntu VM
 
 ### Get security alerts
 
 Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) to get security alerts.
 
 - Email and Slack notifications are supported
-- Notifications sent when outbound traffic is blocked or source code is overwritten
-- Notifications are not repeated for the same alert for a given workflow.
+- Notifications are sent when outbound traffic is blocked or source code is overwritten
+- Notifications are not repeated for the same alert for a given workflow
 
 ## Support for private repositories
 
@@ -162,4 +164,4 @@ Harden-Runner GitHub Action downloads and installs the StepSecurity Agent.
 
 - The code to monitor file, process, and network activity is in the Agent.
 - The agent is written in Go and is open source at https://github.com/step-security/agent
-- The agent's build is reproducible. You can view the steps to reproduce the build [here](http://app.stepsecurity.io/github/step-security/agent/releases/latest).
+- The agent's build is reproducible. You can view the steps to reproduce the build [here](http://app.stepsecurity.io/github/step-security/agent/releases/latest)
