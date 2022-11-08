@@ -21,7 +21,7 @@ Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runne
 2. Detect tampering of source code during build
 3. Detect compromised dependencies and build tools
 
-<p align="left">
+<p align="center">
   <img src="images/main-screenshot.png" alt="Policy recommended by harden-runner" >
 </p>
 
@@ -33,9 +33,9 @@ Harden-Runner GitHub Actions installs a daemon that monitors process, file, and 
 
 |     | Countermeasure                                                                               | Threat                                                                                                                                                                                                                                |
 | --- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.  | Block outbound calls that are not in the allowed list to prevent exfiltration of credentials | To prevent [Codecov breach](https://github.com/step-security/supply-chain-goat/blob/main/RestrictOutboundTraffic.md) scenario                                                                                                         |
-| 2.  | Detect if source code is being overwritten during the build process to inject a backdoor     | To detect [SolarWinds incident scenario](https://github.com/step-security/supply-chain-goat/blob/main/MonitorSourceCode.md)                                                                                                           |
-| 3.  | Detect compromised dependencies that make unexpected outbound network calls                  | To detect [Dependency confusion](https://github.com/step-security/supply-chain-goat/blob/main/DNSExfiltration.md) and [Malicious dependencies](https://github.com/step-security/supply-chain-goat/blob/main/CompromisedDependency.md) |
+| 1.  | Block outbound calls that are not in the allowed list to prevent exfiltration of credentials | To prevent [Codecov breach](https://github.com/step-security/attack-simulator/blob/main/docs/RestrictOutboundTraffic.md) scenario                                                                                                         |
+| 2.  | Detect if source code is being overwritten during the build process to inject a backdoor     | To detect [SolarWinds incident scenario](https://github.com/step-security/attack-simulator/blob/main/docs/MonitorSourceCode.md)                                                                                                           |
+| 3.  | Detect compromised dependencies that make unexpected outbound network calls                  | To detect [Dependency confusion](https://github.com/step-security/attack-simulator/blob/main/docs/DNSExfiltration.md) and [Malicious dependencies](https://github.com/step-security/attack-simulator/blob/main/docs/CompromisedDependency.md) |
 
 Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in-github-actions-7b93a9985635) on how Harden-Runner detected malicious packages in the NPM registry.
 
@@ -52,21 +52,21 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 
 2. In the workflow logs, you will see a link to security insights and recommendations.
 
-<p align="left">
-  <img src="images/buildlog.png" alt="Link in build log" >
-</p>
+    <p align="left">
+      <img src="images/buildlog1.png" alt="Link in build log" >
+    </p>
 
 3. Click on the link ([example link](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2265028928)). You will see a process monitor view of file and network activities correlated with each step of the job.
 
-<p align="left">
-  <img src="images/insights1.png" alt="Insights from harden-runner" >
-</p>
+    <p align="left">
+      <img src="images/insights2.png" alt="Insights from harden-runner" >
+    </p>
 
 4. Below the insights, you will see the recommended policy. Update your workflow file with the recommended policy.
 
-<p align="left">
-  <img src="images/rec-policy.png" alt="Policy recommended by harden-runner" >
-</p>
+    <p align="left">
+      <img src="images/rec-policy1.png" alt="Policy recommended by harden-runner" >
+    </p>
 
 ## Features at a glance
 
