@@ -1,35 +1,42 @@
+<p align="center">
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="images/banner.png" width="400">
   <img src="images/banner.png" width="400">
 </picture>
+</p>
+
+<div align="center">
 
 [![Maintained by stepsecurity.io](https://img.shields.io/badge/maintained%20by-stepsecurity.io-blueviolet)](https://stepsecurity.io/?utm_source=github&utm_medium=organic_oss&utm_campaign=harden-runner)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/step-security/harden-runner/badge)](https://api.securityscorecards.dev/projects/github.com/step-security/harden-runner)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://raw.githubusercontent.com/step-security/harden-runner/main/LICENSE)
+
+</div>
 
 ---
 
 Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runner (Ubuntu VM) to
 
 1. Prevent exfiltration of credentials
-2. Detect compromised dependencies and build tools
-3. Detect tampering of source code during build
+2. Detect tampering of source code during build
+3. Detect compromised dependencies and build tools
+
 
 <p align="left">
-      <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/HardenRunnerGIFV.gif" alt="Demo using GIF" >
-    </p>
+  <img src="images/main-screenshot1.png" alt="Policy recommended by harden-runner">
+</p>
 
 ## Why
 
-Compromised dependencies and build tools typically make outbound calls to exfiltrate data or credentials, or may tamper source code, dependencies, or artifacts during the build.
+Compromised dependencies and build tools typically make outbound calls to exfiltrate credentials, or may tamper source code, dependencies, or artifacts during the build.
 
 Harden-Runner GitHub Actions installs a daemon that monitors process, file, and network activity to:
 
 |     | Countermeasure                                                                               | Threat                                                                                                                                                                                                                                |
 | --- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.  | Block outbound calls that are not in the allowed list to prevent exfiltration of credentials | To prevent [Codecov breach](https://github.com/step-security/supply-chain-goat/blob/main/RestrictOutboundTraffic.md) scenario                                                                                                         |
-| 2.  | Detect if source code is being overwritten during the build process to inject a backdoor     | To detect [SolarWinds incident scenario](https://github.com/step-security/supply-chain-goat/blob/main/MonitorSourceCode.md)                                                                                                           |
-| 3.  | Detect compromised dependencies that make unexpected outbound network calls                  | To detect [Dependency confusion](https://github.com/step-security/supply-chain-goat/blob/main/DNSExfiltration.md) and [Malicious dependencies](https://github.com/step-security/supply-chain-goat/blob/main/CompromisedDependency.md) |
+| 1.  | Block outbound calls that are not in the allowed list to prevent exfiltration of credentials | To prevent [Codecov breach](https://github.com/step-security/attack-simulator/blob/main/docs/RestrictOutboundTraffic.md) scenario                                                                                                         |
+| 2.  | Detect if source code is being overwritten during the build process to inject a backdoor     | To detect [SolarWinds incident scenario](https://github.com/step-security/attack-simulator/blob/main/docs/MonitorSourceCode.md)                                                                                                           |
+| 3.  | Detect compromised dependencies that make unexpected outbound network calls                  | To detect [Dependency confusion](https://github.com/step-security/attack-simulator/blob/main/docs/DNSExfiltration.md) and [Malicious dependencies](https://github.com/step-security/attack-simulator/blob/main/docs/CompromisedDependency.md) |
 
 Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in-github-actions-7b93a9985635) on how Harden-Runner detected malicious packages in the NPM registry.
 
@@ -46,29 +53,70 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 
 2. In the workflow logs, you will see a link to security insights and recommendations.
 
+    <p align="left">
+      <img src="images/buildlog1.png" alt="Link in build log" >
+    </p>
+
+3. Click on the link ([example link](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2265028928)). You will see a process monitor view of file and network activities correlated with each step of the job.
+
+    <p align="left">
+      <img src="images/insights2.png" alt="Insights from harden-runner" >
+    </p>
+
+4. Below the insights, you will see the recommended policy. Update your workflow file with the recommended policy.
+
+    <p align="left">
+      <img src="images/rec-policy1.png" alt="Policy recommended by harden-runner" >
+    </p>
+
+## Features at a glance
+
+For details, check out the documentation at https://docs.stepsecurity.io
+
+### Restrict egress traffic to allowed endpoints
+
+Once allowed endpoints are set in the workflow file,
+
+- Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4).
+- It blocks DNS exfiltration, where attacker tries to send data out using DNS resolution
+- Blocks outbound traffic using IP tables
+
 <p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/ActionLog.png" alt="Link in build log" >
+  <img src="images/block-outbound-call.png" alt="Policy recommended by harden-runner" >
 </p>
 
-3. Click on the link ([example link](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2265028928)). You will see a process monitor view of what activities happened as part of each step.
+### Detect tampering of source code during build
+
+Harden-Runner monitors file writes and can detect if a file is overwritten.
+
+- Source code overwrite is not expected in a release build
+- All source code files are monitored, which means even changes to IaC files (Kubernetes manifest, Terraform) are detected
+- You can enable notifications to get one-time alert when source code is overwritten
 
 <p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/OutboundCalls2.png" alt="Insights from harden-runner" >
+  <img src="images/fileoverwrite.png" alt="Policy recommended by harden-runner" >
 </p>
 
-4. Below the insights, you will see the recommended policy. Add the recommended outbound endpoints to your workflow file, and only traffic to these endpoints will be allowed. When you use `egress-policy: block` mode, you can also set `disable-telemetry: true` to not send telemetry to the StepSecurity API.
+### Run your job without sudo access
 
-<p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/RecomPolicy1.png" alt="Policy recommended by harden-runner" >
-</p>
+GitHub-hosted runner uses passwordless sudo for running jobs.
 
-5. If outbound network call is made to an endpoint not in the allowed list or if source code is tampered, you will see an annotation in the workflow run.
+- This means compromised build tools or dependencies can install attack tools
+- If your job does not need sudo access, you see a policy
+  recommendation to disable sudo in the insights page
+- When you set `disable-sudo` to `true`, the job steps run without sudo access to the Ubuntu VM
 
-<p align="left">
-  <img src="https://github.com/step-security/supply-chain-goat/blob/main/images/harden-runner/SourceCodeOverwrite.png" alt="Policy recommended by harden-runner" >
-</p>
+### Get security alerts
+
+Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) to get security alerts.
+
+- Email and Slack notifications are supported
+- Notifications are sent when outbound traffic is blocked or source code is overwritten
+- Notifications are not repeated for the same alert for a given workflow
 
 ## Support for private repositories
+
+Private repositories are supported if they have a commercial license. Check out the [documentation](https://docs.stepsecurity.io/harden-runner/installation/business-enterprise-license) for more details.
 
 Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) to use Harden-Runner GitHub Action for `Private` repositories.
 
@@ -90,8 +138,7 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 
 1. Harden-Runner GitHub Action only works for GitHub-hosted runners. Self-hosted runners are not supported.
 2. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
-3. Detecting overwriting of source code only checks for a subset of file extensions right now. These files extensions are ".c", ".cpp", ".cs", ".go", ".java". We will be adding more extensions and options around detecting overwriting of source code in future releases.
-4. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
+3. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
 
 ## Testimonials
 
@@ -107,7 +154,7 @@ Some important workflows using harden-runner:
 | |Repository |Link to insights|
 |--|----------|----------------|
 |1.|[nvm-sh/nvm](https://github.com/nvm-sh/nvm/blob/master/.github/workflows/lint.yml)|[Link to insights](https://app.stepsecurity.io/github/nvm-sh/nvm/actions/runs/1757959262)|
-|2.|[yannickcr/eslint-plugin-react](https://github.com/yannickcr/eslint-plugin-react/blob/master/.github/workflows/release.yml)|[Link to insights](https://app.stepsecurity.io/github/yannickcr/eslint-plugin-react/actions/runs/1930818585)
+|2.|[jsx-eslint/eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react/blob/master/.github/workflows/release.yml)|[Link to insights](https://app.stepsecurity.io/github/yannickcr/eslint-plugin-react/actions/runs/1930818585)
 |3.|[microsoft/msquic](https://github.com/microsoft/msquic/blob/main/.github/workflows/docker-publish.yml)|[Link to insights](https://app.stepsecurity.io/github/microsoft/msquic/actions/runs/1759010243)
 |4.|[ossf/scorecard](https://github.com/ossf/scorecard/blob/main/.github/workflows/codeql-analysis.yml)|[Link to insights](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2006162141)
 |5.|[Automattic/vip-go-mu-plugins](https://github.com/Automattic/vip-go-mu-plugins/blob/master/.github/workflows/e2e.yml)|[Link to insights](https://app.stepsecurity.io/github/Automattic/vip-go-mu-plugins/actions/runs/1758760957)
@@ -118,8 +165,4 @@ Harden-Runner GitHub Action downloads and installs the StepSecurity Agent.
 
 - The code to monitor file, process, and network activity is in the Agent.
 - The agent is written in Go and is open source at https://github.com/step-security/agent
-- The agent's build is reproducible. You can view the steps to reproduce the build [here](http://app.stepsecurity.io/github/step-security/agent/releases/latest).
-
-## 1-minute Demo Video
-
-https://user-images.githubusercontent.com/25015917/156026587-79356450-9b35-4254-9c2e-7f2cc8d81059.mp4
+- The agent's build is reproducible. You can view the steps to reproduce the build [here](http://app.stepsecurity.io/github/step-security/agent/releases/latest)
