@@ -62,12 +62,14 @@ import path from "path";
     });
   }
 
-  // Always log the service log
-  var journalLog = cp.execSync("sudo journalctl -u agent.service", {
-    encoding: "utf8",
-  });
-  console.log("Service log:");
-  console.log(journalLog);
+  var disable_sudo = core.getBooleanInput("disable-sudo");
+  if (!disable_sudo) {
+    var journalLog = cp.execSync("sudo journalctl -u agent.service", {
+      encoding: "utf8",
+    });
+    console.log("Service log:");
+    console.log(journalLog);
+  }
 
   if (isValidEvent()) {
     try {
