@@ -8,6 +8,7 @@ import * as common from "./common";
 import * as tc from "@actions/tool-cache";
 import { verifyChecksum } from "./checksum";
 import isDocker from "is-docker";
+import { context } from "@actions/github";
 import {
   cacheFile,
   cacheKey,
@@ -43,6 +44,9 @@ import {
       allowed_endpoints: core.getInput("allowed-endpoints"),
       egress_policy: core.getInput("egress-policy"),
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
+      disable_sudo: core.getBooleanInput("disable-sudo"),
+      disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
+      private: context.payload.repository.private,
     };
 
     if (isValidEvent()) {
@@ -98,7 +102,7 @@ import {
     let auth = `token ${token}`;
 
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.11.0/agent_0.11.0_linux_amd64.tar.gz",
+      "https://github.com/step-security/agent/releases/download/v0.12.1/agent_0.12.1_linux_amd64.tar.gz",
       undefined,
       auth
     );
