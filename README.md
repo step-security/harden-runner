@@ -22,7 +22,7 @@ Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runne
 3. Detect compromised dependencies and build tools
 
 <p align="center">
-  <img src="images/main-screenshot.png" alt="Policy recommended by harden-runner" >
+  <img src="images/main-screenshot.png" alt="Policy recommended by harden-runner" width="800">
 </p>
 
 ## Why
