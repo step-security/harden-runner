@@ -13,6 +13,8 @@
 
 </div>
 
+---
+
 Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runner (Ubuntu VM) to
 
 1. Prevent exfiltration of credentials
