@@ -23,7 +23,7 @@ Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runne
 
 
 <p align="left">
-  <img src="images/main-screenshot.png" alt="Policy recommended by harden-runner" width="700">
+  <img src="images/main-screenshot.png" alt="Policy recommended by harden-runner" width="800">
 </p>
 
 ## Why
