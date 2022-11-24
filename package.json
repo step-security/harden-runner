@@ -8,7 +8,8 @@
     "main": "ncc build src/index.ts --source-map",
     "pre": "ncc build src/setup.ts --source-map -o dist/pre",
     "post": "ncc build src/cleanup.ts --source-map -o dist/post",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -34,16 +35,16 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@types/jest": "^27.0.1",
+    "@types/jest": "^27.5.2",
     "@types/node": "^16.9.0",
     "@typescript-eslint/eslint-plugin": "^4.29.2",
     "@typescript-eslint/parser": "^4.29.2",
     "@vercel/ncc": "^0.30.0",
     "eslint": "^7.32.0",
     "eslint-config-google": "^0.14.0",
-    "jest": ">=27.4.7",
+    "jest": "^29.3.1",
     "jest-junit": ">=13.0.0",
-    "ts-jest": ">=27.1.3",
+    "ts-jest": "^29.0.3",
     "typescript": "^4.3.5"
   }
 }
