@@ -61025,8 +61025,7 @@ function addSummary() {
         if (process.env.STATE_monitorStatusCode === "200") {
             const web_url = "https://app.stepsecurity.io";
             const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
-            yield core.summary
-                .addHeading("StepSecurity Harden-Runner Summary", "3")
+            yield lib_core.summary.addHeading("StepSecurity Harden-Runner Summary", "3")
                 .addLink(":detective: View security insights and recommended policy", insights_url)
                 .write();
         }
@@ -61254,6 +61253,7 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
             console.log(exception);
         }
     }
+    yield addSummary();
 }))();
 function sleep(ms) {
     return new Promise((resolve) => {

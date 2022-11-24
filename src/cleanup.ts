@@ -82,6 +82,7 @@ import path from "path";
       console.log(exception);
     }
   }
+  await common.addSummary();
 })();
 
 function sleep(ms) {
