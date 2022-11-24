@@ -14111,7 +14111,7 @@ var __webpack_exports__ = {};
 __nccwpck_require__.r(__webpack_exports__);
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
-var core = __nccwpck_require__(2186);
+var lib_core = __nccwpck_require__(2186);
 // EXTERNAL MODULE: external "child_process"
 var external_child_process_ = __nccwpck_require__(3129);
 // EXTERNAL MODULE: external "fs"
@@ -14135,9 +14135,31 @@ const stringify = dist.stringify;
 const parse = dist.parse;
 
 ;// CONCATENATED MODULE: ./src/common.ts
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
 function printInfo(web_url) {
     console.log("\x1b[32m%s\x1b[0m", "View security insights and recommended policy at:");
     console.log(`${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
+}
+function addSummary() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (process.env.STATE_monitorStatusCode === "200") {
+            const web_url = "https://app.stepsecurity.io";
+            const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
+            yield core.summary
+                .addHeading("StepSecurity Harden-Runner Summary", "3")
+                .addLink(":detective: View security insights and recommended policy", insights_url)
+                .write();
+        }
+    });
 }
 const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
@@ -14157,9 +14179,9 @@ function verifyChecksum(downloadPath) {
         .digest("hex"); // checksum of downloaded file
     const expectedChecksum = "79f397360470d6e42c73d6c9c5cf485ac9982e56e3e3fdd07f66c59cda4388c8"; // checksum for v0.12.1
     if (checksum !== expectedChecksum) {
-        core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
+        lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
     }
-    core.debug("Checksum verification passed.");
+    lib_core.debug("Checksum verification passed.");
 }
 
 ;// CONCATENATED MODULE: external "node:fs"
@@ -14197,10 +14219,12 @@ function isDocker() {
 
 // EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
 var github = __nccwpck_require__(5438);
+// EXTERNAL MODULE: external "os"
+var external_os_ = __nccwpck_require__(2087);
 // EXTERNAL MODULE: ./node_modules/@actions/http-client/lib/auth.js
 var auth = __nccwpck_require__(5526);
 ;// CONCATENATED MODULE: ./src/cache.ts
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var cache_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -14222,7 +14246,7 @@ function getCacheApiUrl(resource) {
         throw new Error("Cache Service Url not found, unable to restore cache.");
     }
     const url = `${baseUrl}_apis/artifactcache/${resource}`;
-    core.debug(`Resource Url: ${url}`);
+    lib_core.debug(`Resource Url: ${url}`);
     return url;
 }
 function createAcceptHeader(type, apiVersion) {
@@ -14252,7 +14276,7 @@ function getCacheVersion(paths, compressionMethod) {
     return external_crypto_.createHash("sha256").update(components.join("|")).digest("hex");
 }
 function getCacheEntry(keys, paths, options) {
-    return __awaiter(this, void 0, void 0, function* () {
+    return cache_awaiter(this, void 0, void 0, function* () {
         const httpClient = createHttpClient();
         const version = getCacheVersion(paths, options === null || options === void 0 ? void 0 : options.compressionMethod);
         const resource = `cache?keys=${encodeURIComponent(keys.join(","))}&version=${version}`;
@@ -14313,6 +14337,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
 
 
 
+
 (() => setup_awaiter(void 0, void 0, void 0, function* () {
     try {
         if (process.platform !== "linux") {
@@ -14334,11 +14359,11 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             correlation_id: correlation_id,
             working_directory: process.env["GITHUB_WORKSPACE"],
             api_url: api_url,
-            allowed_endpoints: core.getInput("allowed-endpoints"),
-            egress_policy: core.getInput("egress-policy"),
-            disable_telemetry: core.getBooleanInput("disable-telemetry"),
-            disable_sudo: core.getBooleanInput("disable-sudo"),
-            disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
+            allowed_endpoints: lib_core.getInput("allowed-endpoints"),
+            egress_policy: lib_core.getInput("egress-policy"),
+            disable_telemetry: lib_core.getBooleanInput("disable-telemetry"),
+            disable_sudo: lib_core.getBooleanInput("disable-sudo"),
+            disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
             private: github.context.payload.repository.private,
         };
         if (isValidEvent()) {
@@ -14347,32 +14372,37 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                     compressionMethod: CompressionMethod.ZstdWithoutLong,
                 });
                 const url = new URL(cacheEntry.archiveLocation);
-                core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
+                lib_core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
                 confg.allowed_endpoints += ` ${url.hostname}:443`;
             }
             catch (exception) {
                 // some exception has occurred.
-                core.info("Unable to fetch cacheURL");
+                lib_core.info("Unable to fetch cacheURL");
                 if (confg.egress_policy === "block") {
-                    core.info("Switching egress-policy to audit mode");
+                    lib_core.info("Switching egress-policy to audit mode");
                     confg.egress_policy = "audit";
                 }
             }
         }
         if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
-            core.setFailed("egress-policy must be either audit or block");
+            lib_core.setFailed("egress-policy must be either audit or block");
         }
         if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
-            core.warning("egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps.");
+            lib_core.warning("egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps.");
         }
         if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
-            core.setFailed("disable-telemetry must be a boolean value");
+            lib_core.setFailed("disable-telemetry must be a boolean value");
         }
         if (!confg.disable_telemetry) {
             let _http = new lib.HttpClient();
             _http.requestOptions = { socketTimeout: 3 * 1000 };
             try {
-                yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
+                const resp = yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
+                if (resp.message.statusCode === 200) {
+                    external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${resp.message.statusCode}${external_os_.EOL}`, {
+                        encoding: "utf8",
+                    });
+                }
             }
             catch (e) {
                 console.log(`error in connecting to ${api_url}: ${e}`);
@@ -14382,7 +14412,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
         // Note: to avoid github rate limiting
-        let token = core.getInput("token");
+        let token = lib_core.getInput("token");
         let auth = `token ${token}`;
         const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.12.1/agent_0.12.1_linux_amd64.tar.gz", undefined, auth);
         verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
@@ -14429,7 +14459,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         }
     }
     catch (error) {
-        core.setFailed(error.message);
+        lib_core.setFailed(error.message);
     }
 }))();
 function sleep(ms) {
