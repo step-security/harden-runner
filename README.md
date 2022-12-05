@@ -22,8 +22,8 @@ Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runne
 3. Detect compromised dependencies and build tools
 
 
-<p align="left">
-  <img src="images/main-screenshot1.png" alt="Policy recommended by harden-runner">
+<p align="center">
+  <img src="images/demo.gif" alt="Harden Runner demo">
 </p>
 
 ## Why
@@ -72,6 +72,10 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 ## Features at a glance
 
 For details, check out the documentation at https://docs.stepsecurity.io
+
+<p align="left">
+  <img src="images/main-screenshot1.png" alt="Policy recommended by harden-runner">
+</p>
 
 ### Restrict egress traffic to allowed endpoints
 
