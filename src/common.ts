@@ -15,9 +15,13 @@ export async function addSummary() {
     const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
 
     await core.summary
-      .addHeading("StepSecurity Harden-Runner Summary", "3")
+      .addImage(
+        "https://github.com/step-security/harden-runner/raw/main/images/banner.png",
+        "StepSecurity Harden-Runner",
+        { width: "200" }
+      )
       .addLink(
-        ":detective: View security insights and recommended policy",
+        "StepSecurity Harden-Runner security insights and recommended policy",
         insights_url
       )
       .write();
