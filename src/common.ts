@@ -21,7 +21,7 @@ export async function addSummary() {
         { width: "200" }
       )
       .addLink(
-        "StepSecurity Harden-Runner security insights and recommended policy",
+        ":link: View security insights and recommended policy",
         insights_url
       )
       .write();
