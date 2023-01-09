@@ -14155,8 +14155,10 @@ function addSummary() {
             const web_url = "https://app.stepsecurity.io";
             const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
             yield core.summary
+                .addSeparator()
                 .addImage("https://github.com/step-security/harden-runner/raw/main/images/banner.png", "StepSecurity Harden-Runner", { width: "200" })
                 .addLink(":link: View security insights and recommended policy", insights_url)
+                .addSeparator()
                 .write();
         }
     });
