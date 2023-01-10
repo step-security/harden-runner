@@ -22,7 +22,7 @@ export async function addSummary() {
         { width: "200" }
       )
       .addLink(
-        ":link: View security insights and recommended policy",
+        "View security insights and recommended policy",
         insights_url
       )
       .addSeparator()
