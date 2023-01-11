@@ -61255,7 +61255,12 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
             console.log(exception);
         }
     }
-    yield addSummary();
+    try {
+        yield addSummary();
+    }
+    catch (exception) {
+        console.log(exception);
+    }
 }))();
 function sleep(ms) {
     return new Promise((resolve) => {
