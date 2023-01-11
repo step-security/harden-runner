@@ -82,7 +82,12 @@ import path from "path";
       console.log(exception);
     }
   }
-  await common.addSummary();
+
+  try {
+    await common.addSummary();
+  } catch (exception) {
+    console.log(exception);
+  }
 })();
 
 function sleep(ms) {
