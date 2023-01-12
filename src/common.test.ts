@@ -2,8 +2,11 @@ import { addSummary } from "./common";
 import * as cp from "child_process";
 
 test("adding stepsecurity summary in github_summary", async () => {
-  let expected = `<h3>StepSecurity Harden-Runner Summary</h3>
-<a href="https://app.stepsecurity.io/github/step-security/test/actions/runs/12345">:detective: View security insights and recommended policy</a>`;
+  let expected = `<hr>
+<img src="https://github.com/step-security/harden-runner/raw/main/images/banner.png" alt="StepSecurity Harden-Runner" width="200">
+<a href="https://app.stepsecurity.io/github/step-security/test/actions/runs/12345">View security insights and recommended policy</a>
+<hr>
+`;
 
   const github_summary = "/tmp/github_summary";
   cp.execSync(`touch ${github_summary}`);
