@@ -2832,16 +2832,40 @@ var __webpack_exports__ = {};
 // ESM COMPAT FLAG
 __nccwpck_require__.r(__webpack_exports__);
 
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var lib_core = __nccwpck_require__(186);
 ;// CONCATENATED MODULE: ./src/common.ts
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
 function printInfo(web_url) {
     console.log("\x1b[32m%s\x1b[0m", "View security insights and recommended policy at:");
     console.log(`${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
 }
+function addSummary() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (process.env.STATE_monitorStatusCode === "200") {
+            const web_url = "https://app.stepsecurity.io";
+            const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
+            yield core.summary
+                .addSeparator()
+                .addImage("https://github.com/step-security/harden-runner/raw/main/images/banner.png", "StepSecurity Harden-Runner", { width: "200" })
+                .addLink("View security insights and recommended policy", insights_url)
+                .addSeparator()
+                .write();
+        }
+    });
+}
 const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
 
-// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
-var core = __nccwpck_require__(186);
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = require("node:fs");
 ;// CONCATENATED MODULE: ./node_modules/is-docker/index.js
@@ -2876,7 +2900,7 @@ function isDocker() {
 }
 
 ;// CONCATENATED MODULE: ./src/index.ts
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -2888,7 +2912,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
-(() => __awaiter(void 0, void 0, void 0, function* () {
+(() => src_awaiter(void 0, void 0, void 0, function* () {
     if (process.platform !== "linux") {
         console.log(UBUNTU_MESSAGE);
         return;
@@ -2897,8 +2921,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         console.log(CONTAINER_MESSAGE);
         return;
     }
-    if (core.getBooleanInput("disable-telemetry") &&
-        core.getInput("egress-policy") === "block") {
+    if (lib_core.getBooleanInput("disable-telemetry") &&
+        lib_core.getInput("egress-policy") === "block") {
         console.log("Telemetry will not be sent to StepSecurity API as disable-telemetry is set to true");
     }
     else {

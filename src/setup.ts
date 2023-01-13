@@ -9,6 +9,7 @@ import * as tc from "@actions/tool-cache";
 import { verifyChecksum } from "./checksum";
 import isDocker from "is-docker";
 import { context } from "@actions/github";
+import { EOL } from "os";
 import {
   cacheFile,
   cacheKey,
@@ -85,9 +86,19 @@ import {
       let _http = new httpm.HttpClient();
       _http.requestOptions = { socketTimeout: 3 * 1000 };
       try {
-        await _http.get(
+        const resp: httpm.HttpClientResponse = await _http.get(
           `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
         );
+        if(resp.message.statusCode === 200){
+          fs.appendFileSync(
+            process.env.GITHUB_STATE,
+            `monitorStatusCode=${resp.message.statusCode}${EOL}`,
+            {
+              encoding: "utf8",
+            }
+          );
+        }
+        
       } catch (e) {
         console.log(`error in connecting to ${api_url}: ${e}`);
       }
