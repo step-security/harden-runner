@@ -82,26 +82,28 @@ import {
       core.setFailed("disable-telemetry must be a boolean value");
     }
 
-    if (!confg.disable_telemetry) {
-      let _http = new httpm.HttpClient();
-      _http.requestOptions = { socketTimeout: 3 * 1000 };
-      try {
-        const resp: httpm.HttpClientResponse = await _http.get(
-          `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
-        );
-        if(resp.message.statusCode === 200){
-          fs.appendFileSync(
-            process.env.GITHUB_STATE,
-            `monitorStatusCode=${resp.message.statusCode}${EOL}`,
-            {
-              encoding: "utf8",
-            }
-          );
+    let _http = new httpm.HttpClient();
+    _http.requestOptions = { socketTimeout: 3 * 1000 };
+    try {
+      const resp: httpm.HttpClientResponse = await _http.get(
+        `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
+      );
+      
+      let statusCode = resp.message.statusCode;
+      fs.appendFileSync(
+        process.env.GITHUB_STATE,
+        `monitorStatusCode=${statusCode}${EOL}`,
+        {
+          encoding: "utf8",
         }
-        
-      } catch (e) {
-        console.log(`error in connecting to ${api_url}: ${e}`);
+      );
+
+      if (resp.message.statusCode === 503) {
+        core.info("[StepSecurity Harden-Runner]: Unable to install Runner Agent.");
+        return;
       }
+    } catch (e) {
+      console.log(`error in connecting to ${api_url}: ${e}`);
     }
 
     const confgStr = JSON.stringify(confg);
