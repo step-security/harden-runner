@@ -17,10 +17,7 @@ import path from "path";
     return;
   }
 
-  if (process.env.STATE_monitorStatusCode === "503") {
-    core.info("[StepSecurity Harden-Runner]: Nothing for cleanup as agent was not installed.");
-    return;
-  }
+  common.dropOnBadStatus(process.env.STATE_monitorStatusCode,"Nothing to cleanup as StepSecurity Agent was not installed");
 
   fs.writeFileSync(
     "/home/agent/post_event.json",

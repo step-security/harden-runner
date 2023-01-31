@@ -1,4 +1,5 @@
 import * as core from "@actions/core";
+import { exit } from "process";
 export function printInfo(web_url) {
   console.log(
     "\x1b[32m%s\x1b[0m",
@@ -29,6 +30,14 @@ export async function addSummary() {
       .write();
   }
 }
+
+export function dropOnBadStatus(status: Number|string, dropMessage: string) {
+  if (String(status) === "503") {
+    core.info(`[StepSecurity Harden-Runner]: ${dropMessage}`);
+    exit(0);
+  }
+}
+
 export const CONTAINER_MESSAGE =
   "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
 
