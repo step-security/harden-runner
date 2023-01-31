@@ -2834,6 +2834,8 @@ __nccwpck_require__.r(__webpack_exports__);
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var lib_core = __nccwpck_require__(186);
+;// CONCATENATED MODULE: external "process"
+const external_process_namespaceObject = require("process");
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -2844,6 +2846,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 function printInfo(web_url) {
     console.log("\x1b[32m%s\x1b[0m", "View security insights and recommended policy at:");
@@ -2862,6 +2865,12 @@ function addSummary() {
                 .write();
         }
     });
+}
+function dropOnBadStatus(status, dropMessage) {
+    if (String(status) === "503") {
+        lib_core.info(`[StepSecurity Harden-Runner]: ${dropMessage}`);
+        (0,external_process_namespaceObject.exit)(0);
+    }
 }
 const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
@@ -2926,6 +2935,7 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
         console.log("Telemetry will not be sent to StepSecurity API as disable-telemetry is set to true");
     }
     else {
+        dropOnBadStatus(process.env.STATE_monitorStatusCode, "StepSecurity Agent not installed");
         var web_url = "https://app.stepsecurity.io";
         printInfo(web_url);
     }
