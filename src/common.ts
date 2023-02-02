@@ -31,8 +31,10 @@ export async function addSummary() {
   }
 }
 
+const STATUS_DISABLED_HARDEN_RUNNER = "409"; 
+
 export function dropOnBadStatus(status: Number|string, dropMessage: string) {
-  if (String(status) === "503") {
+  if (String(status) === STATUS_DISABLED_HARDEN_RUNNER) {
     core.info(`[StepSecurity Harden-Runner]: ${dropMessage}`);
     exit(0);
   }
