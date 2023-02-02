@@ -61036,8 +61036,9 @@ function addSummary() {
         }
     });
 }
+const STATUS_DISABLED_HARDEN_RUNNER = "409";
 function dropOnBadStatus(status, dropMessage) {
-    if (String(status) === "503") {
+    if (String(status) === STATUS_DISABLED_HARDEN_RUNNER) {
         lib_core.info(`[StepSecurity Harden-Runner]: ${dropMessage}`);
         (0,external_process_namespaceObject.exit)(0);
     }
