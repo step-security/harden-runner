@@ -14163,8 +14163,10 @@ function addSummary() {
         }
     });
 }
+const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
+const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 
 // EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
 var tool_cache = __nccwpck_require__(7784);
@@ -14354,7 +14356,6 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         var env = "agent";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
         var web_url = "https://app.stepsecurity.io";
-        console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         const confg = {
             repo: process.env["GITHUB_REPOSITORY"],
             run_id: process.env["GITHUB_RUN_ID"],
@@ -14368,6 +14369,33 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
             private: github.context.payload.repository.private,
         };
+        if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
+            lib_core.setFailed("egress-policy must be either audit or block");
+        }
+        if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
+            lib_core.warning("egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps.");
+        }
+        if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
+            lib_core.setFailed("disable-telemetry must be a boolean value");
+        }
+        let _http = new lib.HttpClient();
+        let statusCode;
+        _http.requestOptions = { socketTimeout: 3 * 1000 };
+        try {
+            const resp = yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
+            statusCode = resp.message.statusCode; // adding error code to check whether agent is getting installed or not.
+            external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${external_os_.EOL}`, {
+                encoding: "utf8",
+            });
+        }
+        catch (e) {
+            console.log(`error in connecting to ${api_url}: ${e}`);
+        }
+        console.log(`Step Security Job Correlation ID: ${correlation_id}`);
+        if (String(statusCode) === STATUS_HARDEN_RUNNER_UNAVAILABLE) {
+            console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+            return;
+        }
         if (isValidEvent()) {
             try {
                 const cacheEntry = yield getCacheEntry([cacheKey], [cacheFile], {
@@ -14384,30 +14412,6 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                     lib_core.info("Switching egress-policy to audit mode");
                     confg.egress_policy = "audit";
                 }
-            }
-        }
-        if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
-            lib_core.setFailed("egress-policy must be either audit or block");
-        }
-        if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
-            lib_core.warning("egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps.");
-        }
-        if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
-            lib_core.setFailed("disable-telemetry must be a boolean value");
-        }
-        if (!confg.disable_telemetry) {
-            let _http = new lib.HttpClient();
-            _http.requestOptions = { socketTimeout: 3 * 1000 };
-            try {
-                const resp = yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
-                if (resp.message.statusCode === 200) {
-                    external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${resp.message.statusCode}${external_os_.EOL}`, {
-                        encoding: "utf8",
-                    });
-                }
-            }
-            catch (e) {
-                console.log(`error in connecting to ${api_url}: ${e}`);
             }
         }
         const confgStr = JSON.stringify(confg);
