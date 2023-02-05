@@ -17,7 +17,13 @@ import path from "path";
     return;
   }
 
-  common.dropOnBadStatus(process.env.STATE_monitorStatusCode,"Nothing to cleanup as StepSecurity Agent was not installed");
+  if (
+    String(process.env.STATE_monitorStatusCode) ===
+    common.STATUS_HARDEN_RUNNER_UNAVAILABLE
+  ) {
+    console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+    return;
+  }
 
   fs.writeFileSync(
     "/home/agent/post_event.json",

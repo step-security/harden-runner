@@ -61005,8 +61005,6 @@ var external_fs_ = __nccwpck_require__(5747);
 var external_child_process_ = __nccwpck_require__(3129);
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var lib_core = __nccwpck_require__(2186);
-;// CONCATENATED MODULE: external "process"
-const external_process_namespaceObject = require("process");
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -61017,7 +61015,6 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-
 
 function printInfo(web_url) {
     console.log("\x1b[32m%s\x1b[0m", "View security insights and recommended policy at:");
@@ -61036,15 +61033,10 @@ function addSummary() {
         }
     });
 }
-const STATUS_DISABLED_HARDEN_RUNNER = "409";
-function dropOnBadStatus(status, dropMessage) {
-    if (String(status) === STATUS_DISABLED_HARDEN_RUNNER) {
-        lib_core.info(`[StepSecurity Harden-Runner]: ${dropMessage}`);
-        (0,external_process_namespaceObject.exit)(0);
-    }
-}
+const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
+const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = require("node:fs");
@@ -61209,7 +61201,11 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         console.log(CONTAINER_MESSAGE);
         return;
     }
-    dropOnBadStatus(process.env.STATE_monitorStatusCode, "Nothing to cleanup as StepSecurity Agent was not installed");
+    if (String(process.env.STATE_monitorStatusCode) ===
+        STATUS_HARDEN_RUNNER_UNAVAILABLE) {
+        console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+        return;
+    }
     external_fs_.writeFileSync("/home/agent/post_event.json", JSON.stringify({ event: "post" }));
     var doneFile = "/home/agent/done.json";
     var counter = 0;

@@ -13,6 +13,14 @@ import isDocker from "is-docker";
   }
 
   if (
+    String(process.env.STATE_monitorStatusCode) ===
+    common.STATUS_HARDEN_RUNNER_UNAVAILABLE
+  ) {
+    console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+    return;
+  }
+
+  if (
     core.getBooleanInput("disable-telemetry") &&
     core.getInput("egress-policy") === "block"
   ) {
@@ -20,7 +28,6 @@ import isDocker from "is-docker";
       "Telemetry will not be sent to StepSecurity API as disable-telemetry is set to true"
     );
   } else {
-    common.dropOnBadStatus(process.env.STATE_monitorStatusCode,"StepSecurity Agent not installed");
     var web_url = "https://app.stepsecurity.io";
     common.printInfo(web_url);
   }

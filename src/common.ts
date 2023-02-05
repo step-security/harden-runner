@@ -22,26 +22,19 @@ export async function addSummary() {
         "StepSecurity Harden-Runner",
         { width: "200" }
       )
-      .addLink(
-        "View security insights and recommended policy",
-        insights_url
-      )
+      .addLink("View security insights and recommended policy", insights_url)
       .addSeparator()
       .write();
   }
 }
 
-const STATUS_DISABLED_HARDEN_RUNNER = "409"; 
-
-export function dropOnBadStatus(status: Number|string, dropMessage: string) {
-  if (String(status) === STATUS_DISABLED_HARDEN_RUNNER) {
-    core.info(`[StepSecurity Harden-Runner]: ${dropMessage}`);
-    exit(0);
-  }
-}
+export const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 
 export const CONTAINER_MESSAGE =
   "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
 
 export const UBUNTU_MESSAGE =
   "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
+
+export const HARDEN_RUNNER_UNAVAILABLE_MESSAGE =
+  "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";

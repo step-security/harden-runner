@@ -48,7 +48,6 @@ import {
       private: context.payload.repository.private,
     };
 
-
     if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
       core.setFailed("egress-policy must be either audit or block");
     }
@@ -78,14 +77,17 @@ import {
           encoding: "utf8",
         }
       );
-
     } catch (e) {
       console.log(`error in connecting to ${api_url}: ${e}`);
     }
 
-    common.dropOnBadStatus(statusCode,"Unable to install StepSecurity Agent");
-
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
+
+    if (String(statusCode) === common.STATUS_HARDEN_RUNNER_UNAVAILABLE) {
+      console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+      return;
+    }
+
     if (isValidEvent()) {
       try {
         const cacheEntry = await getCacheEntry([cacheKey], [cacheFile], {
