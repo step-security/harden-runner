@@ -14181,7 +14181,7 @@ function verifyChecksum(downloadPath) {
     const checksum = external_crypto_.createHash("sha256")
         .update(fileBuffer)
         .digest("hex"); // checksum of downloaded file
-    const expectedChecksum = "79f397360470d6e42c73d6c9c5cf485ac9982e56e3e3fdd07f66c59cda4388c8"; // checksum for v0.12.1
+    const expectedChecksum = "10fd5587cfeba6aac4125be78ee32f60d5e780de10929f454525670c4c16935d"; // checksum for v0.12.2
     if (checksum !== expectedChecksum) {
         lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
     }
@@ -14420,7 +14420,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         // Note: to avoid github rate limiting
         let token = lib_core.getInput("token");
         let auth = `token ${token}`;
-        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.12.1/agent_0.12.1_linux_amd64.tar.gz", undefined, auth);
+        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.12.2/agent_0.12.2_linux_amd64.tar.gz", undefined, auth);
         verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
         const extractPath = yield tool_cache.extractTar(downloadPath);
         if (!confg.disable_telemetry || confg.egress_policy === "audit") {

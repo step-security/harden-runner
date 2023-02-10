@@ -1,5 +1,4 @@
 import * as core from "@actions/core";
-import { exit } from "process";
 export function printInfo(web_url) {
   console.log(
     "\x1b[32m%s\x1b[0m",
