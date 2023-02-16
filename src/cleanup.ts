@@ -62,8 +62,8 @@ import path from "path";
     });
   }
 
-  var disable_sudo = core.getBooleanInput("disable-sudo");
-  if (!disable_sudo) {
+  var disable_sudo = process.env.STATE_disableSudo;
+  if (disable_sudo !== "false") {
     var journalLog = cp.execSync("sudo journalctl -u agent.service", {
       encoding: "utf8",
     });
