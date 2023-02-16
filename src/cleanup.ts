@@ -63,7 +63,7 @@ import path from "path";
   }
 
   var disable_sudo = process.env.STATE_disableSudo;
-  if (disable_sudo !== "false") {
+  if (disable_sudo !== "true") {
     var journalLog = cp.execSync("sudo journalctl -u agent.service", {
       encoding: "utf8",
     });

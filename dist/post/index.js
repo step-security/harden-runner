@@ -61236,7 +61236,7 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         });
     }
     var disable_sudo = process.env.STATE_disableSudo;
-    if (disable_sudo !== "false") {
+    if (disable_sudo !== "true") {
         var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service", {
             encoding: "utf8",
         });
