@@ -13,9 +13,12 @@ export interface Configuration {
   }
 
   export interface PolicyResponse {
+    owner?: string;
+    policyName?: string;
     allowed_endpoints?: string[]; 
     disable_sudo?: boolean;
     disable_file_monitoring?: boolean;
+    disable_telemetry?: boolean;
     egress_policy?: string
   }
   
