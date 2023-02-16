@@ -60,18 +60,17 @@ import { PolicyResponse, Configuration } from "./interfaces";
           policyName
         );
         confg = mergeConfigs(confg, result);
-        fs.appendFileSync(
-          process.env.GITHUB_STATE,
-          `disableSudo=${confg.disable_sudo}${EOL}`,
-          {
-            encoding: "utf8",
-          }
-        );
       } catch (err) {
         core.info(`[!] ${err}`);
       }
     }
-
+    fs.appendFileSync(
+      process.env.GITHUB_STATE,
+      `disableSudo=${confg.disable_sudo}${EOL}`,
+      {
+        encoding: "utf8",
+      }
+    );
     core.info(`[!] Current Configuration: \n${JSON.stringify(confg)}\n`)
     if (isValidEvent()) {
       try {
