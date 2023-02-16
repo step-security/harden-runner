@@ -17,6 +17,8 @@ import {
   getCacheEntry,
   isValidEvent,
 } from "./cache";
+import { fetchPolicy } from "./policy-utils";
+import { PolicyResponse, Configuration } from "./interfaces";
 
 (async () => {
   try {
@@ -36,7 +38,7 @@ import {
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
 
-    const confg = {
+    let confg: Configuration = {
       repo: process.env["GITHUB_REPOSITORY"],
       run_id: process.env["GITHUB_RUN_ID"],
       correlation_id: correlation_id,
@@ -50,6 +52,20 @@ import {
       private: context.payload.repository.private,
     };
 
+    let policyName = core.getInput("policy");
+    if (policyName !== "") {
+      try {
+        let result: PolicyResponse = await fetchPolicy(
+          context.repo.owner,
+          policyName
+        );
+        confg = mergeConfigs(confg, result);
+      } catch (err) {
+        core.info(`[!] ${err}`);
+      }
+    }
+
+    core.info(`[!] Current Configuration: \n${JSON.stringify(confg)}\n`)
     if (isValidEvent()) {
       try {
         const cacheEntry = await getCacheEntry([cacheKey], [cacheFile], {
@@ -89,7 +105,7 @@ import {
         const resp: httpm.HttpClientResponse = await _http.get(
           `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
         );
-        if(resp.message.statusCode === 200){
+        if (resp.message.statusCode === 200) {
           fs.appendFileSync(
             process.env.GITHUB_STATE,
             `monitorStatusCode=${resp.message.statusCode}${EOL}`,
@@ -98,7 +114,6 @@ import {
             }
           );
         }
-        
       } catch (e) {
         console.log(`error in connecting to ${api_url}: ${e}`);
       }
@@ -175,4 +190,25 @@ function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+function mergeConfigs(
+  localConfig: Configuration,
+  remoteConfig: PolicyResponse
+) {
+  if (localConfig.allowed_endpoints === "") {
+    localConfig.allowed_endpoints = remoteConfig.allowed_endpoints.join(" ");
+  }
+  if (remoteConfig.disable_sudo !== undefined) {
+    localConfig.disable_sudo = remoteConfig.disable_sudo;
+  }
+
+  if (remoteConfig.disable_file_monitoring !== undefined) {
+    localConfig.disable_file_monitoring = remoteConfig.disable_file_monitoring;
+  }
+  if (remoteConfig.egress_policy !== undefined) {
+    localConfig.egress_policy = remoteConfig.egress_policy;
+  }
+
+  return localConfig;
 }
