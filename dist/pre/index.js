@@ -14404,6 +14404,9 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             try {
                 let result = yield fetchPolicy(github.context.repo.owner, policyName);
                 confg = mergeConfigs(confg, result);
+                external_fs_.appendFileSync(process.env.GITHUB_STATE, `disableSudo=${confg.disable_sudo}${external_os_.EOL}`, {
+                    encoding: "utf8",
+                });
             }
             catch (err) {
                 lib_core.info(`[!] ${err}`);
