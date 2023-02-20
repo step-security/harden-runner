@@ -34,8 +34,6 @@ import {
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
     var web_url = "https://app.stepsecurity.io";
 
-    console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-
     const confg = {
       repo: process.env["GITHUB_REPOSITORY"],
       run_id: process.env["GITHUB_RUN_ID"],
@@ -49,6 +47,46 @@ import {
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
       private: context.payload.repository.private,
     };
+
+    if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
+      core.setFailed("egress-policy must be either audit or block");
+    }
+
+    if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
+      core.warning(
+        "egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps."
+      );
+    }
+
+    if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
+      core.setFailed("disable-telemetry must be a boolean value");
+    }
+
+    let _http = new httpm.HttpClient();
+    let statusCode;
+    _http.requestOptions = { socketTimeout: 3 * 1000 };
+    try {
+      const resp: httpm.HttpClientResponse = await _http.get(
+        `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
+      );
+      statusCode = resp.message.statusCode; // adding error code to check whether agent is getting installed or not.
+      fs.appendFileSync(
+        process.env.GITHUB_STATE,
+        `monitorStatusCode=${statusCode}${EOL}`,
+        {
+          encoding: "utf8",
+        }
+      );
+    } catch (e) {
+      console.log(`error in connecting to ${api_url}: ${e}`);
+    }
+
+    console.log(`Step Security Job Correlation ID: ${correlation_id}`);
+
+    if (String(statusCode) === common.STATUS_HARDEN_RUNNER_UNAVAILABLE) {
+      console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+      return;
+    }
 
     if (isValidEvent()) {
       try {
@@ -68,42 +106,6 @@ import {
       }
     }
 
-    if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
-      core.setFailed("egress-policy must be either audit or block");
-    }
-
-    if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
-      core.warning(
-        "egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps."
-      );
-    }
-
-    if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
-      core.setFailed("disable-telemetry must be a boolean value");
-    }
-
-    if (!confg.disable_telemetry) {
-      let _http = new httpm.HttpClient();
-      _http.requestOptions = { socketTimeout: 3 * 1000 };
-      try {
-        const resp: httpm.HttpClientResponse = await _http.get(
-          `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
-        );
-        if(resp.message.statusCode === 200){
-          fs.appendFileSync(
-            process.env.GITHUB_STATE,
-            `monitorStatusCode=${resp.message.statusCode}${EOL}`,
-            {
-              encoding: "utf8",
-            }
-          );
-        }
-        
-      } catch (e) {
-        console.log(`error in connecting to ${api_url}: ${e}`);
-      }
-    }
-
     const confgStr = JSON.stringify(confg);
     cp.execSync("sudo mkdir -p /home/agent");
     cp.execSync("sudo chown -R $USER /home/agent");
@@ -113,7 +115,7 @@ import {
     let auth = `token ${token}`;
 
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.12.1/agent_0.12.1_linux_amd64.tar.gz",
+      "https://github.com/step-security/agent/releases/download/v0.12.2/agent_0.12.2_linux_amd64.tar.gz",
       undefined,
       auth
     );

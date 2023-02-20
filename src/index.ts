@@ -13,6 +13,14 @@ import isDocker from "is-docker";
   }
 
   if (
+    String(process.env.STATE_monitorStatusCode) ===
+    common.STATUS_HARDEN_RUNNER_UNAVAILABLE
+  ) {
+    console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+    return;
+  }
+
+  if (
     core.getBooleanInput("disable-telemetry") &&
     core.getInput("egress-policy") === "block"
   ) {

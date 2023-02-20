@@ -17,6 +17,14 @@ import path from "path";
     return;
   }
 
+  if (
+    String(process.env.STATE_monitorStatusCode) ===
+    common.STATUS_HARDEN_RUNNER_UNAVAILABLE
+  ) {
+    console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+    return;
+  }
+
   fs.writeFileSync(
     "/home/agent/post_event.json",
     JSON.stringify({ event: "post" })

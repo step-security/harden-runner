@@ -61033,8 +61033,10 @@ function addSummary() {
         }
     });
 }
+const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
+const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = require("node:fs");
@@ -61197,6 +61199,11 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
     }
     if (isDocker()) {
         console.log(CONTAINER_MESSAGE);
+        return;
+    }
+    if (String(process.env.STATE_monitorStatusCode) ===
+        STATUS_HARDEN_RUNNER_UNAVAILABLE) {
+        console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
         return;
     }
     external_fs_.writeFileSync("/home/agent/post_event.json", JSON.stringify({ event: "post" }));
