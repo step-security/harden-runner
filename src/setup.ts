@@ -17,6 +17,8 @@ import {
   getCacheEntry,
   isValidEvent,
 } from "./cache";
+import { Configuration, PolicyResponse } from "./interfaces";
+import { fetchPolicy, mergeConfigs } from "./policy-utils";
 
 (async () => {
   try {
@@ -34,7 +36,7 @@ import {
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
     var web_url = "https://app.stepsecurity.io";
 
-    const confg = {
+    let confg: Configuration = {
       repo: process.env["GITHUB_REPOSITORY"],
       run_id: process.env["GITHUB_RUN_ID"],
       correlation_id: correlation_id,
@@ -47,6 +49,27 @@ import {
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
       private: context.payload.repository.private,
     };
+
+    let policyName = core.getInput("policy");
+    if (policyName !== "") {
+      try {
+        let result: PolicyResponse = await fetchPolicy(
+          context.repo.owner,
+          policyName
+        );
+        confg = mergeConfigs(confg, result);
+      } catch (err) {
+        core.info(`[!] ${err}`);
+      }
+    }
+    fs.appendFileSync(
+      process.env.GITHUB_STATE,
+      `disableSudo=${confg.disable_sudo}${EOL}`,
+      {
+        encoding: "utf8",
+      }
+    );
+    core.info(`[!] Current Configuration: \n${JSON.stringify(confg)}\n`);
 
     if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
       core.setFailed("egress-policy must be either audit or block");
