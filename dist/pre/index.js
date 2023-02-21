@@ -14319,6 +14319,51 @@ function isValidEvent() {
     return RefKey in process.env && Boolean(process.env[RefKey]);
 }
 
+;// CONCATENATED MODULE: ./src/policy-utils.ts
+var policy_utils_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+const API_ENDPOINT = "https://agent.api.stepsecurity.io/v1";
+function fetchPolicy(owner, policyName) {
+    return policy_utils_awaiter(this, void 0, void 0, function* () {
+        let policyEndpoint = `${API_ENDPOINT}/github/${owner}/actions/policies/${policyName}`;
+        let httpClient = new lib.HttpClient();
+        let response = yield httpClient.getJson(policyEndpoint);
+        if (response.statusCode !== 200) {
+            // policy doesn't exists
+            switch (response.statusCode) {
+                case 400:
+                    throw new Error("error: policy doesn't exists");
+                case 401:
+                    throw new Error("error: unauthorized");
+            }
+        }
+        return response.result;
+    });
+}
+function mergeConfigs(localConfig, remoteConfig) {
+    if (localConfig.allowed_endpoints === "") {
+        localConfig.allowed_endpoints = remoteConfig.allowed_endpoints.join(" ");
+    }
+    if (remoteConfig.disable_sudo !== undefined) {
+        localConfig.disable_sudo = remoteConfig.disable_sudo;
+    }
+    if (remoteConfig.disable_file_monitoring !== undefined) {
+        localConfig.disable_file_monitoring = remoteConfig.disable_file_monitoring;
+    }
+    if (remoteConfig.egress_policy !== undefined) {
+        localConfig.egress_policy = remoteConfig.egress_policy;
+    }
+    return localConfig;
+}
+
 ;// CONCATENATED MODULE: ./src/setup.ts
 var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -14329,6 +14374,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -14356,7 +14402,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         var env = "agent";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
         var web_url = "https://app.stepsecurity.io";
-        const confg = {
+        let confg = {
             repo: process.env["GITHUB_REPOSITORY"],
             run_id: process.env["GITHUB_RUN_ID"],
             correlation_id: correlation_id,
@@ -14369,6 +14415,20 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
             private: github.context.payload.repository.private,
         };
+        let policyName = lib_core.getInput("policy");
+        if (policyName !== "") {
+            try {
+                let result = yield fetchPolicy(github.context.repo.owner, policyName);
+                confg = mergeConfigs(confg, result);
+            }
+            catch (err) {
+                lib_core.info(`[!] ${err}`);
+            }
+        }
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `disableSudo=${confg.disable_sudo}${external_os_.EOL}`, {
+            encoding: "utf8",
+        });
+        lib_core.info(`[!] Current Configuration: \n${JSON.stringify(confg)}\n`);
         if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
             lib_core.setFailed("egress-policy must be either audit or block");
         }
