@@ -61135,7 +61135,7 @@ var external_fs_ = __nccwpck_require__(5747);
 // EXTERNAL MODULE: external "child_process"
 var external_child_process_ = __nccwpck_require__(3129);
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
-var lib_core = __nccwpck_require__(2186);
+var core = __nccwpck_require__(2186);
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -61156,7 +61156,7 @@ function addSummary() {
         if (process.env.STATE_monitorStatusCode === "200") {
             const web_url = "https://app.stepsecurity.io";
             const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
-            yield lib_core.summary.addSeparator()
+            yield core.summary.addSeparator()
                 .addImage("https://github.com/step-security/harden-runner/raw/main/images/banner.png", "StepSecurity Harden-Runner", { width: "200" })
                 .addLink("View security insights and recommended policy", insights_url)
                 .addSeparator()
@@ -61204,90 +61204,9 @@ function isDocker() {
 
 // EXTERNAL MODULE: ./node_modules/@actions/cache/lib/cache.js
 var cache = __nccwpck_require__(7799);
-// EXTERNAL MODULE: ./node_modules/@actions/http-client/lib/index.js
-var lib = __nccwpck_require__(6255);
-// EXTERNAL MODULE: ./node_modules/@actions/http-client/lib/auth.js
-var auth = __nccwpck_require__(5526);
-// EXTERNAL MODULE: external "crypto"
-var external_crypto_ = __nccwpck_require__(6417);
 ;// CONCATENATED MODULE: ./src/cache.ts
-var cache_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-
-
-
-
-const versionSalt = "1.0";
 const cacheKey = "harden-runner-cacheKey";
 const cacheFile = "/home/agent/cache.txt";
-function getCacheApiUrl(resource) {
-    const baseUrl = process.env["ACTIONS_CACHE_URL"] || "";
-    if (!baseUrl) {
-        throw new Error("Cache Service Url not found, unable to restore cache.");
-    }
-    const url = `${baseUrl}_apis/artifactcache/${resource}`;
-    core.debug(`Resource Url: ${url}`);
-    return url;
-}
-function createAcceptHeader(type, apiVersion) {
-    return `${type};api-version=${apiVersion}`;
-}
-function getRequestOptions() {
-    const token = process.env["ACTIONS_RUNTIME_TOKEN"] || "";
-    const requestOptions = {
-        headers: {
-            Accept: createAcceptHeader("application/json", "6.0-preview.1"),
-            Authorization: `Bearer ${token}`,
-        },
-    };
-    return requestOptions;
-}
-function createHttpClient() {
-    const token = process.env["ACTIONS_RUNTIME_TOKEN"] || "";
-    const bhandler = new BearerCredentialHandler(token);
-    return new HttpClient("actions/cache", [bhandler], getRequestOptions());
-}
-function getCacheVersion(paths, compressionMethod) {
-    const components = paths.concat(!compressionMethod || compressionMethod === CompressionMethod.Gzip
-        ? []
-        : [compressionMethod]);
-    // Add salt to cache version to support breaking changes in cache entry
-    components.push(versionSalt);
-    return crypto.createHash("sha256").update(components.join("|")).digest("hex");
-}
-function getCacheEntry(keys, paths, options) {
-    return cache_awaiter(this, void 0, void 0, function* () {
-        const httpClient = createHttpClient();
-        const version = getCacheVersion(paths, options === null || options === void 0 ? void 0 : options.compressionMethod);
-        const resource = `cache?keys=${encodeURIComponent(keys.join(","))}&version=${version}`;
-        const response = yield httpClient.getJson(getCacheApiUrl(resource));
-        if (response.statusCode === 204) {
-            throw new Error("Request returned 204 status");
-        }
-        if (!isSuccessStatusCode(response.statusCode)) {
-            throw new Error(`Cache service responded with ${response.statusCode}`);
-        }
-        const cacheResult = response.result;
-        const cacheDownloadUrl = cacheResult === null || cacheResult === void 0 ? void 0 : cacheResult.archiveLocation;
-        if (!cacheDownloadUrl) {
-            throw new Error("Cache still be done, but  not found.");
-        }
-        return cacheResult;
-    });
-}
-function isSuccessStatusCode(statusCode) {
-    if (!statusCode) {
-        return false;
-    }
-    return statusCode >= 200 && statusCode < 300;
-}
 var CompressionMethod;
 (function (CompressionMethod) {
     CompressionMethod["Gzip"] = "gzip";
@@ -61370,10 +61289,10 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
     if (external_fs_.existsSync(annotationsFile)) {
         var content = external_fs_.readFileSync(annotationsFile, "utf-8");
         content.split(/\r?\n/).forEach((line) => {
-            lib_core.error(line);
+            core.error(line);
         });
     }
-    var disable_sudo = lib_core.getBooleanInput("disable-sudo");
+    var disable_sudo = core.getBooleanInput("disable-sudo");
     if (!disable_sudo) {
         var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service", {
             encoding: "utf8",

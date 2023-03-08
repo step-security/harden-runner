@@ -69077,86 +69077,9 @@ function isDocker() {
 var github = __nccwpck_require__(5438);
 // EXTERNAL MODULE: external "os"
 var external_os_ = __nccwpck_require__(2087);
-// EXTERNAL MODULE: ./node_modules/@actions/http-client/lib/auth.js
-var auth = __nccwpck_require__(5526);
 ;// CONCATENATED MODULE: ./src/cache.ts
-var cache_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-
-
-
-
-const versionSalt = "1.0";
 const cacheKey = "harden-runner-cacheKey";
 const cacheFile = "/home/agent/cache.txt";
-function getCacheApiUrl(resource) {
-    const baseUrl = process.env["ACTIONS_CACHE_URL"] || "";
-    if (!baseUrl) {
-        throw new Error("Cache Service Url not found, unable to restore cache.");
-    }
-    const url = `${baseUrl}_apis/artifactcache/${resource}`;
-    core.debug(`Resource Url: ${url}`);
-    return url;
-}
-function createAcceptHeader(type, apiVersion) {
-    return `${type};api-version=${apiVersion}`;
-}
-function getRequestOptions() {
-    const token = process.env["ACTIONS_RUNTIME_TOKEN"] || "";
-    const requestOptions = {
-        headers: {
-            Accept: createAcceptHeader("application/json", "6.0-preview.1"),
-            Authorization: `Bearer ${token}`,
-        },
-    };
-    return requestOptions;
-}
-function createHttpClient() {
-    const token = process.env["ACTIONS_RUNTIME_TOKEN"] || "";
-    const bhandler = new BearerCredentialHandler(token);
-    return new HttpClient("actions/cache", [bhandler], getRequestOptions());
-}
-function getCacheVersion(paths, compressionMethod) {
-    const components = paths.concat(!compressionMethod || compressionMethod === CompressionMethod.Gzip
-        ? []
-        : [compressionMethod]);
-    // Add salt to cache version to support breaking changes in cache entry
-    components.push(versionSalt);
-    return crypto.createHash("sha256").update(components.join("|")).digest("hex");
-}
-function getCacheEntry(keys, paths, options) {
-    return cache_awaiter(this, void 0, void 0, function* () {
-        const httpClient = createHttpClient();
-        const version = getCacheVersion(paths, options === null || options === void 0 ? void 0 : options.compressionMethod);
-        const resource = `cache?keys=${encodeURIComponent(keys.join(","))}&version=${version}`;
-        const response = yield httpClient.getJson(getCacheApiUrl(resource));
-        if (response.statusCode === 204) {
-            throw new Error("Request returned 204 status");
-        }
-        if (!isSuccessStatusCode(response.statusCode)) {
-            throw new Error(`Cache service responded with ${response.statusCode}`);
-        }
-        const cacheResult = response.result;
-        const cacheDownloadUrl = cacheResult === null || cacheResult === void 0 ? void 0 : cacheResult.archiveLocation;
-        if (!cacheDownloadUrl) {
-            throw new Error("Cache still be done, but  not found.");
-        }
-        return cacheResult;
-    });
-}
-function isSuccessStatusCode(statusCode) {
-    if (!statusCode) {
-        return false;
-    }
-    return statusCode >= 200 && statusCode < 300;
-}
 var CompressionMethod;
 (function (CompressionMethod) {
     CompressionMethod["Gzip"] = "gzip";
