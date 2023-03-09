@@ -11,12 +11,15 @@ import isDocker from "is-docker";
 import { context } from "@actions/github";
 import { EOL } from "os";
 import {
-  cacheFile,
+  ArtifactCacheEntry,
   cacheKey,
+  cacheFile,
   CompressionMethod,
-  getCacheEntry,
   isValidEvent,
 } from "./cache";
+
+import {getCacheEntry} from "@actions/cache/lib/internal/cacheHttpClient"
+import * as utils from '@actions/cache/lib/internal/cacheUtils'
 
 (async () => {
   try {
@@ -90,15 +93,16 @@ import {
 
     if (isValidEvent()) {
       try {
-        const cacheEntry = await getCacheEntry([cacheKey], [cacheFile], {
-          compressionMethod: CompressionMethod.ZstdWithoutLong,
+        let compressionMethod:CompressionMethod = await utils.getCompressionMethod()
+        const cacheEntry:ArtifactCacheEntry = await getCacheEntry([cacheKey], [cacheFile], {
+          compressionMethod: compressionMethod,
         });
         const url = new URL(cacheEntry.archiveLocation);
         core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
         confg.allowed_endpoints += ` ${url.hostname}:443`;
       } catch (exception) {
         // some exception has occurred.
-        core.info("Unable to fetch cacheURL");
+        core.info(`Unable to fetch cacheURL`);
         if (confg.egress_policy === "block") {
           core.info("Switching egress-policy to audit mode");
           confg.egress_policy = "audit";
