@@ -18,7 +18,8 @@ test("success: fetching policy", async () => {
     .get(`/github/${owner}/actions/policies/${policyName}`)
     .reply(200, response);
 
-  let policy = await fetchPolicy(owner, policyName);
+  let idToken = "xyz"; 
+  let policy = await fetchPolicy(owner, policyName, idToken);
   console.log(policy);
   expect(policy).toStrictEqual(response);
 });
