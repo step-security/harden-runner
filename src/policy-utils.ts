@@ -31,7 +31,10 @@ export async function fetchPolicy(
       case 400:
         throw new Error("[PolicyFetch: policy doesn't exists");
       case 401:
-        throw new Error("[PolicyFetch]: unauthorized");
+        throw new Error("[PolicyFetch]: supplied id-token can't be used for authentication");
+      
+      case 403:
+        throw new Error("[PolicyFetch]: access to policy not allowed")
     }
   }
   return response.result;
