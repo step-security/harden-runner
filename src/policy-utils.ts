@@ -5,19 +5,33 @@ export const API_ENDPOINT = "https://agent.api.stepsecurity.io/v1";
 
 export async function fetchPolicy(
   owner: string,
-  policyName: string
+  policyName: string,
+  idToken: string
 ): Promise<PolicyResponse> {
+  if (idToken === "") {
+    throw new Error("[PolicyFetch]: id-token in empty");
+  }
+
   let policyEndpoint = `${API_ENDPOINT}/github/${owner}/actions/policies/${policyName}`;
 
   let httpClient = new HttpClient();
-  let response = await httpClient.getJson<PolicyResponse>(policyEndpoint);
+
+  let headers = {};
+  headers["Authorization"] = `Bearer ${idToken}`;
+  headers["Source"] = "github-actions";
+
+  let response = await httpClient.getJson<PolicyResponse>(
+    policyEndpoint,
+    headers
+  );
+
   if (response.statusCode !== 200) {
     // policy doesn't exists
     switch (response.statusCode) {
       case 400:
-        throw new Error("error: policy doesn't exists");
+        throw new Error("[PolicyFetch: policy doesn't exists");
       case 401:
-        throw new Error("error: unauthorized");
+        throw new Error("[PolicyFetch]: unauthorized");
     }
   }
   return response.result;
