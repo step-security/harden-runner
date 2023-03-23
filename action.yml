@@ -24,6 +24,11 @@ inputs:
     description: "Disable file monitoring"
     required: false
     default: "false"
+  policy:
+    description: "Policy ID to be used from insights website"
+    required: false
+    default: ""
+
 branding:
   icon: "check-square"
   color: "green"

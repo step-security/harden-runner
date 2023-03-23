@@ -61292,8 +61292,8 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
             core.error(line);
         });
     }
-    var disable_sudo = core.getBooleanInput("disable-sudo");
-    if (!disable_sudo) {
+    var disable_sudo = process.env.STATE_disableSudo;
+    if (disable_sudo !== "true") {
         var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service", {
             encoding: "utf8",
         });
