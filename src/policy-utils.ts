@@ -8,6 +8,7 @@ export async function fetchPolicy(
   policyName: string,
   idToken: string
 ): Promise<PolicyResponse> {
+
   if (idToken === "") {
     throw new Error("[PolicyFetch]: id-token in empty");
   }
@@ -20,24 +21,30 @@ export async function fetchPolicy(
   headers["Authorization"] = `Bearer ${idToken}`;
   headers["Source"] = "github-actions";
 
-  let response = await httpClient.getJson<PolicyResponse>(
-    policyEndpoint,
-    headers
-  );
-
-  if (response.statusCode !== 200) {
-    // policy doesn't exists
-    switch (response.statusCode) {
-      case 400:
-        throw new Error("[PolicyFetch: policy doesn't exists");
-      case 401:
-        throw new Error("[PolicyFetch]: supplied id-token can't be used for authentication");
-      
-      case 403:
-        throw new Error("[PolicyFetch]: access to policy not allowed")
+  let response = undefined;
+  let err = undefined;
+  
+  let retry = 0;
+  while(retry < 3){
+    try{
+      console.log(`Attempt: ${retry+1}`)
+      response = await httpClient.getJson<PolicyResponse>(
+        policyEndpoint,
+        headers
+      );
+      break;
+    }catch(e){
+      err = e
     }
+    retry += 1
+    await sleep(1000);
   }
-  return response.result;
+
+  if(response === undefined && err !== undefined){
+    throw new Error(`[Policy Fetch] ${err}`)
+  }else{
+    return response.result;
+  }
 }
 
 export function mergeConfigs(
@@ -59,4 +66,10 @@ export function mergeConfigs(
   }
 
   return localConfig;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
