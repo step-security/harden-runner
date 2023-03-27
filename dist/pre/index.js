@@ -69116,19 +69116,27 @@ function fetchPolicy(owner, policyName, idToken) {
         let headers = {};
         headers["Authorization"] = `Bearer ${idToken}`;
         headers["Source"] = "github-actions";
-        let response = yield httpClient.getJson(policyEndpoint, headers);
-        if (response.statusCode !== 200) {
-            // policy doesn't exists
-            switch (response.statusCode) {
-                case 400:
-                    throw new Error("[PolicyFetch: policy doesn't exists");
-                case 401:
-                    throw new Error("[PolicyFetch]: supplied id-token can't be used for authentication");
-                case 403:
-                    throw new Error("[PolicyFetch]: access to policy not allowed");
+        let response = undefined;
+        let err = undefined;
+        let retry = 0;
+        while (retry < 3) {
+            try {
+                console.log(`Attempt: ${retry + 1}`);
+                response = yield httpClient.getJson(policyEndpoint, headers);
+                break;
             }
+            catch (e) {
+                err = e;
+            }
+            retry += 1;
+            yield sleep(1000);
         }
-        return response.result;
+        if (response === undefined && err !== undefined) {
+            throw new Error(`[Policy Fetch] ${err}`);
+        }
+        else {
+            return response.result;
+        }
     });
 }
 function mergeConfigs(localConfig, remoteConfig) {
@@ -69145,6 +69153,11 @@ function mergeConfigs(localConfig, remoteConfig) {
         localConfig.egress_policy = remoteConfig.egress_policy;
     }
     return localConfig;
+}
+function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
 }
 
 // EXTERNAL MODULE: ./node_modules/@actions/cache/lib/internal/cacheHttpClient.js
@@ -69206,6 +69219,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         };
         let policyName = lib_core.getInput("policy");
         if (policyName !== "") {
+            console.log(`Fetching policy from API with name: ${policyName}`);
             try {
                 let idToken = yield lib_core.getIDToken();
                 let result = yield fetchPolicy(github.context.repo.owner, policyName, idToken);
@@ -69306,7 +69320,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                     }
                     break;
                 }
-                yield sleep(300);
+                yield setup_sleep(300);
             } // The file *does* exist
             else {
                 // Read the file
@@ -69320,7 +69334,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         lib_core.setFailed(error.message);
     }
 }))();
-function sleep(ms) {
+function setup_sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
