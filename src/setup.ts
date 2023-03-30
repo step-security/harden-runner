@@ -55,6 +55,7 @@ import * as utils from '@actions/cache/lib/internal/cacheUtils'
 
     let policyName = core.getInput("policy");
     if (policyName !== "") {
+      console.log(`Fetching policy from API with name: ${policyName}`);
       try {
         let idToken: string = await core.getIDToken()
         let result: PolicyResponse = await fetchPolicy(
