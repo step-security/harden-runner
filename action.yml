@@ -25,7 +25,7 @@ inputs:
     required: false
     default: "false"
   policy:
-    description: "Policy ID to be used from insights website"
+    description: "Policy name to be used from the policy store"
     required: false
     default: ""
 
