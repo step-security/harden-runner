@@ -63,7 +63,7 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
       <img src="images/insights2.png" alt="Insights from harden-runner" >
     </p>
 
-4. Below the insights, you will see the recommended policy. Update your workflow file with the recommended policy.
+4. Under the insights section, you'll find a suggested policy. You can either update your workflow file with this policy, or alternatively, use the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store) to apply the policy without modifying the workflow file.
 
     <p align="left">
       <img src="images/rec-policy1.png" alt="Policy recommended by harden-runner" >
@@ -79,7 +79,7 @@ For details, check out the documentation at https://docs.stepsecurity.io
 
 ### Restrict egress traffic to allowed endpoints
 
-Once allowed endpoints are set in the workflow file,
+Once allowed endpoints are set in the policy in the workflow file, or in the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store)
 
 - Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4).
 - It blocks DNS exfiltration, where attacker tries to send data out using DNS resolution
@@ -140,7 +140,7 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 
 ## Limitations
 
-1. Harden-Runner GitHub Action only works for GitHub-hosted runners. Self-hosted runners are not supported.
+1. Harden-Runner GitHub Action only works for GitHub-hosted runners. Self-hosted runners are not supported. We have started work on supporting [Kubernetes-Based Self-Hosted Actions Runners](https://github.com/step-security/harden-runner/issues/104).
 2. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
 3. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
 
