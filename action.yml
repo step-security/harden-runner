@@ -24,6 +24,11 @@ inputs:
     description: "Disable file monitoring"
     required: false
     default: "false"
+  policy:
+    description: "Policy name to be used from the policy store"
+    required: false
+    default: ""
+
 branding:
   icon: "check-square"
   color: "green"

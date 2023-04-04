@@ -46,6 +46,7 @@ const crypto = __importStar(__nccwpck_require__(6417));
 const fs = __importStar(__nccwpck_require__(5747));
 const url_1 = __nccwpck_require__(8835);
 const utils = __importStar(__nccwpck_require__(1518));
+const constants_1 = __nccwpck_require__(8840);
 const downloadUtils_1 = __nccwpck_require__(5500);
 const options_1 = __nccwpck_require__(6215);
 const requestUtils_1 = __nccwpck_require__(3981);
@@ -75,17 +76,10 @@ function createHttpClient() {
     const bearerCredentialHandler = new auth_1.BearerCredentialHandler(token);
     return new http_client_1.HttpClient('actions/cache', [bearerCredentialHandler], getRequestOptions());
 }
-function getCacheVersion(paths, compressionMethod, enableCrossOsArchive = false) {
-    const components = paths;
-    // Add compression method to cache version to restore
-    // compressed cache as per compression method
-    if (compressionMethod) {
-        components.push(compressionMethod);
-    }
-    // Only check for windows platforms if enableCrossOsArchive is false
-    if (process.platform === 'win32' && !enableCrossOsArchive) {
-        components.push('windows-only');
-    }
+function getCacheVersion(paths, compressionMethod) {
+    const components = paths.concat(!compressionMethod || compressionMethod === constants_1.CompressionMethod.Gzip
+        ? []
+        : [compressionMethod]);
     // Add salt to cache version to support breaking changes in cache entry
     components.push(versionSalt);
     return crypto
@@ -97,15 +91,10 @@ exports.getCacheVersion = getCacheVersion;
 function getCacheEntry(keys, paths, options) {
     return __awaiter(this, void 0, void 0, function* () {
         const httpClient = createHttpClient();
-        const version = getCacheVersion(paths, options === null || options === void 0 ? void 0 : options.compressionMethod, options === null || options === void 0 ? void 0 : options.enableCrossOsArchive);
+        const version = getCacheVersion(paths, options === null || options === void 0 ? void 0 : options.compressionMethod);
         const resource = `cache?keys=${encodeURIComponent(keys.join(','))}&version=${version}`;
         const response = yield requestUtils_1.retryTypedResponse('getCacheEntry', () => __awaiter(this, void 0, void 0, function* () { return httpClient.getJson(getCacheApiUrl(resource)); }));
-        // Cache not found
         if (response.statusCode === 204) {
-            // List cache for primary key only if cache miss occurs
-            if (core.isDebug()) {
-                yield printCachesListForDiagnostics(keys[0], httpClient, version);
-            }
             return null;
         }
         if (!requestUtils_1.isSuccessStatusCode(response.statusCode)) {
@@ -114,7 +103,6 @@ function getCacheEntry(keys, paths, options) {
         const cacheResult = response.result;
         const cacheDownloadUrl = cacheResult === null || cacheResult === void 0 ? void 0 : cacheResult.archiveLocation;
         if (!cacheDownloadUrl) {
-            // Cache achiveLocation not found. This should never happen, and hence bail out.
             throw new Error('Cache not found.');
         }
         core.setSecret(cacheDownloadUrl);
@@ -124,22 +112,6 @@ function getCacheEntry(keys, paths, options) {
     });
 }
 exports.getCacheEntry = getCacheEntry;
-function printCachesListForDiagnostics(key, httpClient, version) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const resource = `caches?key=${encodeURIComponent(key)}`;
-        const response = yield requestUtils_1.retryTypedResponse('listCache', () => __awaiter(this, void 0, void 0, function* () { return httpClient.getJson(getCacheApiUrl(resource)); }));
-        if (response.statusCode === 200) {
-            const cacheListResult = response.result;
-            const totalCount = cacheListResult === null || cacheListResult === void 0 ? void 0 : cacheListResult.totalCount;
-            if (totalCount && totalCount > 0) {
-                core.debug(`No matching cache found for cache key '${key}', version '${version} and scope ${process.env['GITHUB_REF']}. There exist one or more cache(s) with similar key but they have different version or scope. See more info on cache matching here: https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#matching-a-cache-key \nOther caches with similar key:`);
-                for (const cacheEntry of (cacheListResult === null || cacheListResult === void 0 ? void 0 : cacheListResult.artifactCaches) || []) {
-                    core.debug(`Cache Key: ${cacheEntry === null || cacheEntry === void 0 ? void 0 : cacheEntry.cacheKey}, Cache Version: ${cacheEntry === null || cacheEntry === void 0 ? void 0 : cacheEntry.cacheVersion}, Cache Scope: ${cacheEntry === null || cacheEntry === void 0 ? void 0 : cacheEntry.scope}, Cache Created: ${cacheEntry === null || cacheEntry === void 0 ? void 0 : cacheEntry.creationTime}`);
-                }
-            }
-        }
-    });
-}
 function downloadCache(archiveLocation, archivePath, options) {
     return __awaiter(this, void 0, void 0, function* () {
         const archiveUrl = new url_1.URL(archiveLocation);
@@ -160,7 +132,7 @@ exports.downloadCache = downloadCache;
 function reserveCache(key, paths, options) {
     return __awaiter(this, void 0, void 0, function* () {
         const httpClient = createHttpClient();
-        const version = getCacheVersion(paths, options === null || options === void 0 ? void 0 : options.compressionMethod, options === null || options === void 0 ? void 0 : options.enableCrossOsArchive);
+        const version = getCacheVersion(paths, options === null || options === void 0 ? void 0 : options.compressionMethod);
         const reserveCacheRequest = {
             key,
             version,
@@ -378,13 +350,12 @@ function unlinkFile(filePath) {
     });
 }
 exports.unlinkFile = unlinkFile;
-function getVersion(app, additionalArgs = []) {
+function getVersion(app) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.debug(`Checking ${app} --version`);
         let versionOutput = '';
-        additionalArgs.push('--version');
-        core.debug(`Checking ${app} ${additionalArgs.join(' ')}`);
         try {
-            yield exec.exec(`${app}`, additionalArgs, {
+            yield exec.exec(`${app} --version`, [], {
                 ignoreReturnCode: true,
                 silent: true,
                 listeners: {
@@ -404,14 +375,23 @@ function getVersion(app, additionalArgs = []) {
 // Use zstandard if possible to maximize cache performance
 function getCompressionMethod() {
     return __awaiter(this, void 0, void 0, function* () {
-        const versionOutput = yield getVersion('zstd', ['--quiet']);
-        const version = semver.clean(versionOutput);
-        core.debug(`zstd version: ${version}`);
-        if (versionOutput === '') {
+        if (process.platform === 'win32' && !(yield isGnuTarInstalled())) {
+            // Disable zstd due to bug https://github.com/actions/cache/issues/301
             return constants_1.CompressionMethod.Gzip;
         }
-        else {
+        const versionOutput = yield getVersion('zstd');
+        const version = semver.clean(versionOutput);
+        if (!versionOutput.toLowerCase().includes('zstd command line interface')) {
+            // zstd is not installed
+            return constants_1.CompressionMethod.Gzip;
+        }
+        else if (!version || semver.lt(version, 'v1.3.2')) {
+            // zstd is installed but using a version earlier than v1.3.2
+            // v1.3.2 is required to use the `--long` options in zstd
             return constants_1.CompressionMethod.ZstdWithoutLong;
+        }
+        else {
+            return constants_1.CompressionMethod.Zstd;
         }
     });
 }
@@ -422,16 +402,13 @@ function getCacheFileName(compressionMethod) {
         : constants_1.CacheFilename.Zstd;
 }
 exports.getCacheFileName = getCacheFileName;
-function getGnuTarPathOnWindows() {
+function isGnuTarInstalled() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (fs.existsSync(constants_1.GnuTarPathOnWindows)) {
-            return constants_1.GnuTarPathOnWindows;
-        }
         const versionOutput = yield getVersion('tar');
-        return versionOutput.toLowerCase().includes('gnu tar') ? io.which('tar') : '';
+        return versionOutput.toLowerCase().includes('gnu tar');
     });
 }
-exports.getGnuTarPathOnWindows = getGnuTarPathOnWindows;
+exports.isGnuTarInstalled = isGnuTarInstalled;
 function assertDefined(name, value) {
     if (value === undefined) {
         throw Error(`Expected ${name} but value was undefiend`);
@@ -467,11 +444,6 @@ var CompressionMethod;
     CompressionMethod["ZstdWithoutLong"] = "zstd-without-long";
     CompressionMethod["Zstd"] = "zstd";
 })(CompressionMethod = exports.CompressionMethod || (exports.CompressionMethod = {}));
-var ArchiveToolType;
-(function (ArchiveToolType) {
-    ArchiveToolType["GNU"] = "gnu";
-    ArchiveToolType["BSD"] = "bsd";
-})(ArchiveToolType = exports.ArchiveToolType || (exports.ArchiveToolType = {}));
 // The default number of retry attempts.
 exports.DefaultRetryAttempts = 2;
 // The default delay in milliseconds between retry attempts.
@@ -480,12 +452,6 @@ exports.DefaultRetryDelay = 5000;
 // over the socket during this period, the socket is destroyed and the download
 // is aborted.
 exports.SocketTimeout = 5000;
-// The default path of GNUtar on hosted Windows runners
-exports.GnuTarPathOnWindows = `${process.env['PROGRAMFILES']}\\Git\\usr\\bin\\tar.exe`;
-// The default path of BSDtar on hosted Windows runners
-exports.SystemTarPathOnWindows = `${process.env['SYSTEMDRIVE']}\\Windows\\System32\\tar.exe`;
-exports.TarFilename = 'cache.tar';
-exports.ManifestFilename = 'manifest.txt';
 //# sourceMappingURL=constants.js.map
 
 /***/ }),
@@ -69094,6 +69060,72 @@ function isValidEvent() {
     return RefKey in process.env && Boolean(process.env[RefKey]);
 }
 
+;// CONCATENATED MODULE: ./src/policy-utils.ts
+var policy_utils_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+const API_ENDPOINT = "https://agent.api.stepsecurity.io/v1";
+function fetchPolicy(owner, policyName, idToken) {
+    return policy_utils_awaiter(this, void 0, void 0, function* () {
+        if (idToken === "") {
+            throw new Error("[PolicyFetch]: id-token in empty");
+        }
+        let policyEndpoint = `${API_ENDPOINT}/github/${owner}/actions/policies/${policyName}`;
+        let httpClient = new lib.HttpClient();
+        let headers = {};
+        headers["Authorization"] = `Bearer ${idToken}`;
+        headers["Source"] = "github-actions";
+        let response = undefined;
+        let err = undefined;
+        let retry = 0;
+        while (retry < 3) {
+            try {
+                console.log(`Attempt: ${retry + 1}`);
+                response = yield httpClient.getJson(policyEndpoint, headers);
+                break;
+            }
+            catch (e) {
+                err = e;
+            }
+            retry += 1;
+            yield sleep(1000);
+        }
+        if (response === undefined && err !== undefined) {
+            throw new Error(`[Policy Fetch] ${err}`);
+        }
+        else {
+            return response.result;
+        }
+    });
+}
+function mergeConfigs(localConfig, remoteConfig) {
+    if (localConfig.allowed_endpoints === "") {
+        localConfig.allowed_endpoints = remoteConfig.allowed_endpoints.join(" ");
+    }
+    if (remoteConfig.disable_sudo !== undefined) {
+        localConfig.disable_sudo = remoteConfig.disable_sudo;
+    }
+    if (remoteConfig.disable_file_monitoring !== undefined) {
+        localConfig.disable_file_monitoring = remoteConfig.disable_file_monitoring;
+    }
+    if (remoteConfig.egress_policy !== undefined) {
+        localConfig.egress_policy = remoteConfig.egress_policy;
+    }
+    return localConfig;
+}
+function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+}
+
 // EXTERNAL MODULE: ./node_modules/@actions/cache/lib/internal/cacheHttpClient.js
 var cacheHttpClient = __nccwpck_require__(8245);
 // EXTERNAL MODULE: ./node_modules/@actions/cache/lib/internal/cacheUtils.js
@@ -69123,6 +69155,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
 
 
 
+
 (() => setup_awaiter(void 0, void 0, void 0, function* () {
     try {
         if (process.platform !== "linux") {
@@ -69137,7 +69170,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         var env = "agent";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
         var web_url = "https://app.stepsecurity.io";
-        const confg = {
+        let confg = {
             repo: process.env["GITHUB_REPOSITORY"],
             run_id: process.env["GITHUB_RUN_ID"],
             correlation_id: correlation_id,
@@ -69150,6 +69183,23 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
             private: github.context.payload.repository.private,
         };
+        let policyName = lib_core.getInput("policy");
+        if (policyName !== "") {
+            console.log(`Fetching policy from API with name: ${policyName}`);
+            try {
+                let idToken = yield lib_core.getIDToken();
+                let result = yield fetchPolicy(github.context.repo.owner, policyName, idToken);
+                confg = mergeConfigs(confg, result);
+            }
+            catch (err) {
+                lib_core.info(`[!] ${err}`);
+                lib_core.setFailed(err);
+            }
+        }
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `disableSudo=${confg.disable_sudo}${external_os_.EOL}`, {
+            encoding: "utf8",
+        });
+        lib_core.info(`[!] Current Configuration: \n${JSON.stringify(confg)}\n`);
         if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
             lib_core.setFailed("egress-policy must be either audit or block");
         }
@@ -69236,7 +69286,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                     }
                     break;
                 }
-                yield sleep(300);
+                yield setup_sleep(300);
             } // The file *does* exist
             else {
                 // Read the file
@@ -69250,7 +69300,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         lib_core.setFailed(error.message);
     }
 }))();
-function sleep(ms) {
+function setup_sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
