@@ -50,7 +50,6 @@ import * as utils from '@actions/cache/lib/internal/cacheUtils'
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
       disable_sudo: core.getBooleanInput("disable-sudo"),
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
-      private: context.payload.repository.private,
     };
 
     let policyName = core.getInput("policy");

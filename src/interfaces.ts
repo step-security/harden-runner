@@ -9,7 +9,6 @@ export interface Configuration {
   disable_telemetry: boolean;
   disable_sudo: boolean;
   disable_file_monitoring: boolean;
-  private: string;
 }
 
 export interface PolicyResponse {
