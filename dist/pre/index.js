@@ -46,7 +46,6 @@ const crypto = __importStar(__nccwpck_require__(6417));
 const fs = __importStar(__nccwpck_require__(5747));
 const url_1 = __nccwpck_require__(8835);
 const utils = __importStar(__nccwpck_require__(1518));
-const constants_1 = __nccwpck_require__(8840);
 const downloadUtils_1 = __nccwpck_require__(5500);
 const options_1 = __nccwpck_require__(6215);
 const requestUtils_1 = __nccwpck_require__(3981);
@@ -76,10 +75,17 @@ function createHttpClient() {
     const bearerCredentialHandler = new auth_1.BearerCredentialHandler(token);
     return new http_client_1.HttpClient('actions/cache', [bearerCredentialHandler], getRequestOptions());
 }
-function getCacheVersion(paths, compressionMethod) {
-    const components = paths.concat(!compressionMethod || compressionMethod === constants_1.CompressionMethod.Gzip
-        ? []
-        : [compressionMethod]);
+function getCacheVersion(paths, compressionMethod, enableCrossOsArchive = false) {
+    const components = paths;
+    // Add compression method to cache version to restore
+    // compressed cache as per compression method
+    if (compressionMethod) {
+        components.push(compressionMethod);
+    }
+    // Only check for windows platforms if enableCrossOsArchive is false
+    if (process.platform === 'win32' && !enableCrossOsArchive) {
+        components.push('windows-only');
+    }
     // Add salt to cache version to support breaking changes in cache entry
     components.push(versionSalt);
     return crypto
@@ -91,10 +97,15 @@ exports.getCacheVersion = getCacheVersion;
 function getCacheEntry(keys, paths, options) {
     return __awaiter(this, void 0, void 0, function* () {
         const httpClient = createHttpClient();
-        const version = getCacheVersion(paths, options === null || options === void 0 ? void 0 : options.compressionMethod);
+        const version = getCacheVersion(paths, options === null || options === void 0 ? void 0 : options.compressionMethod, options === null || options === void 0 ? void 0 : options.enableCrossOsArchive);
         const resource = `cache?keys=${encodeURIComponent(keys.join(','))}&version=${version}`;
         const response = yield requestUtils_1.retryTypedResponse('getCacheEntry', () => __awaiter(this, void 0, void 0, function* () { return httpClient.getJson(getCacheApiUrl(resource)); }));
+        // Cache not found
         if (response.statusCode === 204) {
+            // List cache for primary key only if cache miss occurs
+            if (core.isDebug()) {
+                yield printCachesListForDiagnostics(keys[0], httpClient, version);
+            }
             return null;
         }
         if (!requestUtils_1.isSuccessStatusCode(response.statusCode)) {
@@ -103,6 +114,7 @@ function getCacheEntry(keys, paths, options) {
         const cacheResult = response.result;
         const cacheDownloadUrl = cacheResult === null || cacheResult === void 0 ? void 0 : cacheResult.archiveLocation;
         if (!cacheDownloadUrl) {
+            // Cache achiveLocation not found. This should never happen, and hence bail out.
             throw new Error('Cache not found.');
         }
         core.setSecret(cacheDownloadUrl);
@@ -112,6 +124,22 @@ function getCacheEntry(keys, paths, options) {
     });
 }
 exports.getCacheEntry = getCacheEntry;
+function printCachesListForDiagnostics(key, httpClient, version) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const resource = `caches?key=${encodeURIComponent(key)}`;
+        const response = yield requestUtils_1.retryTypedResponse('listCache', () => __awaiter(this, void 0, void 0, function* () { return httpClient.getJson(getCacheApiUrl(resource)); }));
+        if (response.statusCode === 200) {
+            const cacheListResult = response.result;
+            const totalCount = cacheListResult === null || cacheListResult === void 0 ? void 0 : cacheListResult.totalCount;
+            if (totalCount && totalCount > 0) {
+                core.debug(`No matching cache found for cache key '${key}', version '${version} and scope ${process.env['GITHUB_REF']}. There exist one or more cache(s) with similar key but they have different version or scope. See more info on cache matching here: https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#matching-a-cache-key \nOther caches with similar key:`);
+                for (const cacheEntry of (cacheListResult === null || cacheListResult === void 0 ? void 0 : cacheListResult.artifactCaches) || []) {
+                    core.debug(`Cache Key: ${cacheEntry === null || cacheEntry === void 0 ? void 0 : cacheEntry.cacheKey}, Cache Version: ${cacheEntry === null || cacheEntry === void 0 ? void 0 : cacheEntry.cacheVersion}, Cache Scope: ${cacheEntry === null || cacheEntry === void 0 ? void 0 : cacheEntry.scope}, Cache Created: ${cacheEntry === null || cacheEntry === void 0 ? void 0 : cacheEntry.creationTime}`);
+                }
+            }
+        }
+    });
+}
 function downloadCache(archiveLocation, archivePath, options) {
     return __awaiter(this, void 0, void 0, function* () {
         const archiveUrl = new url_1.URL(archiveLocation);
@@ -132,7 +160,7 @@ exports.downloadCache = downloadCache;
 function reserveCache(key, paths, options) {
     return __awaiter(this, void 0, void 0, function* () {
         const httpClient = createHttpClient();
-        const version = getCacheVersion(paths, options === null || options === void 0 ? void 0 : options.compressionMethod);
+        const version = getCacheVersion(paths, options === null || options === void 0 ? void 0 : options.compressionMethod, options === null || options === void 0 ? void 0 : options.enableCrossOsArchive);
         const reserveCacheRequest = {
             key,
             version,
@@ -350,12 +378,13 @@ function unlinkFile(filePath) {
     });
 }
 exports.unlinkFile = unlinkFile;
-function getVersion(app) {
+function getVersion(app, additionalArgs = []) {
     return __awaiter(this, void 0, void 0, function* () {
-        core.debug(`Checking ${app} --version`);
         let versionOutput = '';
+        additionalArgs.push('--version');
+        core.debug(`Checking ${app} ${additionalArgs.join(' ')}`);
         try {
-            yield exec.exec(`${app} --version`, [], {
+            yield exec.exec(`${app}`, additionalArgs, {
                 ignoreReturnCode: true,
                 silent: true,
                 listeners: {
@@ -375,23 +404,14 @@ function getVersion(app) {
 // Use zstandard if possible to maximize cache performance
 function getCompressionMethod() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (process.platform === 'win32' && !(yield isGnuTarInstalled())) {
-            // Disable zstd due to bug https://github.com/actions/cache/issues/301
-            return constants_1.CompressionMethod.Gzip;
-        }
-        const versionOutput = yield getVersion('zstd');
+        const versionOutput = yield getVersion('zstd', ['--quiet']);
         const version = semver.clean(versionOutput);
-        if (!versionOutput.toLowerCase().includes('zstd command line interface')) {
-            // zstd is not installed
+        core.debug(`zstd version: ${version}`);
+        if (versionOutput === '') {
             return constants_1.CompressionMethod.Gzip;
-        }
-        else if (!version || semver.lt(version, 'v1.3.2')) {
-            // zstd is installed but using a version earlier than v1.3.2
-            // v1.3.2 is required to use the `--long` options in zstd
-            return constants_1.CompressionMethod.ZstdWithoutLong;
         }
         else {
-            return constants_1.CompressionMethod.Zstd;
+            return constants_1.CompressionMethod.ZstdWithoutLong;
         }
     });
 }
@@ -402,13 +422,16 @@ function getCacheFileName(compressionMethod) {
         : constants_1.CacheFilename.Zstd;
 }
 exports.getCacheFileName = getCacheFileName;
-function isGnuTarInstalled() {
+function getGnuTarPathOnWindows() {
     return __awaiter(this, void 0, void 0, function* () {
+        if (fs.existsSync(constants_1.GnuTarPathOnWindows)) {
+            return constants_1.GnuTarPathOnWindows;
+        }
         const versionOutput = yield getVersion('tar');
-        return versionOutput.toLowerCase().includes('gnu tar');
+        return versionOutput.toLowerCase().includes('gnu tar') ? io.which('tar') : '';
     });
 }
-exports.isGnuTarInstalled = isGnuTarInstalled;
+exports.getGnuTarPathOnWindows = getGnuTarPathOnWindows;
 function assertDefined(name, value) {
     if (value === undefined) {
         throw Error(`Expected ${name} but value was undefiend`);
@@ -444,6 +467,11 @@ var CompressionMethod;
     CompressionMethod["ZstdWithoutLong"] = "zstd-without-long";
     CompressionMethod["Zstd"] = "zstd";
 })(CompressionMethod = exports.CompressionMethod || (exports.CompressionMethod = {}));
+var ArchiveToolType;
+(function (ArchiveToolType) {
+    ArchiveToolType["GNU"] = "gnu";
+    ArchiveToolType["BSD"] = "bsd";
+})(ArchiveToolType = exports.ArchiveToolType || (exports.ArchiveToolType = {}));
 // The default number of retry attempts.
 exports.DefaultRetryAttempts = 2;
 // The default delay in milliseconds between retry attempts.
@@ -452,6 +480,12 @@ exports.DefaultRetryDelay = 5000;
 // over the socket during this period, the socket is destroyed and the download
 // is aborted.
 exports.SocketTimeout = 5000;
+// The default path of GNUtar on hosted Windows runners
+exports.GnuTarPathOnWindows = `${process.env['PROGRAMFILES']}\\Git\\usr\\bin\\tar.exe`;
+// The default path of BSDtar on hosted Windows runners
+exports.SystemTarPathOnWindows = `${process.env['SYSTEMDRIVE']}\\Windows\\System32\\tar.exe`;
+exports.TarFilename = 'cache.tar';
+exports.ManifestFilename = 'manifest.txt';
 //# sourceMappingURL=constants.js.map
 
 /***/ }),
@@ -68974,7 +69008,10 @@ function addSummary() {
             const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
             yield core.summary
                 .addSeparator()
-                .addImage("https://github.com/step-security/harden-runner/raw/main/images/banner.png", "StepSecurity Harden-Runner", { width: "200" })
+                .addRaw(`<picture>
+          <source media="(prefers-color-scheme: light)" srcset="https://github.com/step-security/harden-runner/raw/main/images/banner.png" width="200">
+          <img alt="Dark Banner" src="https://github.com/step-security/harden-runner/raw/main/images/banner-dark.png" width="200">
+        </picture>`)
                 .addLink("View security insights and recommended policy", insights_url)
                 .addSeparator()
                 .write();
@@ -69181,7 +69218,6 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             disable_telemetry: lib_core.getBooleanInput("disable-telemetry"),
             disable_sudo: lib_core.getBooleanInput("disable-sudo"),
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
-            private: github.context.payload.repository.private,
         };
         let policyName = lib_core.getInput("policy");
         if (policyName !== "") {
