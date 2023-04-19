@@ -18,7 +18,7 @@ test("success: fetching policy", async () => {
     .get(`/github/${owner}/actions/policies/${policyName}`)
     .reply(200, response);
 
-  let idToken = "xyz"; 
+  let idToken = "xyz";
   let policy = await fetchPolicy(owner, policyName, idToken);
   console.log(policy);
   expect(policy).toStrictEqual(response);
@@ -36,7 +36,6 @@ test("merge configs", async () => {
     disable_telemetry: false,
     disable_sudo: false,
     disable_file_monitoring: false,
-    private: "true",
   };
   let policyResponse: PolicyResponse = {
     owner: "h0x0er",
@@ -59,7 +58,6 @@ test("merge configs", async () => {
     disable_telemetry: false,
     disable_sudo: false,
     disable_file_monitoring: false,
-    private: "true",
   };
 
   localConfig = mergeConfigs(localConfig, policyResponse);

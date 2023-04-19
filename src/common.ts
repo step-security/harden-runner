@@ -16,10 +16,12 @@ export async function addSummary() {
 
     await core.summary
       .addSeparator()
-      .addImage(
-        "https://github.com/step-security/harden-runner/raw/main/images/banner.png",
-        "StepSecurity Harden-Runner",
-        { width: "200" }
+      .addRaw(
+        `<p><picture>
+          <source media="(prefers-color-scheme: light)" srcset="https://github.com/step-security/harden-runner/raw/main/images/banner.png" width="200">
+          <img alt="Dark Banner" src="https://github.com/step-security/harden-runner/raw/main/images/banner-dark.png" width="200">
+        </picture></p>`,
+        true
       )
       .addLink("View security insights and recommended policy", insights_url)
       .addSeparator()

@@ -1,7 +1,7 @@
 <p align="center">
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="images/banner.png" width="400">
-  <img src="images/banner.png" width="400">
+  <img alt="Dark Banner" src="images/banner-dark.png" width="400">
 </picture>
 </p>
 
@@ -57,7 +57,7 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
       <img src="images/buildlog1.png" alt="Link in build log" >
     </p>
 
-3. Click on the link ([example link](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2265028928)). You will see a process monitor view of file and network activities correlated with each step of the job.
+3. Click on the link ([example link](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2265028928)). You will see a process monitor view of file and network activities correlated with each step of the job. These insights hold significant value for forensic investigations, proving crucial in the event of an incident.
 
     <p align="left">
       <img src="images/insights2.png" alt="Insights from harden-runner" >
