@@ -3,10 +3,10 @@ import * as cp from "child_process";
 
 test("adding stepsecurity summary in github_summary", async () => {
   let expected = `<hr>
-<picture>
+<p><picture>
           <source media=\"(prefers-color-scheme: light)\" srcset=\"https://github.com/step-security/harden-runner/raw/main/images/banner.png\" width=\"200\">
           <img alt=\"Dark Banner\" src=\"https://github.com/step-security/harden-runner/raw/main/images/banner-dark.png\" width=\"200\">
-        </picture>
+        </picture></p>
 <a href=\"https://app.stepsecurity.io/github/step-security/test/actions/runs/12345\">View security insights and recommended policy</a>
 <hr>
 `;
