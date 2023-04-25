@@ -145,7 +145,7 @@ import * as utils from '@actions/cache/lib/internal/cacheUtils'
     let auth = `token ${token}`;
 
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.13.0/agent_0.13.0_linux_amd64.tar.gz",
+      "https://github.com/step-security/agent/releases/download/v0.13.1/agent_0.13.1_linux_amd64.tar.gz",
       undefined,
       auth
     );
