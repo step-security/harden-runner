@@ -1,0 +1,23 @@
+name: Code Review
+on:
+  pull_request:
+    branches:
+      - main
+      - int
+jobs:
+  code-review:
+    name: int tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+      - name: Code Review
+        uses: docker://ghcr.io/step-security/code-reviewer/int:latest # docker pull ghcr.io/step-security/code-reviewer/int:latest
+        env:
+          PAT: ${{ secrets.GITHUB_TOKEN }}
