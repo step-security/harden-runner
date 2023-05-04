@@ -15,11 +15,11 @@
 
 ---
 
-Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runner (Ubuntu VM) to
+🔒 Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runner (Ubuntu VM) to
 
-1. Prevent exfiltration of credentials
-2. Detect tampering of source code during build
-3. Detect compromised dependencies and build tools
+1. Prevent exfiltration of credentials 🔑
+2. Detect tampering of source code during build 🕵️
+3. Detect compromised dependencies and build tools 🚨
 
 
 <p align="center">
@@ -77,19 +77,20 @@ For details, check out the documentation at https://docs.stepsecurity.io
   <img src="images/main-screenshot1.png" alt="Policy recommended by harden-runner">
 </p>
 
-### Restrict egress traffic to allowed endpoints
+### 🚦 Restrict egress traffic to allowed endpoints
 
 Once allowed endpoints are set in the policy in the workflow file, or in the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store)
 
 - Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4).
 - It blocks DNS exfiltration, where attacker tries to send data out using DNS resolution
 - Blocks outbound traffic using IP tables
+- Wildcard domains are supported, e.g. you can add `*.data.mcr.microsoft.com:443` to the allowed list, and egress traffic will be allowed to `eastus.data.mcr.microsoft.com:443` and `westus.data.mcr.microsoft.com:443`. 
 
 <p align="left">
   <img src="images/block-outbound-call.png" alt="Policy recommended by harden-runner" >
 </p>
 
-### Detect tampering of source code during build
+### 🕵️ Detect tampering of source code during build
 
 Harden-Runner monitors file writes and can detect if a file is overwritten.
 
@@ -101,7 +102,7 @@ Harden-Runner monitors file writes and can detect if a file is overwritten.
   <img src="images/fileoverwrite.png" alt="Policy recommended by harden-runner" >
 </p>
 
-### Run your job without sudo access
+### 🚫 Run your job without sudo access
 
 GitHub-hosted runner uses passwordless sudo for running jobs.
 
@@ -110,7 +111,7 @@ GitHub-hosted runner uses passwordless sudo for running jobs.
   recommendation to disable sudo in the insights page
 - When you set `disable-sudo` to `true`, the job steps run without sudo access to the Ubuntu VM
 
-### Get security alerts
+### 🔔 Get security alerts
 
 Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) to get security alerts.
 
