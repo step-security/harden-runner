@@ -1,27 +1,23 @@
 name: Code Review
 on:
   pull_request:
-    branches:
-      - main
-      - int
 permissions:
   contents: read
-
 jobs:
   code-review:
-    name: Code Review
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
-      id-token: write
+      pull-requests: read
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
         with:
-          egress-policy: audit
+          disable-sudo: true
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            int.api.stepsecurity.io:443
 
       - name: Code Review
-        uses: docker://ghcr.io/step-security/code-reviewer/int:latest
-        env:
-          PAT: ${{ secrets.GITHUB_TOKEN }}
+        uses: step-security/ai-codewise@int
