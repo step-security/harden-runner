@@ -61164,7 +61164,7 @@ const processLogLine = (line, tableEntries) => {
             if (pid && process && domain && ipAddress) {
                 const status = ipAddress.startsWith("54.185.253.63")
                     ? "❌ Blocked"
-                    : "✔️ Allowed";
+                    : "✅ Allowed";
                 tableEntries.push({ pid, process, domain, ipAddress, status });
             }
         }
@@ -61205,7 +61205,7 @@ function addSummary() {
         });
         tableEntries = tableEntries.slice(0, 3); // Limit the table entries
         yield core.summary.addRaw(`
-  <h3>🌐 Outbound Network Traffic</h3>
+  <h3>🌐 Network Events</h3>
   <table>
     <thead>
       <tr>

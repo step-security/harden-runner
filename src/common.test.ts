@@ -23,6 +23,6 @@ describe("processLogLine function", () => {
     expect(entry.process).toBe("node");
     expect(entry.domain).toBe("registry.npmjs.org.");
     expect(entry.ipAddress).toBe("104.16.24.35:443");
-    expect(entry.status).toBe("✔️ Allowed"); // Since the IP address is not '54.185.253.63', status should be '✔️ Allowed'
+    expect(entry.status).toBe("✅ Allowed"); // Since the IP address is not '54.185.253.63', status should be '✔️ Allowed'
   });
 });
