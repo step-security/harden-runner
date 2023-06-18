@@ -72,10 +72,9 @@ export async function addSummary() {
     return;
   }
 
-  await core.summary.addSeparator().addRaw(
-    `<h2>GitHub Actions Runtime Security</h2>
-        <p><a href="https://github.com/step-security/harden-runner">By StepSecurity Harden Runner</a></p>`
-  );
+  await core.summary
+    .addSeparator()
+    .addRaw(`<h2>GitHub Actions Runtime Security</h2>`);
 
   tableEntries.sort((a, b) => {
     if (a.status === "❌ Blocked" && b.status !== "❌ Blocked") {
@@ -87,38 +86,43 @@ export async function addSummary() {
     }
   });
 
-  tableEntries = tableEntries.slice(0, 5); // Limit the table entries
+  tableEntries = tableEntries.slice(0, 3); // Limit the table entries
 
   await core.summary.addRaw(`
-    <h3>🌐 Outbound Network Traffic Analysis</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>PID</th>
-          <th>Process</th>
-          <th>Domain</th>
-          <th>IP Address</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${tableEntries
-          .map(
-            (entry) => `<tr>
-            <td>${entry.pid}</td>
-            <td>${entry.process}</td>
-            <td>${entry.domain}</td>
-            <td>${entry.ipAddress}</td>
-            <td>${entry.status}</td>
-          </tr>`
-          )
-          .join("")}
-      </tbody>
-    </table>`);
+  <h3>🌐 Outbound Network Traffic</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Process</th>
+        <th>Endpoint</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${tableEntries
+        .map(
+          (entry) => `<tr>
+          <td>${entry.process}</td>
+          <td>${entry.domain.replace(/\.$/, "")}</td>
+          <td>${entry.status}</td>
+        </tr>`
+        )
+        .join("")}
+      <tr>
+        <td>...</td>
+        <td>...</td>
+        <td>...</td>
+      </tr>
+      <tr>
+        <td colspan="3" align="center"><a href="${insights_url}">View full report and recommended policy at StepSecurity</a></td>
+      </tr>
+    </tbody>
+  </table>
+`);
 
   await core.summary
     .addRaw(
-      `<p>🔍 <a href="${insights_url}">View detailed insights and policy recommendation</a></p>`
+      `<blockquote>Powered by <a href="https://step-security/harden-runner">https://step-security/harden-runner</a></blockquote>`
     )
     .addSeparator()
     .write();
