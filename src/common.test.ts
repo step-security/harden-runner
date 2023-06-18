@@ -1,28 +1,28 @@
-import { addSummary } from "./common";
-import * as cp from "child_process";
+import { processLogLine } from "./common"; // import the function
 
-test("adding stepsecurity summary in github_summary", async () => {
-  let expected = `<hr>
-<p><picture>
-          <source media=\"(prefers-color-scheme: light)\" srcset=\"https://github.com/step-security/harden-runner/raw/main/images/banner.png\" width=\"200\">
-          <img alt=\"Dark Banner\" src=\"https://github.com/step-security/harden-runner/raw/main/images/banner-dark.png\" width=\"200\">
-        </picture></p>
-<a href=\"https://app.stepsecurity.io/github/step-security/test/actions/runs/12345\">View security insights and recommended policy</a>
-<hr>
-`;
+describe("processLogLine function", () => {
+  it("correctly processes the log line and adds an entry to the array", () => {
+    const tableEntries: {
+      pid: string;
+      process: string;
+      domain: string;
+      ipAddress: string;
+      status: string;
+    }[] = [];
+    const logLine =
+      "Thu, 15 Jun 2023 05:35:29 GMT:endpoint called ip address:port 104.16.24.35:443, domain: registry.npmjs.org., pid: 2135, process: node.";
 
-  const github_summary = "/tmp/github_summary";
-  cp.execSync(`touch ${github_summary}`);
+    processLogLine(logLine, tableEntries);
 
-  process.env["STATE_monitorStatusCode"] = "200";
-  process.env["GITHUB_STEP_SUMMARY"] = github_summary;
-  process.env["GITHUB_REPOSITORY"] = "step-security/test";
-  process.env["GITHUB_RUN_ID"] = "12345";
+    // Check if a single entry is added to the array
+    expect(tableEntries.length).toBe(1);
 
-  await addSummary();
-
-  let output = cp.execSync(`cat ${github_summary}`).toString();
-  cp.execSync(`rm ${github_summary}`);
-
-  expect(output).toMatch(expected);
+    // Check if the entry's properties are set correctly
+    const entry = tableEntries[0];
+    expect(entry.pid).toBe("2135");
+    expect(entry.process).toBe("node");
+    expect(entry.domain).toBe("registry.npmjs.org.");
+    expect(entry.ipAddress).toBe("104.16.24.35:443");
+    expect(entry.status).toBe("✔️ Allowed"); // Since the IP address is not '54.185.253.63', status should be '✔️ Allowed'
+  });
 });
