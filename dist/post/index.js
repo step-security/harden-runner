@@ -61233,7 +61233,7 @@ function addSummary() {
     </tbody>
   </table>
 `);
-        yield core.summary.addRaw(`<blockquote>Powered by <a href="https://step-security/harden-runner">https://step-security/harden-runner</a></blockquote>`)
+        yield core.summary.addRaw(`<blockquote>Powered by <a href="https://github.com/step-security/harden-runner">https://github.com/step-security/harden-runner</a></blockquote>`)
             .addSeparator()
             .write();
     });
@@ -61315,7 +61315,6 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
 
 
 
-
 (() => cleanup_awaiter(void 0, void 0, void 0, function* () {
     if (process.platform !== "linux") {
         console.log(UBUNTU_MESSAGE);
@@ -61357,14 +61356,6 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         console.log("status:");
         var content = external_fs_.readFileSync(status, "utf-8");
         console.log(content);
-    }
-    // write annotations
-    var annotationsFile = "/home/agent/annotation.log";
-    if (external_fs_.existsSync(annotationsFile)) {
-        var content = external_fs_.readFileSync(annotationsFile, "utf-8");
-        content.split(/\r?\n/).forEach((line) => {
-            core.error(line);
-        });
     }
     var disable_sudo = process.env.STATE_disableSudo;
     if (disable_sudo !== "true") {

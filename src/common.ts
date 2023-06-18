@@ -122,7 +122,7 @@ export async function addSummary() {
 
   await core.summary
     .addRaw(
-      `<blockquote>Powered by <a href="https://step-security/harden-runner">https://step-security/harden-runner</a></blockquote>`
+      `<blockquote>Powered by <a href="https://github.com/step-security/harden-runner">https://github.com/step-security/harden-runner</a></blockquote>`
     )
     .addSeparator()
     .write();

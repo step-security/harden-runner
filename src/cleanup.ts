@@ -61,15 +61,6 @@ import path from "path";
     console.log(content);
   }
 
-  // write annotations
-  var annotationsFile = "/home/agent/annotation.log";
-  if (fs.existsSync(annotationsFile)) {
-    var content = fs.readFileSync(annotationsFile, "utf-8");
-    content.split(/\r?\n/).forEach((line) => {
-      core.error(line);
-    });
-  }
-
   var disable_sudo = process.env.STATE_disableSudo;
   if (disable_sudo !== "true") {
     var journalLog = cp.execSync("sudo journalctl -u agent.service", {
