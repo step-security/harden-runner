@@ -78,7 +78,7 @@ export async function addSummary() {
       .addRaw(
         `
 <p>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a> by StepSecurity in a private repository, but your organization has not signed up for a free trial or a paid subscription.</p>
-<p>To start a free trial, install the <a href="http://github.com/apps/secure-github-actions-app">Secure GitHub Actions App</a> by StepSecurity or reach out to us via our <a href="https://www.stepsecurity.io/contact">contact form.</a></p>
+<p>To start a free trial, install the <a href="http://github.com/apps/stepsecurity-actions-security">GitHub Actions Security App</a> by StepSecurity or reach out to us via our <a href="https://www.stepsecurity.io/contact">contact form.</a></p>
 `
       )
       .addSeparator()
@@ -100,12 +100,13 @@ export async function addSummary() {
   }
 
   let insightsRow = `<tr>
-      <td colspan="3" align="center"><a href="${insights_url}">🛡️ Check out the full report and recommended policy at StepSecurity.</a></td>
+      <td colspan="3" align="center"><a href="${insights_url}">🛡️ Check out the full report and recommended policy at StepSecurity</a></td>
     </tr>`;
 
-  await core.summary
-    .addSeparator()
-    .addRaw(`<h2>GitHub Actions Runtime Security</h2>`);
+  await core.summary.addSeparator().addRaw(
+    `<h2><a href="${insights_url}">StepSecurity Report</a></h2>
+      <h3>GitHub Actions Runtime Security</h3>`
+  );
 
   tableEntries.sort((a, b) => {
     if (a.status === "❌ Blocked" && b.status !== "❌ Blocked") {
@@ -152,7 +153,8 @@ export async function addSummary() {
   await core.summary
     .addSeparator()
     .addRaw(
-      `<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a> by StepSecurity. Harden-Runner is a security agent for GitHub-hosted runners to block egress traffic & detect code overwrite to prevent breaches.</blockquote>`
+      `<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a>. 
+      Harden-Runner is a security agent for GitHub-hosted runners to block egress traffic & detect code overwrite to prevent breaches.</blockquote>`
     )
     .addSeparator()
     .write();
