@@ -2890,6 +2890,21 @@ function addSummary() {
         if (tableEntries.length === 0) {
             return;
         }
+        let needsSubscription = false;
+        try {
+            let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
+            if (data.includes("StepSecurity Harden Runner is disabled")) {
+                needsSubscription = true;
+            }
+        }
+        catch (err) {
+            //console.error(err);
+        }
+        let insightsRow = needsSubscription
+            ? ""
+            : `<tr>
+      <td colspan="3" align="center"><a href="${insights_url}">Check out the full report at StepSecurity!</a></td>
+    </tr>`;
         yield core.summary
             .addSeparator()
             .addRaw(`<h2>GitHub Actions Runtime Security</h2>`);
@@ -2904,7 +2919,7 @@ function addSummary() {
                 return 0;
             }
         });
-        tableEntries = tableEntries.slice(0, 3); // Limit the table entries
+        tableEntries = tableEntries.slice(0, 3);
         yield core.summary.addRaw(`
   <h3>🌐 Network Events</h3>
   <table>
@@ -2928,14 +2943,18 @@ function addSummary() {
         <td>...</td>
         <td>...</td>
       </tr>
-      <tr>
-        <td colspan="3" align="center"><a href="${insights_url}">View full report and recommended policy at StepSecurity</a></td>
-      </tr>
+       ${insightsRow}
     </tbody>
   </table>
 `);
+        if (needsSubscription) {
+            yield core.summary.addRaw(`
+<p>This is a glimpse of our security report. Full runtime security capabilities, including the ability to set block policies and get detection notifications, are available for private repositories with a paid subscription.</p>
+<p><a href="https://www.stepsecurity.io">Check out our subscription plans at StepSecurity.</a></p>
+`);
+        }
         yield core.summary
-            .addRaw(`<blockquote>Powered by <a href="https://github.com/step-security/harden-runner">https://github.com/step-security/harden-runner</a></blockquote>`)
+            .addRaw(`<blockquote>This analysis is powered by <a href="https://github.com/step-security/harden-runner">Harden-runner</a>, a security agent for GitHub-hosted runners to block egress traffic & detect code overwrite to prevent breaches.</blockquote>`)
             .addSeparator()
             .write();
     });

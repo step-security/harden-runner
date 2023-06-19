@@ -69040,6 +69040,21 @@ function addSummary() {
         if (tableEntries.length === 0) {
             return;
         }
+        let needsSubscription = false;
+        try {
+            let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
+            if (data.includes("StepSecurity Harden Runner is disabled")) {
+                needsSubscription = true;
+            }
+        }
+        catch (err) {
+            //console.error(err);
+        }
+        let insightsRow = needsSubscription
+            ? ""
+            : `<tr>
+      <td colspan="3" align="center"><a href="${insights_url}">Check out the full report at StepSecurity!</a></td>
+    </tr>`;
         yield core.summary
             .addSeparator()
             .addRaw(`<h2>GitHub Actions Runtime Security</h2>`);
@@ -69054,7 +69069,7 @@ function addSummary() {
                 return 0;
             }
         });
-        tableEntries = tableEntries.slice(0, 3); // Limit the table entries
+        tableEntries = tableEntries.slice(0, 3);
         yield core.summary.addRaw(`
   <h3>🌐 Network Events</h3>
   <table>
@@ -69078,14 +69093,18 @@ function addSummary() {
         <td>...</td>
         <td>...</td>
       </tr>
-      <tr>
-        <td colspan="3" align="center"><a href="${insights_url}">View full report and recommended policy at StepSecurity</a></td>
-      </tr>
+       ${insightsRow}
     </tbody>
   </table>
 `);
+        if (needsSubscription) {
+            yield core.summary.addRaw(`
+<p>This is a glimpse of our security report. Full runtime security capabilities, including the ability to set block policies and get detection notifications, are available for private repositories with a paid subscription.</p>
+<p><a href="https://www.stepsecurity.io">Check out our subscription plans at StepSecurity.</a></p>
+`);
+        }
         yield core.summary
-            .addRaw(`<blockquote>Powered by <a href="https://github.com/step-security/harden-runner">https://github.com/step-security/harden-runner</a></blockquote>`)
+            .addRaw(`<blockquote>This analysis is powered by <a href="https://github.com/step-security/harden-runner">Harden-runner</a>, a security agent for GitHub-hosted runners to block egress traffic & detect code overwrite to prevent breaches.</blockquote>`)
             .addSeparator()
             .write();
     });
@@ -69266,6 +69285,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
 
 
 (() => setup_awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
         if (process.platform !== "linux") {
             console.log(UBUNTU_MESSAGE);
@@ -69290,6 +69310,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             disable_telemetry: lib_core.getBooleanInput("disable-telemetry"),
             disable_sudo: lib_core.getBooleanInput("disable-sudo"),
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
+            private: ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.private) || false,
         };
         let policyName = lib_core.getInput("policy");
         if (policyName !== "") {
