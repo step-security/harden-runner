@@ -2898,7 +2898,7 @@ function addSummary() {
             yield core.summary
                 .addRaw(`
 <p>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a> by StepSecurity in a private repository, but your organization has not signed up for a free trial or a paid subscription.</p>
-<p>To start a free trial, install the <a href="http://github.com/apps/stepsecurity-actions-security">StepSecurity Actions Security GitHub App</a> or reach out to us via our <a href="https://www.stepsecurity.io/contact">contact form.</a></p>
+<p>To start a free trial, install the <a href="https://github.com/apps/stepsecurity-actions-security">StepSecurity Actions Security GitHub App</a> or reach out to us via our <a href="https://www.stepsecurity.io/contact">contact form.</a></p>
 `)
                 .addSeparator()
                 .write();
