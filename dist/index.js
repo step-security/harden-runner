@@ -2881,15 +2881,6 @@ function addSummary() {
         if (!fs.existsSync(log)) {
             return;
         }
-        const content = fs.readFileSync(log, "utf-8");
-        const lines = content.split("\n");
-        let tableEntries = [];
-        for (const line of lines) {
-            processLogLine(line, tableEntries);
-        }
-        if (tableEntries.length === 0) {
-            return;
-        }
         let needsSubscription = false;
         try {
             let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
@@ -2900,10 +2891,30 @@ function addSummary() {
         catch (err) {
             //console.error(err);
         }
-        let insightsRow = needsSubscription
-            ? ""
-            : `<tr>
-      <td colspan="3" align="center"><a href="${insights_url}">Check out the full report at StepSecurity!</a></td>
+        if (needsSubscription) {
+            yield core.summary
+                .addSeparator()
+                .addRaw(`<h2>❌ GitHub Actions Runtime Security is disabled</h2>`);
+            yield core.summary
+                .addRaw(`
+<p>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a> by StepSecurity in a private repository, but your organization has not signed up for a free trial or a paid subscription.</p>
+<p>To start a free trial, install the <a href="http://github.com/apps/secure-github-actions-app">Secure GitHub Actions App</a> by StepSecurity or reach out to us via our <a href="https://www.stepsecurity.io/contact">contact form.</a></p>
+`)
+                .addSeparator()
+                .write();
+            return;
+        }
+        const content = fs.readFileSync(log, "utf-8");
+        const lines = content.split("\n");
+        let tableEntries = [];
+        for (const line of lines) {
+            processLogLine(line, tableEntries);
+        }
+        if (tableEntries.length === 0) {
+            return;
+        }
+        let insightsRow = `<tr>
+      <td colspan="3" align="center"><a href="${insights_url}">🛡️ Check out the full report and recommended policy at StepSecurity.</a></td>
     </tr>`;
         yield core.summary
             .addSeparator()
@@ -2947,14 +2958,9 @@ function addSummary() {
     </tbody>
   </table>
 `);
-        if (needsSubscription) {
-            yield core.summary.addRaw(`
-<p>This is a glimpse of our security report. Full runtime security capabilities, including the ability to set block policies and get detection notifications, are available for private repositories with a paid subscription.</p>
-<p><a href="https://www.stepsecurity.io">Check out our subscription plans at StepSecurity.</a></p>
-`);
-        }
         yield core.summary
-            .addRaw(`<blockquote>This analysis is powered by <a href="https://github.com/step-security/harden-runner">Harden-runner</a>, a security agent for GitHub-hosted runners to block egress traffic & detect code overwrite to prevent breaches.</blockquote>`)
+            .addSeparator()
+            .addRaw(`<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a> by StepSecurity. Harden-Runner is a security agent for GitHub-hosted runners to block egress traffic & detect code overwrite to prevent breaches.</blockquote>`)
             .addSeparator()
             .write();
     });

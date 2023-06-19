@@ -59,6 +59,33 @@ export async function addSummary() {
     return;
   }
 
+  let needsSubscription = false;
+  try {
+    let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
+    if (data.includes("StepSecurity Harden Runner is disabled")) {
+      needsSubscription = true;
+    }
+  } catch (err) {
+    //console.error(err);
+  }
+
+  if (needsSubscription) {
+    await core.summary
+      .addSeparator()
+      .addRaw(`<h2>❌ GitHub Actions Runtime Security is disabled</h2>`);
+
+    await core.summary
+      .addRaw(
+        `
+<p>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a> by StepSecurity in a private repository, but your organization has not signed up for a free trial or a paid subscription.</p>
+<p>To start a free trial, install the <a href="http://github.com/apps/secure-github-actions-app">Secure GitHub Actions App</a> by StepSecurity or reach out to us via our <a href="https://www.stepsecurity.io/contact">contact form.</a></p>
+`
+      )
+      .addSeparator()
+      .write();
+    return;
+  }
+
   const content = fs.readFileSync(log, "utf-8");
   const lines = content.split("\n");
 
@@ -72,20 +99,8 @@ export async function addSummary() {
     return;
   }
 
-  let needsSubscription = false;
-  try {
-    let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
-    if (data.includes("StepSecurity Harden Runner is disabled")) {
-      needsSubscription = true;
-    }
-  } catch (err) {
-    //console.error(err);
-  }
-
-  let insightsRow = needsSubscription
-    ? ""
-    : `<tr>
-      <td colspan="3" align="center"><a href="${insights_url}">Check out the full report at StepSecurity!</a></td>
+  let insightsRow = `<tr>
+      <td colspan="3" align="center"><a href="${insights_url}">🛡️ Check out the full report and recommended policy at StepSecurity.</a></td>
     </tr>`;
 
   await core.summary
@@ -134,16 +149,10 @@ export async function addSummary() {
   </table>
 `);
 
-  if (needsSubscription) {
-    await core.summary.addRaw(`
-<p>This is a glimpse of our security report. Full runtime security capabilities, including the ability to set block policies and get detection notifications, are available for private repositories with a paid subscription.</p>
-<p><a href="https://www.stepsecurity.io">Check out our subscription plans at StepSecurity.</a></p>
-`);
-  }
-
   await core.summary
+    .addSeparator()
     .addRaw(
-      `<blockquote>This analysis is powered by <a href="https://github.com/step-security/harden-runner">Harden-runner</a>, a security agent for GitHub-hosted runners to block egress traffic & detect code overwrite to prevent breaches.</blockquote>`
+      `<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a> by StepSecurity. Harden-Runner is a security agent for GitHub-hosted runners to block egress traffic & detect code overwrite to prevent breaches.</blockquote>`
     )
     .addSeparator()
     .write();
