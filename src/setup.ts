@@ -50,6 +50,7 @@ import * as utils from '@actions/cache/lib/internal/cacheUtils'
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
       disable_sudo: core.getBooleanInput("disable-sudo"),
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
+      private: context?.payload?.repository?.private || false,
     };
 
     let policyName = core.getInput("policy");
@@ -145,7 +146,7 @@ import * as utils from '@actions/cache/lib/internal/cacheUtils'
     let auth = `token ${token}`;
 
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.13.2/agent_0.13.2_linux_amd64.tar.gz",
+      "https://github.com/step-security/agent/releases/download/v0.13.4/agent_0.13.4_linux_amd64.tar.gz",
       undefined,
       auth
     );

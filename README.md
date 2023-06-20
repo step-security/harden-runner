@@ -113,7 +113,7 @@ GitHub-hosted runner uses passwordless sudo for running jobs.
 
 ### 🔔 Get security alerts
 
-Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) to get security alerts.
+Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to get security alerts.
 
 - Email and Slack notifications are supported
 - Notifications are sent when outbound traffic is blocked or source code is overwritten
@@ -123,11 +123,11 @@ Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app
 
 Private repositories are supported if they have a commercial license. Check out the [documentation](https://docs.stepsecurity.io/harden-runner/installation/business-enterprise-license) for more details.
 
-Install the [Harden Runner App](https://github.com/marketplace/harden-runner-app) to use Harden-Runner GitHub Action for `Private` repositories.
+Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to use Harden-Runner GitHub Action for `Private` repositories.
 
 - If you use Harden-Runner GitHub Action in a private repository, the generated insights URL is NOT public.
 - You need to authenticate first to access insights URL for private repository. Only those who have access to the repository can view it.
-- [Harden Runner App](https://github.com/marketplace/harden-runner-app) only needs `actions: read` permissions on your repositories.
+- [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) only needs `actions: read` permissions on your repositories.
 
 Read this [case study on how Kapiche uses Harden Runner](https://www.stepsecurity.io/case-studies/kapiche/) to improve software supply chain security in their open source and private repositories.
 

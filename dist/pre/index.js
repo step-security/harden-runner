@@ -68997,25 +68997,122 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
     });
 };
 
+
 function printInfo(web_url) {
     console.log("\x1b[32m%s\x1b[0m", "View security insights and recommended policy at:");
     console.log(`${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
 }
+const processLogLine = (line, tableEntries) => {
+    if (line.includes("pid") &&
+        line.includes("process") &&
+        line.includes("domain") &&
+        line.includes("ip address")) {
+        const matches = line.match(/ip address:port ([\d.:]+), domain: ([\w.-]+), pid: (\d+), process: (\w+)/);
+        if (matches) {
+            const [ipAddress, domain, pid, process] = matches.slice(1);
+            // Check if all values are non-empty
+            if (pid && process && domain && ipAddress) {
+                const status = ipAddress.startsWith("54.185.253.63")
+                    ? "❌ Blocked"
+                    : "✅ Allowed";
+                tableEntries.push({ pid, process, domain, ipAddress, status });
+            }
+        }
+    }
+};
 function addSummary() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (process.env.STATE_monitorStatusCode === "200") {
-            const web_url = "https://app.stepsecurity.io";
-            const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
+        if (process.env.STATE_monitorStatusCode !== "200") {
+            return;
+        }
+        const web_url = "https://app.stepsecurity.io";
+        const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
+        const log = "/home/agent/agent.log";
+        if (!fs.existsSync(log)) {
+            return;
+        }
+        let needsSubscription = false;
+        try {
+            let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
+            if (data.includes("StepSecurity Harden Runner is disabled")) {
+                needsSubscription = true;
+            }
+        }
+        catch (err) {
+            //console.error(err);
+        }
+        if (needsSubscription) {
             yield core.summary
                 .addSeparator()
-                .addRaw(`<p><picture>
-          <source media="(prefers-color-scheme: light)" srcset="https://github.com/step-security/harden-runner/raw/main/images/banner.png" width="200">
-          <img alt="Dark Banner" src="https://github.com/step-security/harden-runner/raw/main/images/banner-dark.png" width="200">
-        </picture></p>`, true)
-                .addLink("View security insights and recommended policy", insights_url)
+                .addRaw(`<h2>❌ GitHub Actions Runtime Security is disabled</h2>`);
+            yield core.summary
+                .addRaw(`
+<p>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a> by StepSecurity in a private repository, but your organization has not signed up for a free trial or a paid subscription.</p>
+<p>To start a free trial, install the <a href="https://github.com/apps/stepsecurity-actions-security">StepSecurity Actions Security GitHub App</a> or reach out to us via our <a href="https://www.stepsecurity.io/contact">contact form.</a></p>
+`)
                 .addSeparator()
                 .write();
+            return;
         }
+        const content = fs.readFileSync(log, "utf-8");
+        const lines = content.split("\n");
+        let tableEntries = [];
+        for (const line of lines) {
+            processLogLine(line, tableEntries);
+        }
+        if (tableEntries.length === 0) {
+            return;
+        }
+        let insightsRow = `<tr>
+      <td colspan="3" align="center"><a href="${insights_url}">🛡️ Check out the full report and recommended policy at StepSecurity</a></td>
+    </tr>`;
+        yield core.summary.addSeparator().addRaw(`<h2><a href="${insights_url}">StepSecurity Report</a></h2>
+      <h3>GitHub Actions Runtime Security</h3>`);
+        tableEntries.sort((a, b) => {
+            if (a.status === "❌ Blocked" && b.status !== "❌ Blocked") {
+                return -1;
+            }
+            else if (a.status !== "❌ Blocked" && b.status === "❌ Blocked") {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        });
+        tableEntries = tableEntries.slice(0, 3);
+        yield core.summary.addRaw(`
+  <h3>🌐 Network Events</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Process</th>
+        <th>Endpoint</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${tableEntries
+            .map((entry) => `<tr>
+          <td>${entry.process}</td>
+          <td>${entry.domain.replace(/\.$/, "")}</td>
+          <td>${entry.status}</td>
+        </tr>`)
+            .join("")}
+      <tr>
+        <td>...</td>
+        <td>...</td>
+        <td>...</td>
+      </tr>
+       ${insightsRow}
+    </tbody>
+  </table>
+`);
+        yield core.summary
+            .addSeparator()
+            .addRaw(`<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a>. 
+      Harden-Runner is a security agent for GitHub-hosted runners to block egress traffic & detect code overwrite to prevent breaches.</blockquote>`)
+            .addSeparator()
+            .write();
     });
 }
 const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
@@ -69036,7 +69133,7 @@ function verifyChecksum(downloadPath) {
     const checksum = external_crypto_.createHash("sha256")
         .update(fileBuffer)
         .digest("hex"); // checksum of downloaded file
-    const expectedChecksum = "a1e79e4d7323a63a845c446b9a964a772b0ab7dff9fc94f8a1d10e901f2acde1"; // checksum for v0.13.2
+    const expectedChecksum = "79cc2df62f6eba9ab4ceadbbdfca4d20ef5b14e1439a98eaa559142b8dd61aac"; // checksum for v0.13.4
     if (checksum !== expectedChecksum) {
         lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
     }
@@ -69194,6 +69291,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
 
 
 (() => setup_awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
         if (process.platform !== "linux") {
             console.log(UBUNTU_MESSAGE);
@@ -69218,6 +69316,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             disable_telemetry: lib_core.getBooleanInput("disable-telemetry"),
             disable_sudo: lib_core.getBooleanInput("disable-sudo"),
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
+            private: ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.private) || false,
         };
         let policyName = lib_core.getInput("policy");
         if (policyName !== "") {
@@ -69288,7 +69387,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         // Note: to avoid github rate limiting
         let token = lib_core.getInput("token");
         let auth = `token ${token}`;
-        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.2/agent_0.13.2_linux_amd64.tar.gz", undefined, auth);
+        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.4/agent_0.13.4_linux_amd64.tar.gz", undefined, auth);
         verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
         const extractPath = yield tool_cache.extractTar(downloadPath);
         if (!confg.disable_telemetry || confg.egress_policy === "audit") {
