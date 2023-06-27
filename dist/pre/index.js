@@ -69270,6 +69270,7 @@ var cacheUtils = __nccwpck_require__(1518);
 function isArcRunner() {
     let out = false;
     let runner_user_agent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
+    console.log(`Runner Agent: ${runner_user_agent}`);
     if (runner_user_agent.indexOf("actions-runner-controller/") > -1)
         out = true;
     return out;
