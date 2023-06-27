@@ -1,7 +1,7 @@
 import * as cp from "child_process";
 
 
-export function isArcRunner(): boolean {
+export async function isArcRunner(): Promise<boolean> {
   let out: boolean = false;
 
   let runner_user_agent: string =

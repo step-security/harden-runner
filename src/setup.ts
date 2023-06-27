@@ -113,6 +113,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
     }
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
+    console.log(process.env)
 
     if (String(statusCode) === common.STATUS_HARDEN_RUNNER_UNAVAILABLE) {
       console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
