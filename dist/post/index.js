@@ -61266,6 +61266,7 @@ const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
+const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner";
 
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = require("node:fs");
@@ -61322,6 +61323,31 @@ function isValidEvent() {
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(5622);
 var external_path_default = /*#__PURE__*/__nccwpck_require__.n(external_path_);
+;// CONCATENATED MODULE: ./src/arc-runner.ts
+
+function isArcRunner() {
+    let out = false;
+    let runner_user_agent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
+    if (runner_user_agent.indexOf("actions-runner-controller/") > -1)
+        out = true;
+    return out;
+}
+function sendAllowedEndpoints(endpoints) {
+    let allowed_endpoints = endpoints.split(" "); // endpoints are space separated 
+    if (allowed_endpoints.length > 0) {
+        for (let endp of allowed_endpoints) {
+            cp.execSync(`echo "${endp}" > "step_policy_endpoint_\`echo "${endp}" | base64\`"`);
+        }
+        applyPolicy(allowed_endpoints.length);
+    }
+}
+function applyPolicy(count) {
+    cp.execSync(`echo "step_policy_apply_${count}" > "step_policy_apply_${count}"`);
+}
+function removeStepPolicyFiles() {
+    external_child_process_.execSync("rm step_policy_*");
+}
+
 ;// CONCATENATED MODULE: ./src/cleanup.ts
 var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -61339,6 +61365,7 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
 
 
 
+
 (() => cleanup_awaiter(void 0, void 0, void 0, function* () {
     if (process.platform !== "linux") {
         console.log(UBUNTU_MESSAGE);
@@ -61346,6 +61373,11 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
     }
     if (isDocker()) {
         console.log(CONTAINER_MESSAGE);
+        return;
+    }
+    if (isArcRunner()) {
+        console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
+        removeStepPolicyFiles();
         return;
     }
     if (String(process.env.STATE_monitorStatusCode) ===

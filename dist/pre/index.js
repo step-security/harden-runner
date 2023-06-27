@@ -69119,6 +69119,7 @@ const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
+const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner";
 
 // EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
 var tool_cache = __nccwpck_require__(7784);
@@ -69264,6 +69265,31 @@ function sleep(ms) {
 var cacheHttpClient = __nccwpck_require__(8245);
 // EXTERNAL MODULE: ./node_modules/@actions/cache/lib/internal/cacheUtils.js
 var cacheUtils = __nccwpck_require__(1518);
+;// CONCATENATED MODULE: ./src/arc-runner.ts
+
+function isArcRunner() {
+    let out = false;
+    let runner_user_agent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
+    if (runner_user_agent.indexOf("actions-runner-controller/") > -1)
+        out = true;
+    return out;
+}
+function sendAllowedEndpoints(endpoints) {
+    let allowed_endpoints = endpoints.split(" "); // endpoints are space separated 
+    if (allowed_endpoints.length > 0) {
+        for (let endp of allowed_endpoints) {
+            external_child_process_.execSync(`echo "${endp}" > "step_policy_endpoint_\`echo "${endp}" | base64\`"`);
+        }
+        applyPolicy(allowed_endpoints.length);
+    }
+}
+function applyPolicy(count) {
+    external_child_process_.execSync(`echo "step_policy_apply_${count}" > "step_policy_apply_${count}"`);
+}
+function removeStepPolicyFiles() {
+    cp.execSync("rm step_policy_*");
+}
+
 ;// CONCATENATED MODULE: ./src/setup.ts
 var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -69274,6 +69300,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -69360,6 +69387,12 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         if (String(statusCode) === STATUS_HARDEN_RUNNER_UNAVAILABLE) {
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+            return;
+        }
+        // TODO:
+        //  if arc_based runner; then send allowed endpoints to backed using file-write logic
+        if (isArcRunner()) {
+            sendAllowedEndpoints(confg.allowed_endpoints);
             return;
         }
         if (isValidEvent()) {
