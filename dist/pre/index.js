@@ -69266,14 +69266,25 @@ var cacheHttpClient = __nccwpck_require__(8245);
 // EXTERNAL MODULE: ./node_modules/@actions/cache/lib/internal/cacheUtils.js
 var cacheUtils = __nccwpck_require__(1518);
 ;// CONCATENATED MODULE: ./src/arc-runner.ts
+var arc_runner_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 
 function isArcRunner() {
-    let out = false;
-    let runner_user_agent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
-    console.log(`Runner Agent: ${runner_user_agent}`);
-    if (runner_user_agent.indexOf("actions-runner-controller/") > -1)
-        out = true;
-    return out;
+    return arc_runner_awaiter(this, void 0, void 0, function* () {
+        let out = false;
+        let runner_user_agent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
+        console.log(`Runner Agent: ${runner_user_agent}`);
+        if (runner_user_agent.indexOf("actions-runner-controller/") > -1)
+            out = true;
+        return out;
+    });
 }
 function sendAllowedEndpoints(endpoints) {
     let allowed_endpoints = endpoints.split(" "); // endpoints are space separated 
@@ -69386,6 +69397,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log(`error in connecting to ${api_url}: ${e}`);
         }
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
+        console.log(process.env);
         if (String(statusCode) === STATUS_HARDEN_RUNNER_UNAVAILABLE) {
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
             return;
