@@ -69280,7 +69280,6 @@ function isArcRunner() {
     return arc_runner_awaiter(this, void 0, void 0, function* () {
         let out = false;
         let runner_user_agent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
-        console.log(`Runner Agent: ${runner_user_agent}`);
         if (runner_user_agent.indexOf("actions-runner-controller/") > -1)
             out = true;
         return out;
@@ -69383,6 +69382,11 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
             lib_core.setFailed("disable-telemetry must be a boolean value");
         }
+        if (isArcRunner()) {
+            console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
+            sendAllowedEndpoints(confg.allowed_endpoints);
+            return;
+        }
         let _http = new lib.HttpClient();
         let statusCode;
         _http.requestOptions = { socketTimeout: 3 * 1000 };
@@ -69397,15 +69401,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log(`error in connecting to ${api_url}: ${e}`);
         }
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-        console.log(process.env);
         if (String(statusCode) === STATUS_HARDEN_RUNNER_UNAVAILABLE) {
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
-            return;
-        }
-        // TODO:
-        //  if arc_based runner; then send allowed endpoints to backed using file-write logic
-        if (isArcRunner()) {
-            sendAllowedEndpoints(confg.allowed_endpoints);
             return;
         }
         if (isValidEvent()) {
