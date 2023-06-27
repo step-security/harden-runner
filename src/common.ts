@@ -170,3 +170,5 @@ export const UBUNTU_MESSAGE =
 
 export const HARDEN_RUNNER_UNAVAILABLE_MESSAGE =
   "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
+
+export const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner"

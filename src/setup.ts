@@ -20,8 +20,9 @@ import {
 import { Configuration, PolicyResponse } from "./interfaces";
 import { fetchPolicy, mergeConfigs } from "./policy-utils";
 
-import {getCacheEntry} from "@actions/cache/lib/internal/cacheHttpClient"
-import * as utils from '@actions/cache/lib/internal/cacheUtils'
+import { getCacheEntry } from "@actions/cache/lib/internal/cacheHttpClient";
+import * as utils from "@actions/cache/lib/internal/cacheUtils";
+import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
 
 (async () => {
   try {
@@ -57,7 +58,7 @@ import * as utils from '@actions/cache/lib/internal/cacheUtils'
     if (policyName !== "") {
       console.log(`Fetching policy from API with name: ${policyName}`);
       try {
-        let idToken: string = await core.getIDToken()
+        let idToken: string = await core.getIDToken();
         let result: PolicyResponse = await fetchPolicy(
           context.repo.owner,
           policyName,
@@ -118,12 +119,24 @@ import * as utils from '@actions/cache/lib/internal/cacheUtils'
       return;
     }
 
+    // TODO:
+    //  if arc_based runner; then send allowed endpoints to backed using file-write logic
+    if (isArcRunner()) {
+      sendAllowedEndpoints(confg.allowed_endpoints);
+      return;
+    }
+
     if (isValidEvent()) {
       try {
-        let compressionMethod:CompressionMethod = await utils.getCompressionMethod()
-        const cacheEntry:ArtifactCacheEntry = await getCacheEntry([cacheKey], [cacheFile], {
-          compressionMethod: compressionMethod,
-        });
+        let compressionMethod: CompressionMethod =
+          await utils.getCompressionMethod();
+        const cacheEntry: ArtifactCacheEntry = await getCacheEntry(
+          [cacheKey],
+          [cacheFile],
+          {
+            compressionMethod: compressionMethod,
+          }
+        );
         const url = new URL(cacheEntry.archiveLocation);
         core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
         confg.allowed_endpoints += ` ${url.hostname}:443`;
