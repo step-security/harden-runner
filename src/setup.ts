@@ -93,6 +93,12 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       core.setFailed("disable-telemetry must be a boolean value");
     }
 
+    if (isArcRunner()) {
+      console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
+      sendAllowedEndpoints(confg.allowed_endpoints);
+      return;
+    }
+
     let _http = new httpm.HttpClient();
     let statusCode;
     _http.requestOptions = { socketTimeout: 3 * 1000 };
@@ -113,17 +119,8 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
     }
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
-    console.log(process.env)
-
     if (String(statusCode) === common.STATUS_HARDEN_RUNNER_UNAVAILABLE) {
       console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
-      return;
-    }
-
-    // TODO:
-    //  if arc_based runner; then send allowed endpoints to backed using file-write logic
-    if (isArcRunner()) {
-      sendAllowedEndpoints(confg.allowed_endpoints);
       return;
     }
 
