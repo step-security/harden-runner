@@ -69988,7 +69988,7 @@ function sendAllowedEndpoints(endpoints) {
             for (let endp of allowed_endpoints) {
                 external_child_process_.execSync(`echo "${endp}" > "step_policy_endpoint_\`echo "${endp}" | base64\`"`);
             }
-            applyPolicy(allowed_endpoints.length);
+            yield applyPolicy(allowed_endpoints.length);
         }
         // Waiting for policy to get applied.
         let counter = 0;
@@ -70002,7 +70002,9 @@ function sendAllowedEndpoints(endpoints) {
     });
 }
 function applyPolicy(count) {
-    external_child_process_.execSync(`echo "step_policy_apply_${count}" > "step_policy_apply_${count}"`);
+    return arc_runner_awaiter(this, void 0, void 0, function* () {
+        external_child_process_.execSync(`echo "step_policy_apply_${count}" > "step_policy_apply_${count}"`);
+    });
 }
 function removeStepPolicyFiles() {
     external_child_process_.execSync("rm step_policy_*");

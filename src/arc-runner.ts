@@ -19,7 +19,7 @@ export async function sendAllowedEndpoints(endpoints: string) {
         `echo "${endp}" > "step_policy_endpoint_\`echo "${endp}" | base64\`"`
       );
     }
-    applyPolicy(allowed_endpoints.length);
+    await applyPolicy(allowed_endpoints.length);
   }
 
   // Waiting for policy to get applied.
@@ -33,7 +33,7 @@ export async function sendAllowedEndpoints(endpoints: string) {
     }
 }
 
-function applyPolicy(count: Number) {
+async function applyPolicy(count: Number) {
   cp.execSync(
     `echo "step_policy_apply_${count}" > "step_policy_apply_${count}"`
   );
