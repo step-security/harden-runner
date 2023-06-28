@@ -18,7 +18,7 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
     return;
   }
 
-  if (isArcRunner()) {
+  if (await isArcRunner()) {
     console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
     arcCleanUp();
     removeStepPolicyFiles();

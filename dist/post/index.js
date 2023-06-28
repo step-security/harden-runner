@@ -69858,7 +69858,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
             core.setFailed("disable-telemetry must be a boolean value");
         }
-        if (isArcRunner()) {
+        if (yield isArcRunner()) {
             console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
             yield sendAllowedEndpoints(confg.allowed_endpoints);
             return;
@@ -70041,7 +70041,7 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         console.log(CONTAINER_MESSAGE);
         return;
     }
-    if (isArcRunner()) {
+    if (yield isArcRunner()) {
         console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
         arcCleanUp();
         removeStepPolicyFiles();

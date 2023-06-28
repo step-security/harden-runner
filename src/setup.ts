@@ -93,7 +93,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       core.setFailed("disable-telemetry must be a boolean value");
     }
 
-    if (isArcRunner()) {
+    if (await isArcRunner()) {
       console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
       await sendAllowedEndpoints(confg.allowed_endpoints);
       return;
