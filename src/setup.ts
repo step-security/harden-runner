@@ -95,7 +95,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
 
     if (isArcRunner()) {
       console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
-      sendAllowedEndpoints(confg.allowed_endpoints);
+      await sendAllowedEndpoints(confg.allowed_endpoints);
       return;
     }
 
@@ -215,7 +215,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
   }
 })();
 
-function sleep(ms) {
+export function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
