@@ -69288,50 +69288,25 @@ var cacheHttpClient = __nccwpck_require__(8245);
 // EXTERNAL MODULE: ./node_modules/@actions/cache/lib/internal/cacheUtils.js
 var cacheUtils = __nccwpck_require__(1518);
 ;// CONCATENATED MODULE: ./src/arc-runner.ts
-var arc_runner_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-
 
 function isArcRunner() {
-    return arc_runner_awaiter(this, void 0, void 0, function* () {
-        let out = false;
-        let runner_user_agent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
-        if (runner_user_agent.indexOf("actions-runner-controller/") > -1)
-            out = true;
-        return out;
-    });
+    let out = false;
+    let runner_user_agent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
+    if (runner_user_agent.indexOf("actions-runner-controller/") > -1)
+        out = true;
+    return out;
 }
 function sendAllowedEndpoints(endpoints) {
-    return arc_runner_awaiter(this, void 0, void 0, function* () {
-        let allowed_endpoints = endpoints.split(" "); // endpoints are space separated
-        if (allowed_endpoints.length > 0) {
-            for (let endp of allowed_endpoints) {
-                external_child_process_.execSync(`echo "${endp}" > "step_policy_endpoint_\`echo "${endp}" | base64\`"`);
-            }
-            yield applyPolicy(allowed_endpoints.length);
+    let allowed_endpoints = endpoints.split(" "); // endpoints are space separated
+    if (allowed_endpoints.length > 0) {
+        for (let endp of allowed_endpoints) {
+            external_child_process_.execSync(`echo "${endp}" > "step_policy_endpoint_\`echo "${endp}" | base64\`"`);
         }
-        // Waiting for policy to get applied.
-        let counter = 0;
-        while (true) {
-            counter++;
-            if (counter > 10) {
-                break;
-            }
-            yield setup_sleep(300);
-        }
-    });
+        applyPolicy(allowed_endpoints.length);
+    }
 }
 function applyPolicy(count) {
-    return arc_runner_awaiter(this, void 0, void 0, function* () {
-        external_child_process_.execSync(`echo "step_policy_apply_${count}" > "step_policy_apply_${count}"`);
-    });
+    external_child_process_.execSync(`echo "step_policy_apply_${count}" > "step_policy_apply_${count}"`);
 }
 function removeStepPolicyFiles() {
     cp.execSync("rm step_policy_*");
@@ -69422,9 +69397,9 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
             lib_core.setFailed("disable-telemetry must be a boolean value");
         }
-        if (yield isArcRunner()) {
+        if (isArcRunner()) {
             console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
-            yield sendAllowedEndpoints(confg.allowed_endpoints);
+            sendAllowedEndpoints(confg.allowed_endpoints);
             return;
         }
         let _http = new lib.HttpClient();

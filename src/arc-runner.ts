@@ -1,7 +1,7 @@
 import * as cp from "child_process";
 import { sleep } from "./setup";
 
-export async function isArcRunner(): Promise<boolean> {
+export function isArcRunner(): boolean {
   let out: boolean = false;
 
   let runner_user_agent: string =
@@ -11,7 +11,7 @@ export async function isArcRunner(): Promise<boolean> {
   return out;
 }
 
-export async function sendAllowedEndpoints(endpoints: string) {
+export function sendAllowedEndpoints(endpoints: string) {
   let allowed_endpoints = endpoints.split(" "); // endpoints are space separated
   if (allowed_endpoints.length > 0) {
     for (let endp of allowed_endpoints) {
@@ -19,21 +19,11 @@ export async function sendAllowedEndpoints(endpoints: string) {
         `echo "${endp}" > "step_policy_endpoint_\`echo "${endp}" | base64\`"`
       );
     }
-    await applyPolicy(allowed_endpoints.length);
+    applyPolicy(allowed_endpoints.length);
   }
-
-  // Waiting for policy to get applied.
-  let counter = 0;
-  while (true) {
-      counter++;
-      if (counter > 10) {
-        break;
-      }
-      await sleep(300);
-    }
 }
 
-async function applyPolicy(count: Number) {
+function applyPolicy(count: Number) {
   cp.execSync(
     `echo "step_policy_apply_${count}" > "step_policy_apply_${count}"`
   );
