@@ -68939,6 +68939,23 @@ module.exports = require("zlib");
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__nccwpck_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
 /******/ 	(() => {
 /******/ 		// define __esModule on exports
@@ -68961,6 +68978,11 @@ var __webpack_exports__ = {};
 "use strict";
 // ESM COMPAT FLAG
 __nccwpck_require__.r(__webpack_exports__);
+
+// EXPORTS
+__nccwpck_require__.d(__webpack_exports__, {
+  "sleep": () => (/* binding */ setup_sleep)
+});
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var lib_core = __nccwpck_require__(2186);
@@ -69276,6 +69298,7 @@ var arc_runner_awaiter = (undefined && undefined.__awaiter) || function (thisArg
     });
 };
 
+
 function isArcRunner() {
     return arc_runner_awaiter(this, void 0, void 0, function* () {
         let out = false;
@@ -69286,19 +69309,34 @@ function isArcRunner() {
     });
 }
 function sendAllowedEndpoints(endpoints) {
-    let allowed_endpoints = endpoints.split(" "); // endpoints are space separated 
-    if (allowed_endpoints.length > 0) {
-        for (let endp of allowed_endpoints) {
-            external_child_process_.execSync(`echo "${endp}" > "step_policy_endpoint_\`echo "${endp}" | base64\`"`);
+    return arc_runner_awaiter(this, void 0, void 0, function* () {
+        let allowed_endpoints = endpoints.split(" "); // endpoints are space separated
+        if (allowed_endpoints.length > 0) {
+            for (let endp of allowed_endpoints) {
+                external_child_process_.execSync(`echo "${endp}" > "step_policy_endpoint_\`echo "${endp}" | base64\`"`);
+            }
+            applyPolicy(allowed_endpoints.length);
         }
-        applyPolicy(allowed_endpoints.length);
-    }
+        // Waiting for policy to get applied.
+        let counter = 0;
+        while (true) {
+            counter++;
+            if (counter > 10) {
+                break;
+            }
+            yield setup_sleep(300);
+        }
+    });
 }
 function applyPolicy(count) {
     external_child_process_.execSync(`echo "step_policy_apply_${count}" > "step_policy_apply_${count}"`);
 }
 function removeStepPolicyFiles() {
     cp.execSync("rm step_policy_*");
+}
+function arcCleanUp() {
+    // send a signal to backend harden-runner for initiating cleanup
+    cp.execSync(`echo "cleanup" > "step_policy_cleanup"`);
 }
 
 ;// CONCATENATED MODULE: ./src/setup.ts
@@ -69384,7 +69422,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         }
         if (isArcRunner()) {
             console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
-            sendAllowedEndpoints(confg.allowed_endpoints);
+            yield sendAllowedEndpoints(confg.allowed_endpoints);
             return;
         }
         let _http = new lib.HttpClient();
