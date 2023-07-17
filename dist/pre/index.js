@@ -69399,7 +69399,9 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         }
         if (isArcRunner()) {
             console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
-            sendAllowedEndpoints(confg.allowed_endpoints);
+            if (confg.egress_policy === "block") {
+                sendAllowedEndpoints(confg.allowed_endpoints);
+            }
             return;
         }
         let _http = new lib.HttpClient();
