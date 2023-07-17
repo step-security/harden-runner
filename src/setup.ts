@@ -95,7 +95,9 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
 
     if (isArcRunner()) {
       console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
-      sendAllowedEndpoints(confg.allowed_endpoints);
+      if(confg.egress_policy === "block"){
+        sendAllowedEndpoints(confg.allowed_endpoints);
+      }
       return;
     }
 
