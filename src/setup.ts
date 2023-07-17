@@ -97,6 +97,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
       if(confg.egress_policy === "block"){
         sendAllowedEndpoints(confg.allowed_endpoints);
+        await sleep(5000);
       }
       return;
     }
