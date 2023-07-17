@@ -69401,6 +69401,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
             if (confg.egress_policy === "block") {
                 sendAllowedEndpoints(confg.allowed_endpoints);
+                yield setup_sleep(5000);
             }
             return;
         }
