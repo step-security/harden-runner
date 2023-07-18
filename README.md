@@ -13,18 +13,15 @@
 
 </div>
 
----
+## GitHub Actions Runtime Security
 
-🔒 Harden-Runner GitHub Action installs a security agent on the GitHub-hosted runner (Ubuntu VM) to
+Harden-Runner GitHub Action provides Runtime Security for GitHub-hosted and self-hosted Actions Runner Controller (ARC) runners. It monitors process, file, and network events and blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4) to
 
-1. Prevent exfiltration of credentials 🔑
-2. Detect tampering of source code during build 🕵️
-3. Detect compromised dependencies and build tools 🚨
+1. Prevent exfiltration of credentials
+2. Detect tampering of files during build
+3. Detect compromised dependencies and build tools
 
-
-<p align="center">
-  <img src="images/demo.gif" alt="Harden Runner demo">
-</p>
+[![Harden Runner Demo](images/RuntimeSecurityDemo.gif)](https://youtu.be/fpdwX5hYACo)
 
 ## Why
 
@@ -84,7 +81,7 @@ Once allowed endpoints are set in the policy in the workflow file, or in the [Po
 - Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4).
 - It blocks DNS exfiltration, where attacker tries to send data out using DNS resolution
 - Blocks outbound traffic using IP tables
-- Wildcard domains are supported, e.g. you can add `*.data.mcr.microsoft.com:443` to the allowed list, and egress traffic will be allowed to `eastus.data.mcr.microsoft.com:443` and `westus.data.mcr.microsoft.com:443`. 
+- Wildcard domains are supported, e.g. you can add `*.data.mcr.microsoft.com:443` to the allowed list, and egress traffic will be allowed to `eastus.data.mcr.microsoft.com:443` and `westus.data.mcr.microsoft.com:443`.
 
 <p align="left">
   <img src="images/block-outbound-call.png" alt="Policy recommended by harden-runner" >
