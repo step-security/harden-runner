@@ -21,10 +21,9 @@ Harden-Runner GitHub Action provides Runtime Security for GitHub-hosted and self
 
 ## Explore open source projects using Harden-Runner
 
-| [![Logo 1](https://avatars.githubusercontent.com/u/6154722?s=60&v=4)](link_to_url_1) | [![Logo 2](https://avatars.githubusercontent.com/u/2810941?s=60&v=4)](link_to_url_2) | [![Logo 3](https://avatars.githubusercontent.com/u/365230?s=60&v=4)](link_to_url_3) |
-| --- | --- | --- |
-| **Microsoft**<br>[Explore](link_to_explore_1) | **Google**<br>[Explore](link_to_explore_2) | **DataDog**<br>[Explore](link_to_explore_3) |
-
+| [![Logo 1](https://avatars.githubusercontent.com/u/6154722?s=60&v=4)](link_to_url_1) | [![Logo 2](https://avatars.githubusercontent.com/u/2810941?s=60&v=4)](link_to_url_2) | [![Logo 3](https://avatars.githubusercontent.com/u/365230?s=60&v=4)](link_to_url_3) | [![Logo 4](https://avatars.githubusercontent.com/u/17888862?s=60&v=4)](link_to_url_4) | [![Logo 5](https://avatars.githubusercontent.com/u/36015203?s=60&v=4)](link_to_url_5) |
+| --- | --- | --- | --- | --- |
+| **Microsoft**<br>[Explore](link_to_explore_1) | **Google**<br>[Explore](link_to_explore_2) | **DataDog**<br>[Explore](link_to_explore_3) | **Intel**<br>[Explore](link_to_explore_4) | **Kubernetes**<br>[Explore](link_to_explore_5) |
 
 ## Why
 
