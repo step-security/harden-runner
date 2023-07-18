@@ -21,9 +21,9 @@ Harden-Runner GitHub Action provides Runtime Security for GitHub-hosted and self
 
 ## Explore open source projects using Harden-Runner
 
-| [![Logo 1](https://avatars.githubusercontent.com/u/6154722?s=60&v=4)](link_to_url_1) | [![Logo 2](https://avatars.githubusercontent.com/u/2810941?s=60&v=4)](link_to_url_2) | [![Logo 3](https://avatars.githubusercontent.com/u/365230?s=60&v=4)](link_to_url_3) | [![Logo 4](https://avatars.githubusercontent.com/u/17888862?s=60&v=4)](link_to_url_4) | [![Logo 5](https://avatars.githubusercontent.com/u/36015203?s=60&v=4)](link_to_url_5) |
+| [![Microsoft](https://avatars.githubusercontent.com/u/6154722?s=60&v=4)](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/5559160177) | [![Google](https://avatars.githubusercontent.com/u/2810941?s=60&v=4)](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/5546354505) | [![DataDog](https://avatars.githubusercontent.com/u/365230?s=60&v=4)](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/5387101451) | [![Intel](https://avatars.githubusercontent.com/u/17888862?s=60&v=4)](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/5579910614) | [![Kubernetes](https://avatars.githubusercontent.com/u/36015203?s=60&v=4)](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/5581511101) |
 | --- | --- | --- | --- | --- |
-| **Microsoft**<br>[Explore](link_to_explore_1) | **Google**<br>[Explore](link_to_explore_2) | **DataDog**<br>[Explore](link_to_explore_3) | **Intel**<br>[Explore](link_to_explore_4) | **Kubernetes**<br>[Explore](link_to_explore_5) |
+| **Microsoft**<br>[Explore](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/5559160177) | **Google**<br>[Explore](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/5546354505) | **DataDog**<br>[Explore](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/5387101451) | **Intel**<br>[Explore](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/5579910614) | **Kubernetes**<br>[Explore](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/5581511101) |
 
 ## Why
 
@@ -31,9 +31,9 @@ Compromised workflows, dependencies, and build tools typically make outbound cal
 
 Harden-Runner GitHub Action monitors process, file, and network activity to:
 
-|     | Countermeasure                                                                               | Threat                                                                                                                                                                                                                                |
+|     | Countermeasure                                                                               | Security breach                                                                                                                                                                                                                                |
 | --- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.  | Blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4) to prevent exfiltration of credentials | To prevent [Codecov breach](https://github.com/step-security/attack-simulator/blob/main/docs/RestrictOutboundTraffic.md) scenario                                                                                                         |
+| 1.  | Blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4) to prevent exfiltration of credentials | To prevent [Codecov breach](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md) scenario                                                                                                         |
 | 2.  | Detect if source code is being overwritten during the build process to inject a backdoor     | To detect [SolarWinds incident scenario](https://github.com/step-security/attack-simulator/blob/main/docs/MonitorSourceCode.md)                                                                                                           |
 | 3.  | Detect compromised dependencies that make unexpected outbound network calls                  | To detect [Dependency confusion](https://github.com/step-security/attack-simulator/blob/main/docs/DNSExfiltration.md) and [Malicious dependencies](https://github.com/step-security/attack-simulator/blob/main/docs/CompromisedDependency.md) |
 
@@ -56,10 +56,10 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
       <img src="images/buildlog1.png" alt="Link in build log" >
     </p>
 
-3. Click on the link ([example link](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2265028928)). You will see a process monitor view of file and network activities correlated with each step of the job. These insights hold significant value for forensic investigations, proving crucial in the event of an incident.
+3. Click on the link ([example link](https://app.stepsecurity.io/github/microsoft/msquic/actions/runs/5577342236)). You will see a process monitor view of network and file events correlated with each step of the job.
 
     <p align="left">
-      <img src="images/insights2.png" alt="Insights from harden-runner" >
+      <img src="images/insights4.png" alt="Insights from harden-runner" >
     </p>
 
 4. Under the insights section, you'll find a suggested policy. You can either update your workflow file with this policy, or alternatively, use the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store) to apply the policy without modifying the workflow file.
@@ -68,13 +68,21 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
       <img src="images/rec-policy1.png" alt="Policy recommended by harden-runner" >
     </p>
 
+## Support for ARC and Private Repositories
+
+Actions Runner Controller (ARC) and Private repositories are supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
+
+Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to use Harden-Runner GitHub Action for `Private` repositories.
+
+- If you use Harden-Runner GitHub Action in a private repository, the generated insights URL is NOT public.
+- You need to authenticate first to access insights URL for private repository. Only those who have access to the repository can view it.
+- [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) only needs `actions: read` permissions on your repositories.
+
+Read this [case study on how Kapiche uses Harden-Runner](https://www.stepsecurity.io/case-studies/kapiche/) to improve software supply chain security in their private repositories.
+
 ## Features at a glance
 
 For details, check out the documentation at https://docs.stepsecurity.io
-
-<p align="left">
-  <img src="images/main-screenshot1.png" alt="Policy recommended by harden-runner">
-</p>
 
 ### 🚦 Restrict egress traffic to allowed endpoints
 
@@ -118,43 +126,19 @@ Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/s
 - Notifications are sent when outbound traffic is blocked or source code is overwritten
 - Notifications are not repeated for the same alert for a given workflow
 
-## Support for ARC and Private Repositories
-
-Actions Runner Controller (ARC) and Private repositories are supported if they have a commercial license. Check out the [documentation](https://docs.stepsecurity.io/harden-runner/installation/business-enterprise-license) for more details.
-
-Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to use Harden-Runner GitHub Action for `Private` repositories.
-
-- If you use Harden-Runner GitHub Action in a private repository, the generated insights URL is NOT public.
-- You need to authenticate first to access insights URL for private repository. Only those who have access to the repository can view it.
-- [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) only needs `actions: read` permissions on your repositories.
-
-Read this [case study on how Kapiche uses Harden Runner](https://www.stepsecurity.io/case-studies/kapiche/) to improve software supply chain security in their open source and private repositories.
-
 ## Discussions
 
-If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions).
+If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions). For support for ARC and Private repositories, email info@stepsecurity.io.
 
-1. [Support for private repositories](https://github.com/step-security/harden-runner/discussions/74)
-2. [Where should allowed-endpoints be stored?](https://github.com/step-security/harden-runner/discussions/84)
-3. [Cryptographically verify tools run as part of the CI/ CD pipeline](https://github.com/step-security/harden-runner/discussions/94)
+## How does it work?
+
+For GitHub-hosted runners, Harden-Runner GitHub Action downloads and installs the StepSecurity Agent.
+
+- The code to monitor file, process, and network activity is in the Agent.
+- The agent is written in Go and is open source at https://github.com/step-security/agent
+- The agent's build is reproducible. You can view the steps to reproduce the build [here](http://app.stepsecurity.io/github/step-security/agent/releases/latest)
 
 ## Limitations for GitHub-hosted Runners
 
 1. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
 2. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
-
-## Testimonials
-
-> _I think this is a great idea and for the threat model of build-time, an immediate network egress request monitoring makes a lot of sense_ - [Liran Tal](https://stars.github.com/profiles/lirantal/), GitHub Star, and Author of Essential Node.js Security
-
-> _Harden-Runner strikes an elegant balance between ease-of-use, maintainability, and mitigation that I intend to apply to all of my 300+ npm packages. I look forward to the tool’s improvement over time_ - [Jordan Harband](https://github.com/ljharb), Open Source Maintainer
-
-> _Harden runner from Step security is such a nice solution, it is another piece of the puzzle in helping treat the CI environment like production and solving supply chain security. I look forward to seeing it evolve._ - Cam Parry, Staff Site Reliability Engineer, Kapiche
-
-## How does it work?
-
-Harden-Runner GitHub Action downloads and installs the StepSecurity Agent.
-
-- The code to monitor file, process, and network activity is in the Agent.
-- The agent is written in Go and is open source at https://github.com/step-security/agent
-- The agent's build is reproducible. You can view the steps to reproduce the build [here](http://app.stepsecurity.io/github/step-security/agent/releases/latest)
