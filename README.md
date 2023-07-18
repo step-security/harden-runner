@@ -15,23 +15,26 @@
 
 ## GitHub Actions Runtime Security
 
-Harden-Runner GitHub Action provides Runtime Security for GitHub-hosted and self-hosted Actions Runner Controller (ARC) runners. It monitors process, file, and network events and blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4) to
-
-1. Prevent exfiltration of credentials
-2. Detect tampering of files during build
-3. Detect compromised dependencies and build tools
+Harden-Runner GitHub Action provides Runtime Security for GitHub-hosted and self-hosted Actions Runner Controller (ARC) runners.
 
 [![Harden Runner Demo](images/RuntimeSecurityDemo.gif)](https://youtu.be/fpdwX5hYACo)
 
+## Explore open source projects using Harden-Runner
+
+| [![Logo 1](https://avatars.githubusercontent.com/u/6154722?s=60&v=4)](link_to_url_1) | [![Logo 2](https://avatars.githubusercontent.com/u/2810941?s=60&v=4)](link_to_url_2) | [![Logo 3](https://avatars.githubusercontent.com/u/365230?s=60&v=4)](link_to_url_3) |
+| --- | --- | --- |
+| **Microsoft**<br>[Explore](link_to_explore_1) | **Google**<br>[Explore](link_to_explore_2) | **DataDog**<br>[Explore](link_to_explore_3) |
+
+
 ## Why
 
-Compromised dependencies and build tools typically make outbound calls to exfiltrate credentials, or may tamper source code, dependencies, or artifacts during the build.
+Compromised workflows, dependencies, and build tools typically make outbound calls to exfiltrate credentials, or may tamper source code, dependencies, or artifacts during the build.
 
-Harden-Runner GitHub Actions installs a daemon that monitors process, file, and network activity to:
+Harden-Runner GitHub Action monitors process, file, and network activity to:
 
 |     | Countermeasure                                                                               | Threat                                                                                                                                                                                                                                |
 | --- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.  | Block outbound calls that are not in the allowed list to prevent exfiltration of credentials | To prevent [Codecov breach](https://github.com/step-security/attack-simulator/blob/main/docs/RestrictOutboundTraffic.md) scenario                                                                                                         |
+| 1.  | Blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4) to prevent exfiltration of credentials | To prevent [Codecov breach](https://github.com/step-security/attack-simulator/blob/main/docs/RestrictOutboundTraffic.md) scenario                                                                                                         |
 | 2.  | Detect if source code is being overwritten during the build process to inject a backdoor     | To detect [SolarWinds incident scenario](https://github.com/step-security/attack-simulator/blob/main/docs/MonitorSourceCode.md)                                                                                                           |
 | 3.  | Detect compromised dependencies that make unexpected outbound network calls                  | To detect [Dependency confusion](https://github.com/step-security/attack-simulator/blob/main/docs/DNSExfiltration.md) and [Malicious dependencies](https://github.com/step-security/attack-simulator/blob/main/docs/CompromisedDependency.md) |
 
@@ -116,9 +119,9 @@ Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/s
 - Notifications are sent when outbound traffic is blocked or source code is overwritten
 - Notifications are not repeated for the same alert for a given workflow
 
-## Support for private repositories
+## Support for ARC and Private Repositories
 
-Private repositories are supported if they have a commercial license. Check out the [documentation](https://docs.stepsecurity.io/harden-runner/installation/business-enterprise-license) for more details.
+Actions Runner Controller (ARC) and Private repositories are supported if they have a commercial license. Check out the [documentation](https://docs.stepsecurity.io/harden-runner/installation/business-enterprise-license) for more details.
 
 Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to use Harden-Runner GitHub Action for `Private` repositories.
 
@@ -136,11 +139,10 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 2. [Where should allowed-endpoints be stored?](https://github.com/step-security/harden-runner/discussions/84)
 3. [Cryptographically verify tools run as part of the CI/ CD pipeline](https://github.com/step-security/harden-runner/discussions/94)
 
-## Limitations
+## Limitations for GitHub-hosted Runners
 
-1. Harden-Runner GitHub Action only works for GitHub-hosted runners. Self-hosted runners are not supported. We have started work on supporting [Kubernetes-Based Self-Hosted Actions Runners](https://github.com/step-security/harden-runner/issues/104).
-2. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
-3. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
+1. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
+2. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
 
 ## Testimonials
 
@@ -149,17 +151,6 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 > _Harden-Runner strikes an elegant balance between ease-of-use, maintainability, and mitigation that I intend to apply to all of my 300+ npm packages. I look forward to the tool’s improvement over time_ - [Jordan Harband](https://github.com/ljharb), Open Source Maintainer
 
 > _Harden runner from Step security is such a nice solution, it is another piece of the puzzle in helping treat the CI environment like production and solving supply chain security. I look forward to seeing it evolve._ - Cam Parry, Staff Site Reliability Engineer, Kapiche
-
-## Workflows using harden-runner
-
-Some important workflows using harden-runner:
-| |Repository |Link to insights|
-|--|----------|----------------|
-|1.|[nvm-sh/nvm](https://github.com/nvm-sh/nvm/blob/master/.github/workflows/lint.yml)|[Link to insights](https://app.stepsecurity.io/github/nvm-sh/nvm/actions/runs/1757959262)|
-|2.|[jsx-eslint/eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react/blob/master/.github/workflows/release.yml)|[Link to insights](https://app.stepsecurity.io/github/yannickcr/eslint-plugin-react/actions/runs/1930818585)
-|3.|[microsoft/msquic](https://github.com/microsoft/msquic/blob/main/.github/workflows/docker-publish.yml)|[Link to insights](https://app.stepsecurity.io/github/microsoft/msquic/actions/runs/1759010243)
-|4.|[ossf/scorecard](https://github.com/ossf/scorecard/blob/main/.github/workflows/codeql-analysis.yml)|[Link to insights](https://app.stepsecurity.io/github/ossf/scorecard/actions/runs/2006162141)
-|5.|[Automattic/vip-go-mu-plugins](https://github.com/Automattic/vip-go-mu-plugins/blob/master/.github/workflows/e2e.yml)|[Link to insights](https://app.stepsecurity.io/github/Automattic/vip-go-mu-plugins/actions/runs/1758760957)
 
 ## How does it work?
 
