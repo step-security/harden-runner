@@ -34,6 +34,5 @@ export function removeStepPolicyFiles() {
 }
 
 export function arcCleanUp() {
-  // send a signal to backend harden-runner for initiating cleanup
   cp.execSync(`echo "cleanup" > "step_policy_cleanup"`);
 }

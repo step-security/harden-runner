@@ -61348,7 +61348,6 @@ function removeStepPolicyFiles() {
     external_child_process_.execSync("rm step_policy_*");
 }
 function arcCleanUp() {
-    // send a signal to backend harden-runner for initiating cleanup
     external_child_process_.execSync(`echo "cleanup" > "step_policy_cleanup"`);
 }
 

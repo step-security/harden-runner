@@ -69312,7 +69312,6 @@ function removeStepPolicyFiles() {
     cp.execSync("rm step_policy_*");
 }
 function arcCleanUp() {
-    // send a signal to backend harden-runner for initiating cleanup
     cp.execSync(`echo "cleanup" > "step_policy_cleanup"`);
 }
 
