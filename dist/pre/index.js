@@ -68939,6 +68939,23 @@ module.exports = require("zlib");
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__nccwpck_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
 /******/ 	(() => {
 /******/ 		// define __esModule on exports
@@ -68961,6 +68978,11 @@ var __webpack_exports__ = {};
 "use strict";
 // ESM COMPAT FLAG
 __nccwpck_require__.r(__webpack_exports__);
+
+// EXPORTS
+__nccwpck_require__.d(__webpack_exports__, {
+  "sleep": () => (/* binding */ setup_sleep)
+});
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var lib_core = __nccwpck_require__(2186);
@@ -69119,6 +69141,7 @@ const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
+const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner";
 
 // EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
 var tool_cache = __nccwpck_require__(7784);
@@ -69264,6 +69287,34 @@ function sleep(ms) {
 var cacheHttpClient = __nccwpck_require__(8245);
 // EXTERNAL MODULE: ./node_modules/@actions/cache/lib/internal/cacheUtils.js
 var cacheUtils = __nccwpck_require__(1518);
+;// CONCATENATED MODULE: ./src/arc-runner.ts
+
+function isArcRunner() {
+    let out = false;
+    let runner_user_agent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
+    if (runner_user_agent.indexOf("actions-runner-controller/") > -1)
+        out = true;
+    return out;
+}
+function sendAllowedEndpoints(endpoints) {
+    let allowed_endpoints = endpoints.split(" "); // endpoints are space separated
+    if (allowed_endpoints.length > 0) {
+        for (let endp of allowed_endpoints) {
+            external_child_process_.execSync(`echo "${endp}" > "step_policy_endpoint_\`echo "${endp}" | base64\`"`);
+        }
+        applyPolicy(allowed_endpoints.length);
+    }
+}
+function applyPolicy(count) {
+    external_child_process_.execSync(`echo "step_policy_apply_${count}" > "step_policy_apply_${count}"`);
+}
+function removeStepPolicyFiles() {
+    cp.execSync("rm step_policy_*");
+}
+function arcCleanUp() {
+    cp.execSync(`echo "cleanup" > "step_policy_cleanup"`);
+}
+
 ;// CONCATENATED MODULE: ./src/setup.ts
 var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -69274,6 +69325,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -69343,6 +69395,14 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         }
         if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
             lib_core.setFailed("disable-telemetry must be a boolean value");
+        }
+        if (isArcRunner()) {
+            console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
+            if (confg.egress_policy === "block") {
+                sendAllowedEndpoints(confg.allowed_endpoints);
+                yield setup_sleep(10000);
+            }
+            return;
         }
         let _http = new lib.HttpClient();
         let statusCode;

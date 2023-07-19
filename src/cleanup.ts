@@ -6,6 +6,7 @@ import isDocker from "is-docker";
 import * as cache from "@actions/cache";
 import { cacheFile, cacheKey, isValidEvent } from "./cache";
 import path from "path";
+import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
 
 (async () => {
   if (process.platform !== "linux") {
@@ -14,6 +15,13 @@ import path from "path";
   }
   if (isDocker()) {
     console.log(common.CONTAINER_MESSAGE);
+    return;
+  }
+
+  if (isArcRunner()) {
+    console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
+    arcCleanUp();
+    removeStepPolicyFiles();
     return;
   }
 
