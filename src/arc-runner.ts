@@ -11,12 +11,21 @@ export function isArcRunner(): boolean {
   return out;
 }
 
+function getRunnerTempDir() {
+  let isTest = process.env["isTest"]
+  if(isTest === "1"){
+    return "/tmp"
+  }
+  let tmp = process.env["RUNNER_TEMP"]; // RUNNER_TEMP=/runner/_work/_temp
+  return tmp;
+}
+
 export function sendAllowedEndpoints(endpoints: string) {
   let allowed_endpoints = endpoints.split(" "); // endpoints are space separated
   if (allowed_endpoints.length > 0) {
     for (let endp of allowed_endpoints) {
       cp.execSync(
-        `echo "${endp}" > "step_policy_endpoint_\`echo "${endp}" | base64\`"`
+        `echo "${endp}" > "${getRunnerTempDir()}/step_policy_endpoint_\`echo "${endp}" | base64\`"`
       );
     }
     applyPolicy(allowed_endpoints.length);
@@ -25,14 +34,14 @@ export function sendAllowedEndpoints(endpoints: string) {
 
 function applyPolicy(count: Number) {
   cp.execSync(
-    `echo "step_policy_apply_${count}" > "step_policy_apply_${count}"`
+    `echo "step_policy_apply_${count}" > "${getRunnerTempDir()}/step_policy_apply_${count}"`
   );
 }
 
 export function removeStepPolicyFiles() {
-  cp.execSync("rm step_policy_*");
+  cp.execSync(`rm ${getRunnerTempDir()}/step_policy_*`);
 }
 
 export function arcCleanUp() {
-  cp.execSync(`echo "cleanup" > "step_policy_cleanup"`);
+  cp.execSync(`echo "cleanup" > "${getRunnerTempDir()}/step_policy_cleanup"`);
 }

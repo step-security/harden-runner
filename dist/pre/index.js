@@ -69131,7 +69131,7 @@ function addSummary() {
 `);
         yield core.summary
             .addSeparator()
-            .addRaw(`<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a>. 
+            .addRaw(`<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a>.
       Harden-Runner is a security agent for GitHub-hosted runners to block egress traffic & detect code overwrite to prevent breaches.</blockquote>`)
             .addSeparator()
             .write();
@@ -69296,23 +69296,31 @@ function isArcRunner() {
         out = true;
     return out;
 }
+function getRunnerTempDir() {
+    let isTest = process.env["isTest"];
+    if (isTest === "1") {
+        return "/tmp";
+    }
+    let tmp = process.env["RUNNER_TEMP"]; // RUNNER_TEMP=/runner/_work/_temp
+    return tmp;
+}
 function sendAllowedEndpoints(endpoints) {
     let allowed_endpoints = endpoints.split(" "); // endpoints are space separated
     if (allowed_endpoints.length > 0) {
         for (let endp of allowed_endpoints) {
-            external_child_process_.execSync(`echo "${endp}" > "step_policy_endpoint_\`echo "${endp}" | base64\`"`);
+            external_child_process_.execSync(`echo "${endp}" > "${getRunnerTempDir()}/step_policy_endpoint_\`echo "${endp}" | base64\`"`);
         }
         applyPolicy(allowed_endpoints.length);
     }
 }
 function applyPolicy(count) {
-    external_child_process_.execSync(`echo "step_policy_apply_${count}" > "step_policy_apply_${count}"`);
+    external_child_process_.execSync(`echo "step_policy_apply_${count}" > "${getRunnerTempDir()}/step_policy_apply_${count}"`);
 }
 function removeStepPolicyFiles() {
-    cp.execSync("rm step_policy_*");
+    cp.execSync(`rm ${getRunnerTempDir()}/step_policy_*`);
 }
 function arcCleanUp() {
-    cp.execSync(`echo "cleanup" > "step_policy_cleanup"`);
+    cp.execSync(`echo "cleanup" > "${getRunnerTempDir()}/step_policy_cleanup"`);
 }
 
 ;// CONCATENATED MODULE: ./src/setup.ts
