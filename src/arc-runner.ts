@@ -39,7 +39,7 @@ function applyPolicy(count: Number) {
 }
 
 export function removeStepPolicyFiles() {
-  cp.execSync(`rm ${getRunnerTempDir()}step_policy_*`);
+  cp.execSync(`rm ${getRunnerTempDir()}/step_policy_*`);
 }
 
 export function arcCleanUp() {

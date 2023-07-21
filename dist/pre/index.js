@@ -69317,7 +69317,7 @@ function applyPolicy(count) {
     external_child_process_.execSync(`echo "step_policy_apply_${count}" > "${getRunnerTempDir()}/step_policy_apply_${count}"`);
 }
 function removeStepPolicyFiles() {
-    cp.execSync(`rm ${getRunnerTempDir()}step_policy_*`);
+    cp.execSync(`rm ${getRunnerTempDir()}/step_policy_*`);
 }
 function arcCleanUp() {
     cp.execSync(`echo "cleanup" > "${getRunnerTempDir()}/step_policy_cleanup"`);

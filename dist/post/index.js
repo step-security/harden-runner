@@ -61353,7 +61353,7 @@ function applyPolicy(count) {
     cp.execSync(`echo "step_policy_apply_${count}" > "${getRunnerTempDir()}/step_policy_apply_${count}"`);
 }
 function removeStepPolicyFiles() {
-    external_child_process_.execSync(`rm ${getRunnerTempDir()}step_policy_*`);
+    external_child_process_.execSync(`rm ${getRunnerTempDir()}/step_policy_*`);
 }
 function arcCleanUp() {
     external_child_process_.execSync(`echo "cleanup" > "${getRunnerTempDir()}/step_policy_cleanup"`);
