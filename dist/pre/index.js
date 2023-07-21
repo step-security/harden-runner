@@ -5777,7 +5777,7 @@ const userAgent = 'actions/tool-cache';
  */
 function downloadTool(url, dest, auth, headers) {
     return __awaiter(this, void 0, void 0, function* () {
-        dest = dest || path.join(_getTempDirectory(), v4_1.default());
+        dest = dest || path.join(_getRunnerTempDirectory(), v4_1.default());
         yield io.mkdirP(path.dirname(dest));
         core.debug(`Downloading ${url}`);
         core.debug(`Destination ${dest}`);
@@ -6271,7 +6271,7 @@ function _createExtractFolder(dest) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!dest) {
             // create a temp dir
-            dest = path.join(_getTempDirectory(), v4_1.default());
+            dest = path.join(_getRunnerTempDirectory(), v4_1.default());
         }
         yield io.mkdirP(dest);
         return dest;
@@ -6350,7 +6350,7 @@ function _getCacheDirectory() {
 /**
  * Gets RUNNER_TEMP
  */
-function _getTempDirectory() {
+function _getRunnerTempDirectory() {
     const tempDirectory = process.env['RUNNER_TEMP'] || '';
     assert_1.ok(tempDirectory, 'Expected RUNNER_TEMP to be defined');
     return tempDirectory;
