@@ -69290,31 +69290,31 @@ var cacheUtils = __nccwpck_require__(1518);
 ;// CONCATENATED MODULE: ./src/arc-runner.ts
 
 function isArcRunner() {
-    let out = false;
-    let runner_user_agent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
-    if (runner_user_agent.indexOf("actions-runner-controller/") > -1)
-        out = true;
-    return out;
+    const runnerUserAgent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
+    return runnerUserAgent.includes("actions-runner-controller/");
 }
 function getRunnerTempDir() {
-    let isTest = process.env["isTest"];
+    const isTest = process.env["isTest"];
     if (isTest === "1") {
         return "/tmp";
     }
-    let tmp = process.env["RUNNER_TEMP"]; // RUNNER_TEMP=/runner/_work/_temp
-    return tmp;
+    return process.env["RUNNER_TEMP"] || "/tmp";
 }
 function sendAllowedEndpoints(endpoints) {
-    let allowed_endpoints = endpoints.split(" "); // endpoints are space separated
-    if (allowed_endpoints.length > 0) {
-        for (let endp of allowed_endpoints) {
-            external_child_process_.execSync(`echo "${endp}" > "${getRunnerTempDir()}/step_policy_endpoint_\`echo "${endp}" | base64\`"`);
+    const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
+    for (const endpoint of allowedEndpoints) {
+        if (endpoint) {
+            const encodedEndpoint = Buffer.from(endpoint).toString("base64");
+            external_child_process_.execSync(`echo "${endpoint}" > "${getRunnerTempDir()}/step_policy_endpoint_${encodedEndpoint}"`);
         }
-        applyPolicy(allowed_endpoints.length);
+    }
+    if (allowedEndpoints.length > 0) {
+        applyPolicy(allowedEndpoints.length);
     }
 }
 function applyPolicy(count) {
-    external_child_process_.execSync(`echo "step_policy_apply_${count}" > "${getRunnerTempDir()}/step_policy_apply_${count}"`);
+    const fileName = `step_policy_apply_${count}`;
+    external_child_process_.execSync(`echo "${fileName}" > "${getRunnerTempDir()}/${fileName}"`);
 }
 function removeStepPolicyFiles() {
     cp.execSync(`rm ${getRunnerTempDir()}/step_policy_*`);
