@@ -121,6 +121,10 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       }
     }
 
+    if (!confg.disable_telemetry || confg.egress_policy === "audit") {
+      common.printInfo(web_url);
+    }
+
     if (isArcRunner()) {
       console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
       if (confg.egress_policy === "block") {
@@ -171,10 +175,6 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
 
     verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
     const extractPath = await tc.extractTar(downloadPath);
-
-    if (!confg.disable_telemetry || confg.egress_policy === "audit") {
-      common.printInfo(web_url);
-    }
 
     let cmd = "cp",
       args = [path.join(extractPath, "agent"), "/home/agent/agent"];
