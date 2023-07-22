@@ -61386,6 +61386,15 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         console.log(CONTAINER_MESSAGE);
         return;
     }
+    if (isValidEvent()) {
+        try {
+            const cacheResult = yield cache.saveCache([external_path_default().join(__dirname, "cache.txt")], cacheKey);
+            console.log(cacheResult);
+        }
+        catch (exception) {
+            console.log(exception);
+        }
+    }
     if (isArcRunner()) {
         console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
         arcCleanUp();
@@ -61432,18 +61441,6 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         });
         console.log("Service log:");
         console.log(journalLog);
-    }
-    if (isValidEvent()) {
-        try {
-            const cmd = "cp";
-            const args = [external_path_default().join(__dirname, "cache.txt"), cacheFile];
-            external_child_process_.execFileSync(cmd, args);
-            const cacheResult = yield cache.saveCache([cacheFile], cacheKey);
-            console.log(cacheResult);
-        }
-        catch (exception) {
-            console.log(exception);
-        }
     }
     try {
         yield addSummary();

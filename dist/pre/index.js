@@ -69404,6 +69404,28 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
             lib_core.setFailed("disable-telemetry must be a boolean value");
         }
+        if (isValidEvent()) {
+            try {
+                let compressionMethod = yield cacheUtils.getCompressionMethod();
+                let cacheFilePath = external_path_.join(__dirname, "cache.txt");
+                cacheFilePath = cacheFilePath.replace("/pre/", "/post/");
+                lib_core.info(`cacheFilePath ${cacheFilePath}`);
+                const cacheEntry = yield (0,cacheHttpClient.getCacheEntry)([cacheKey], [cacheFilePath], {
+                    compressionMethod: compressionMethod,
+                });
+                const url = new URL(cacheEntry.archiveLocation);
+                lib_core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
+                confg.allowed_endpoints += ` ${url.hostname}:443`;
+            }
+            catch (exception) {
+                // some exception has occurred.
+                lib_core.info(`Unable to fetch cacheURL`);
+                if (confg.egress_policy === "block") {
+                    lib_core.info("Switching egress-policy to audit mode");
+                    confg.egress_policy = "audit";
+                }
+            }
+        }
         if (isArcRunner()) {
             console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
             if (confg.egress_policy === "block") {
@@ -69429,25 +69451,6 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         if (String(statusCode) === STATUS_HARDEN_RUNNER_UNAVAILABLE) {
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
             return;
-        }
-        if (isValidEvent()) {
-            try {
-                let compressionMethod = yield cacheUtils.getCompressionMethod();
-                const cacheEntry = yield (0,cacheHttpClient.getCacheEntry)([cacheKey], [cacheFile], {
-                    compressionMethod: compressionMethod,
-                });
-                const url = new URL(cacheEntry.archiveLocation);
-                lib_core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
-                confg.allowed_endpoints += ` ${url.hostname}:443`;
-            }
-            catch (exception) {
-                // some exception has occurred.
-                lib_core.info(`Unable to fetch cacheURL`);
-                if (confg.egress_policy === "block") {
-                    lib_core.info("Switching egress-policy to audit mode");
-                    confg.egress_policy = "audit";
-                }
-            }
         }
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");

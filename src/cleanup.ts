@@ -18,6 +18,18 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
     return;
   }
 
+  if (isValidEvent()) {
+    try {
+      const cacheResult = await cache.saveCache(
+        [path.join(__dirname, "cache.txt")],
+        cacheKey
+      );
+      console.log(cacheResult);
+    } catch (exception) {
+      console.log(exception);
+    }
+  }
+
   if (isArcRunner()) {
     console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
     arcCleanUp();
@@ -76,18 +88,6 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
     });
     console.log("Service log:");
     console.log(journalLog);
-  }
-
-  if (isValidEvent()) {
-    try {
-      const cmd = "cp";
-      const args = [path.join(__dirname, "cache.txt"), cacheFile];
-      cp.execFileSync(cmd, args);
-      const cacheResult = await cache.saveCache([cacheFile], cacheKey);
-      console.log(cacheResult);
-    } catch (exception) {
-      console.log(exception);
-    }
   }
 
   try {
