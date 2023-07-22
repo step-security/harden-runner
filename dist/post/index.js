@@ -61327,6 +61327,9 @@ var external_path_default = /*#__PURE__*/__nccwpck_require__.n(external_path_);
 
 function isArcRunner() {
     const runnerUserAgent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
+    if (!runnerUserAgent) {
+        return false;
+    }
     return runnerUserAgent.includes("actions-runner-controller/");
 }
 function getRunnerTempDir() {

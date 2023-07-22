@@ -3,6 +3,11 @@ import { sleep } from "./setup";
 
 export function isArcRunner(): boolean {
   const runnerUserAgent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
+
+  if (!runnerUserAgent) {
+    return false;
+  }
+
   return runnerUserAgent.includes("actions-runner-controller/");
 }
 

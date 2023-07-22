@@ -69291,6 +69291,9 @@ var cacheUtils = __nccwpck_require__(1518);
 
 function isArcRunner() {
     const runnerUserAgent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
+    if (!runnerUserAgent) {
+        return false;
+    }
     return runnerUserAgent.includes("actions-runner-controller/");
 }
 function getRunnerTempDir() {
