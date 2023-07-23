@@ -2894,11 +2894,11 @@ function addSummary() {
         if (needsSubscription) {
             yield core.summary
                 .addSeparator()
-                .addRaw(`<h2>⚠️ GitHub Actions Runtime Security is disabled</h2>`);
+                .addRaw(`<h2>⚠️ Your GitHub Actions Runtime Security is currently disabled!</h2>`);
             yield core.summary
                 .addRaw(`
-<p>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a> by StepSecurity in a private repository, but your organization has not signed up for a free trial or a paid subscription.</p>
-<p>To start a free trial, install the <a href="https://github.com/apps/stepsecurity-actions-security">StepSecurity Actions Security GitHub App</a> or reach out to us via our <a href="https://www.stepsecurity.io/contact">contact form.</a></p>
+<p>It appears that you're using the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a> by StepSecurity within a private repository. However, runtime security is not enabled as your organization hasn't signed up for a free trial or a paid subscription yet.</p>
+<p>To enable runtime security, start a free trial today by installing the <a href="https://github.com/apps/stepsecurity-actions-security">StepSecurity Actions Security GitHub App</a>. For more information or assistance, feel free to reach out to us through our <a href="https://www.stepsecurity.io/contact">contact form</a>.</p>
 `)
                 .addSeparator()
                 .write();
@@ -2914,11 +2914,11 @@ function addSummary() {
             return;
         }
         let insightsRow = `<tr>
-      <td colspan="3" align="center"><a href="${insights_url}">🛡️ View the recommended policy at StepSecurity</a></td>
+      <td colspan="3" align="center"><a href="${insights_url}">🛡️ View all job events & the recommended policy at StepSecurity</a></td>
     </tr>`;
         yield core.summary
             .addSeparator()
-            .addRaw(`<h2><a href="${insights_url}">StepSecurity Runtime Security Report</a></h2>`);
+            .addRaw(`<h2><a href="${insights_url}">StepSecurity Runtime Security Report for Job</a></h2>`);
         tableEntries.sort((a, b) => {
             if (a.status === "❌ Blocked" && b.status !== "❌ Blocked") {
                 return -1;
@@ -2932,6 +2932,7 @@ function addSummary() {
         });
         tableEntries = tableEntries.slice(0, 3);
         yield core.summary.addRaw(`
+  <p>This report summarizes the network events occurred during this job running on a GitHub-hosted runner. The events monitored include:</p>
   <h3>🌐 Network Events</h3>
   <table>
     <thead>
@@ -2960,7 +2961,7 @@ function addSummary() {
 `);
         yield core.summary
             .addSeparator()
-            .addRaw(`<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a>.`)
+            .addRaw(`<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a> for runtime security.`)
             .addSeparator()
             .write();
     });
