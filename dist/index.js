@@ -2914,11 +2914,11 @@ function addSummary() {
             return;
         }
         let insightsRow = `<tr>
-      <td colspan="3" align="center"><a href="${insights_url}">🛡️ View all job events & the recommended policy at StepSecurity</a></td>
+      <td colspan="3" align="center"><a href="${insights_url}">🛡️ View all events & the recommended policy at StepSecurity</a></td>
     </tr>`;
         yield core.summary
             .addSeparator()
-            .addRaw(`<h2><a href="${insights_url}">StepSecurity Runtime Security Report for this Job</a></h2>`);
+            .addRaw(`<h2><a href="${insights_url}">StepSecurity Runtime Security Report for this Workflow Run</a></h2>`);
         tableEntries.sort((a, b) => {
             if (a.status === "❌ Blocked" && b.status !== "❌ Blocked") {
                 return -1;
@@ -2932,7 +2932,7 @@ function addSummary() {
         });
         tableEntries = tableEntries.slice(0, 3);
         yield core.summary.addRaw(`
-  <p>This report summarizes the egress network events during this job run on a GitHub-hosted runner.</p>
+  <p>This report summarizes the network events during this workflow run on a GitHub-hosted runner.</p>
   <h3>🌐 Network Events</h3>
   <table>
     <thead>
