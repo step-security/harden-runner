@@ -93,9 +93,41 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       core.setFailed("disable-telemetry must be a boolean value");
     }
 
+    if (isValidEvent()) {
+      try {
+        let compressionMethod: CompressionMethod =
+          await utils.getCompressionMethod();
+
+        let cacheFilePath = path.join(__dirname, "cache.txt");
+        cacheFilePath = cacheFilePath.replace("/pre/", "/post/");
+        core.info(`cacheFilePath ${cacheFilePath}`);
+        const cacheEntry: ArtifactCacheEntry = await getCacheEntry(
+          [cacheKey],
+          [cacheFilePath],
+          {
+            compressionMethod: compressionMethod,
+          }
+        );
+        const url = new URL(cacheEntry.archiveLocation);
+        core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
+        confg.allowed_endpoints += ` ${url.hostname}:443`;
+      } catch (exception) {
+        // some exception has occurred.
+        core.info(`Unable to fetch cacheURL`);
+        if (confg.egress_policy === "block") {
+          core.info("Switching egress-policy to audit mode");
+          confg.egress_policy = "audit";
+        }
+      }
+    }
+
+    if (!confg.disable_telemetry || confg.egress_policy === "audit") {
+      common.printInfo(web_url);
+    }
+
     if (isArcRunner()) {
       console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
-      if(confg.egress_policy === "block"){
+      if (confg.egress_policy === "block") {
         sendAllowedEndpoints(confg.allowed_endpoints);
         await sleep(10000);
       }
@@ -127,30 +159,6 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       return;
     }
 
-    if (isValidEvent()) {
-      try {
-        let compressionMethod: CompressionMethod =
-          await utils.getCompressionMethod();
-        const cacheEntry: ArtifactCacheEntry = await getCacheEntry(
-          [cacheKey],
-          [cacheFile],
-          {
-            compressionMethod: compressionMethod,
-          }
-        );
-        const url = new URL(cacheEntry.archiveLocation);
-        core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
-        confg.allowed_endpoints += ` ${url.hostname}:443`;
-      } catch (exception) {
-        // some exception has occurred.
-        core.info(`Unable to fetch cacheURL`);
-        if (confg.egress_policy === "block") {
-          core.info("Switching egress-policy to audit mode");
-          confg.egress_policy = "audit";
-        }
-      }
-    }
-
     const confgStr = JSON.stringify(confg);
     cp.execSync("sudo mkdir -p /home/agent");
     cp.execSync("sudo chown -R $USER /home/agent");
@@ -167,10 +175,6 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
 
     verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
     const extractPath = await tc.extractTar(downloadPath);
-
-    if (!confg.disable_telemetry || confg.egress_policy === "audit") {
-      common.printInfo(web_url);
-    }
 
     let cmd = "cp",
       args = [path.join(extractPath, "agent"), "/home/agent/agent"];

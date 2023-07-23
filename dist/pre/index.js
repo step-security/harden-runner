@@ -69290,31 +69290,34 @@ var cacheUtils = __nccwpck_require__(1518);
 ;// CONCATENATED MODULE: ./src/arc-runner.ts
 
 function isArcRunner() {
-    let out = false;
-    let runner_user_agent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
-    if (runner_user_agent.indexOf("actions-runner-controller/") > -1)
-        out = true;
-    return out;
+    const runnerUserAgent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
+    if (!runnerUserAgent) {
+        return false;
+    }
+    return runnerUserAgent.includes("actions-runner-controller/");
 }
 function getRunnerTempDir() {
-    let isTest = process.env["isTest"];
+    const isTest = process.env["isTest"];
     if (isTest === "1") {
         return "/tmp";
     }
-    let tmp = process.env["RUNNER_TEMP"]; // RUNNER_TEMP=/runner/_work/_temp
-    return tmp;
+    return process.env["RUNNER_TEMP"] || "/tmp";
 }
 function sendAllowedEndpoints(endpoints) {
-    let allowed_endpoints = endpoints.split(" "); // endpoints are space separated
-    if (allowed_endpoints.length > 0) {
-        for (let endp of allowed_endpoints) {
-            external_child_process_.execSync(`echo "${endp}" > "${getRunnerTempDir()}/step_policy_endpoint_\`echo "${endp}" | base64\`"`);
+    const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
+    for (const endpoint of allowedEndpoints) {
+        if (endpoint) {
+            const encodedEndpoint = Buffer.from(endpoint).toString("base64");
+            external_child_process_.execSync(`echo "${endpoint}" > "${getRunnerTempDir()}/step_policy_endpoint_${encodedEndpoint}"`);
         }
-        applyPolicy(allowed_endpoints.length);
+    }
+    if (allowedEndpoints.length > 0) {
+        applyPolicy(allowedEndpoints.length);
     }
 }
 function applyPolicy(count) {
-    external_child_process_.execSync(`echo "step_policy_apply_${count}" > "${getRunnerTempDir()}/step_policy_apply_${count}"`);
+    const fileName = `step_policy_apply_${count}`;
+    external_child_process_.execSync(`echo "${fileName}" > "${getRunnerTempDir()}/${fileName}"`);
 }
 function removeStepPolicyFiles() {
     cp.execSync(`rm ${getRunnerTempDir()}/step_policy_*`);
@@ -69404,6 +69407,31 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
             lib_core.setFailed("disable-telemetry must be a boolean value");
         }
+        if (isValidEvent()) {
+            try {
+                let compressionMethod = yield cacheUtils.getCompressionMethod();
+                let cacheFilePath = external_path_.join(__dirname, "cache.txt");
+                cacheFilePath = cacheFilePath.replace("/pre/", "/post/");
+                lib_core.info(`cacheFilePath ${cacheFilePath}`);
+                const cacheEntry = yield (0,cacheHttpClient.getCacheEntry)([cacheKey], [cacheFilePath], {
+                    compressionMethod: compressionMethod,
+                });
+                const url = new URL(cacheEntry.archiveLocation);
+                lib_core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
+                confg.allowed_endpoints += ` ${url.hostname}:443`;
+            }
+            catch (exception) {
+                // some exception has occurred.
+                lib_core.info(`Unable to fetch cacheURL`);
+                if (confg.egress_policy === "block") {
+                    lib_core.info("Switching egress-policy to audit mode");
+                    confg.egress_policy = "audit";
+                }
+            }
+        }
+        if (!confg.disable_telemetry || confg.egress_policy === "audit") {
+            printInfo(web_url);
+        }
         if (isArcRunner()) {
             console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
             if (confg.egress_policy === "block") {
@@ -69430,25 +69458,6 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
             return;
         }
-        if (isValidEvent()) {
-            try {
-                let compressionMethod = yield cacheUtils.getCompressionMethod();
-                const cacheEntry = yield (0,cacheHttpClient.getCacheEntry)([cacheKey], [cacheFile], {
-                    compressionMethod: compressionMethod,
-                });
-                const url = new URL(cacheEntry.archiveLocation);
-                lib_core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
-                confg.allowed_endpoints += ` ${url.hostname}:443`;
-            }
-            catch (exception) {
-                // some exception has occurred.
-                lib_core.info(`Unable to fetch cacheURL`);
-                if (confg.egress_policy === "block") {
-                    lib_core.info("Switching egress-policy to audit mode");
-                    confg.egress_policy = "audit";
-                }
-            }
-        }
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
@@ -69458,9 +69467,6 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.4/agent_0.13.4_linux_amd64.tar.gz", undefined, auth);
         verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
         const extractPath = yield tool_cache.extractTar(downloadPath);
-        if (!confg.disable_telemetry || confg.egress_policy === "audit") {
-            printInfo(web_url);
-        }
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
         external_child_process_.execSync("chmod +x /home/agent/agent");
