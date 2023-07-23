@@ -2894,7 +2894,7 @@ function addSummary() {
         if (needsSubscription) {
             yield core.summary
                 .addSeparator()
-                .addRaw(`<h2>❌ GitHub Actions Runtime Security is disabled</h2>`);
+                .addRaw(`<h2>⚠️ GitHub Actions Runtime Security is disabled</h2>`);
             yield core.summary
                 .addRaw(`
 <p>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a> by StepSecurity in a private repository, but your organization has not signed up for a free trial or a paid subscription.</p>
@@ -2914,10 +2914,11 @@ function addSummary() {
             return;
         }
         let insightsRow = `<tr>
-      <td colspan="3" align="center"><a href="${insights_url}">🛡️ Check out the full report and recommended policy at StepSecurity</a></td>
+      <td colspan="3" align="center"><a href="${insights_url}">🛡️ View the recommended policy at StepSecurity</a></td>
     </tr>`;
-        yield core.summary.addSeparator().addRaw(`<h2><a href="${insights_url}">StepSecurity Report</a></h2>
-      <h3>GitHub Actions Runtime Security</h3>`);
+        yield core.summary
+            .addSeparator()
+            .addRaw(`<h2><a href="${insights_url}">StepSecurity Runtime Security Report</a></h2>`);
         tableEntries.sort((a, b) => {
             if (a.status === "❌ Blocked" && b.status !== "❌ Blocked") {
                 return -1;
@@ -2959,8 +2960,7 @@ function addSummary() {
 `);
         yield core.summary
             .addSeparator()
-            .addRaw(`<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a>.
-      Harden-Runner is a security agent for GitHub-hosted runners to block egress traffic & detect code overwrite to prevent breaches.</blockquote>`)
+            .addRaw(`<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a>.`)
             .addSeparator()
             .write();
     });

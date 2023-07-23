@@ -72,7 +72,7 @@ export async function addSummary() {
   if (needsSubscription) {
     await core.summary
       .addSeparator()
-      .addRaw(`<h2>❌ GitHub Actions Runtime Security is disabled</h2>`);
+      .addRaw(`<h2>⚠️ GitHub Actions Runtime Security is disabled</h2>`);
 
     await core.summary
       .addRaw(
@@ -100,13 +100,14 @@ export async function addSummary() {
   }
 
   let insightsRow = `<tr>
-      <td colspan="3" align="center"><a href="${insights_url}">🛡️ Check out the full report and recommended policy at StepSecurity</a></td>
+      <td colspan="3" align="center"><a href="${insights_url}">🛡️ View the recommended policy at StepSecurity</a></td>
     </tr>`;
 
-  await core.summary.addSeparator().addRaw(
-    `<h2><a href="${insights_url}">StepSecurity Report</a></h2>
-      <h3>GitHub Actions Runtime Security</h3>`
-  );
+  await core.summary
+    .addSeparator()
+    .addRaw(
+      `<h2><a href="${insights_url}">StepSecurity Runtime Security Report</a></h2>`
+    );
 
   tableEntries.sort((a, b) => {
     if (a.status === "❌ Blocked" && b.status !== "❌ Blocked") {
@@ -153,8 +154,7 @@ export async function addSummary() {
   await core.summary
     .addSeparator()
     .addRaw(
-      `<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a>.
-      Harden-Runner is a security agent for GitHub-hosted runners to block egress traffic & detect code overwrite to prevent breaches.</blockquote>`
+      `<blockquote>You are seeing this markdown since this workflow uses the <a href="https://github.com/step-security/harden-runner">Harden-Runner GitHub Action</a>.`
     )
     .addSeparator()
     .write();
@@ -171,4 +171,5 @@ export const UBUNTU_MESSAGE =
 export const HARDEN_RUNNER_UNAVAILABLE_MESSAGE =
   "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 
-export const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner"
+export const ARC_RUNNER_MESSAGE =
+  "Workflow is currently being executed in ARC based runner";
