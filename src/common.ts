@@ -124,7 +124,7 @@ export async function addSummary() {
   tableEntries = tableEntries.slice(0, 3);
 
   await core.summary.addRaw(`
-  <p>This report summarizes the network events during this workflow run on a GitHub-hosted runner.</p>
+  <p>This report summarizes the network events that occurred during this workflow run on a GitHub-hosted runner.</p>
   <h3>🌐 Network Events</h3>
   <table>
     <thead>
