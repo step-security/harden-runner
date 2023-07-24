@@ -23,7 +23,7 @@ export async function fetchPolicy(
 
   let response = undefined;
   let err = undefined;
-  
+
   let retry = 0;
   while(retry < 3){
     try{

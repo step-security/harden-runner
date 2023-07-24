@@ -6,6 +6,7 @@ import isDocker from "is-docker";
 import * as cache from "@actions/cache";
 import { cacheFile, cacheKey, isValidEvent } from "./cache";
 import path from "path";
+import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
 
 (async () => {
   if (process.platform !== "linux") {
@@ -14,6 +15,25 @@ import path from "path";
   }
   if (isDocker()) {
     console.log(common.CONTAINER_MESSAGE);
+    return;
+  }
+
+  if (isValidEvent()) {
+    try {
+      const cacheResult = await cache.saveCache(
+        [path.join(__dirname, "cache.txt")],
+        cacheKey
+      );
+      console.log(cacheResult);
+    } catch (exception) {
+      console.log(exception);
+    }
+  }
+
+  if (isArcRunner()) {
+    console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
+    arcCleanUp();
+    removeStepPolicyFiles();
     return;
   }
 
@@ -68,18 +88,6 @@ import path from "path";
     });
     console.log("Service log:");
     console.log(journalLog);
-  }
-
-  if (isValidEvent()) {
-    try {
-      const cmd = "cp";
-      const args = [path.join(__dirname, "cache.txt"), cacheFile];
-      cp.execFileSync(cmd, args);
-      const cacheResult = await cache.saveCache([cacheFile], cacheKey);
-      console.log(cacheResult);
-    } catch (exception) {
-      console.log(exception);
-    }
   }
 
   try {

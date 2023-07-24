@@ -6,7 +6,7 @@ on:
 
 permissions:
   contents: read
-      
+
 jobs:
   int-tests:
     name: int tests
