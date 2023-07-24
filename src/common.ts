@@ -101,7 +101,7 @@ export async function addSummary() {
     return;
   }
 
-  const insightsRow = `<h4><a href="${insights_url}">View Full Report & Recommended Policy at StepSecurity</a></h4>`;
+  const insightsRow = `<h4><a href="${insights_url}">View Full Runtime Security Report & Recommended Policy at StepSecurity</a></h4>`;
 
   await core.summary.addSeparator().addRaw(`<h2>StepSecurity Report</h2>`);
 
@@ -124,7 +124,7 @@ export async function addSummary() {
     <thead>
       <tr>
         <th>Process</th>
-        <th>Endpoint</th>
+        <th>Destination</th>
         <th>Status</th>
       </tr>
     </thead>

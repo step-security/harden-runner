@@ -69085,7 +69085,7 @@ function addSummary() {
         if (tableEntries.length === 0) {
             return;
         }
-        const insightsRow = `<h4><a href="${insights_url}">View Full Report & Recommended Policy at StepSecurity</a></h4>`;
+        const insightsRow = `<h4><a href="${insights_url}">View Full Runtime Security Report & Recommended Policy at StepSecurity</a></h4>`;
         yield core.summary.addSeparator().addRaw(`<h2>StepSecurity Report</h2>`);
         tableEntries.sort((a, b) => {
             if (a.status === "❌ Blocked" && b.status !== "❌ Blocked") {
@@ -69106,7 +69106,7 @@ function addSummary() {
     <thead>
       <tr>
         <th>Process</th>
-        <th>Endpoint</th>
+        <th>Destination</th>
         <th>Status</th>
       </tr>
     </thead>
