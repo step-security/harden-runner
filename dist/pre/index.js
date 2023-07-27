@@ -69285,6 +69285,7 @@ var cacheHttpClient = __nccwpck_require__(8245);
 var cacheUtils = __nccwpck_require__(1518);
 ;// CONCATENATED MODULE: ./src/arc-runner.ts
 
+
 function isArcRunner() {
     const runnerUserAgent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
     if (!runnerUserAgent) {
@@ -69300,6 +69301,11 @@ function getRunnerTempDir() {
     return process.env["RUNNER_TEMP"] || "/tmp";
 }
 function sendAllowedEndpoints(endpoints) {
+    let areValidEndpoints = validateEndpoints(endpoints);
+    if (!areValidEndpoints) {
+        lib_core.warning("[!] Unable to apply block-mode. Please make sure allowed-endpoints are in '<domain>:<port>' format");
+        return;
+    }
     const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
     for (const endpoint of allowedEndpoints) {
         if (endpoint) {
@@ -69320,6 +69326,16 @@ function removeStepPolicyFiles() {
 }
 function arcCleanUp() {
     cp.execSync(`echo "cleanup" > "${getRunnerTempDir()}/step_policy_cleanup"`);
+}
+function validateEndpoints(endpoints) {
+    const allowed_endpoints = endpoints.split(" "); // endpoints are space separated
+    for (let endp of allowed_endpoints) {
+        let endpParts = endp.split(":"); // endp=google.com:443
+        if (endpParts.length !== 2) {
+            return false;
+        }
+    }
+    return true;
 }
 
 ;// CONCATENATED MODULE: ./src/setup.ts
