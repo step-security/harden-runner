@@ -1,6 +1,6 @@
 {
   "name": "step-security-harden-runner",
-  "version": "2.4.1",
+  "version": "2.5.1",
   "description": "Security agent for GitHub-hosted runner: block egress traffic & detect code overwrite to prevent breaches",
   "main": "index.js",
   "scripts": {

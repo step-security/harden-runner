@@ -168,7 +168,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
     let auth = `token ${token}`;
 
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.13.4/agent_0.13.4_linux_amd64.tar.gz",
+      "https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz",
       undefined,
       auth
     );
