@@ -144,7 +144,9 @@ Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/s
 
 ## Discussions
 
-If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions). For support for ARC and Private repositories, email support@stepsecurity.io.
+- If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions).
+- For support for ARC and Private repositories, email support@stepsecurity.io.
+- If you use a different CI/CD Provider (e.g. Jenkins, Gitlab CI, etc), and would like to use Harden Runner in your environment, please email interest@stepsecurity.io
 
 ## How does it work?
 
@@ -159,7 +161,7 @@ For GitHub-hosted runners, Harden-Runner GitHub Action downloads and installs th
 ### Actions Runner Controller (ARC) Runners
 
 - ARC Harden Runner uses eBPF
-- You can find more details in this blog: https://www.stepsecurity.io/blog/secure-your-actions-runner-controller-arc-environment-using-stepsecurity
+- You can find more details in this blog post: https://www.stepsecurity.io/blog/introducing-harden-runner-for-kubernetes-based-self-hosted-actions-runners
 - ARC Harden Runner is NOT open source.
 
 ## Limitations
