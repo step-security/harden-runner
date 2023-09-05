@@ -41,6 +41,8 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 
 ## How
 
+### GitHub-Hosted Runners
+
 1. Add `step-security/harden-runner` to your GitHub Actions workflow file as the first step in each job.
 
    ```yaml
@@ -68,6 +70,13 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
       <img src="images/rec-policy1.png" alt="Policy recommended by harden-runner" >
     </p>
 
+### Actions Runner Controller (ARC) Runners
+
+- When you use ARC Harden Runner, you do NOT need to add the Harden-Runner GitHub Action for `audit` mode.
+- All jobs across all workflows are monitored for network and file events automatically without the need to change workflow files.
+- You do need to add the Harden-Runner GitHub Action for `block` mode.
+- You can explore demo workflows here: https://docs.stepsecurity.io/harden-runner/how-tos/enable-runtime-security-arc
+
 ## Support for ARC and Private Repositories
 
 Actions Runner Controller (ARC) and Private repositories are supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
@@ -86,6 +95,8 @@ For details, check out the documentation at https://docs.stepsecurity.io
 
 ### 🚦 Restrict egress traffic to allowed endpoints
 
+> Applies to both GitHub-hosted and ARC Runners
+
 Once allowed endpoints are set in the policy in the workflow file, or in the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store)
 
 - Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4).
@@ -97,6 +108,8 @@ Once allowed endpoints are set in the policy in the workflow file, or in the [Po
 </p>
 
 ### 🕵️ Detect tampering of source code during build
+
+> Applies to both GitHub-hosted and ARC Runners
 
 Harden-Runner monitors file writes and can detect if a file is overwritten.
 
@@ -110,6 +123,8 @@ Harden-Runner monitors file writes and can detect if a file is overwritten.
 
 ### 🚫 Run your job without sudo access
 
+> Applies to GitHub-hosted Runners
+
 GitHub-hosted runner uses passwordless sudo for running jobs.
 
 - This means compromised build tools or dependencies can install attack tools
@@ -118,6 +133,8 @@ GitHub-hosted runner uses passwordless sudo for running jobs.
 - When you set `disable-sudo` to `true`, the job steps run without sudo access to the GitHub-hosted Ubuntu VM
 
 ### 🔔 Get security alerts
+
+> Applies to both GitHub-hosted and ARC Runners
 
 Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to get security alerts.
 
@@ -131,13 +148,27 @@ If you have questions or ideas, please use [discussions](https://github.com/step
 
 ## How does it work?
 
+### GitHub-Hosted Runners
+
 For GitHub-hosted runners, Harden-Runner GitHub Action downloads and installs the StepSecurity Agent.
 
 - The code to monitor file, process, and network activity is in the Agent.
 - The agent is written in Go and is open source at https://github.com/step-security/agent
 - The agent's build is reproducible. You can view the steps to reproduce the build [here](http://app.stepsecurity.io/github/step-security/agent/releases/latest)
 
-## Limitations for GitHub-Hosted Runners
+### Actions Runner Controller (ARC) Runners
+
+- ARC Harden Runner uses eBPF
+- You can find more details in this blog: https://www.stepsecurity.io/blog/secure-your-actions-runner-controller-arc-environment-using-stepsecurity
+- ARC Harden Runner is NOT open source.
+
+## Limitations
+
+### GitHub-Hosted Runners
 
 1. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
-2. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
+2. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`. Note: This is not a limitation for ARC Harden Runner. With ARC Harden Runner, you can monitor jobs that run in a container.
+
+### Actions Runner Controller (ARC) Runners
+
+1. Since ARC Harden Runner uses eBPF, only Linux jobs are supported. Windows jobs are not supported.
