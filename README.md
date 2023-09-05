@@ -90,7 +90,6 @@ Once allowed endpoints are set in the policy in the workflow file, or in the [Po
 
 - Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4).
 - It blocks DNS exfiltration, where attacker tries to send data out using DNS resolution
-- Blocks outbound traffic using IP tables
 - Wildcard domains are supported, e.g. you can add `*.data.mcr.microsoft.com:443` to the allowed list, and egress traffic will be allowed to `eastus.data.mcr.microsoft.com:443` and `westus.data.mcr.microsoft.com:443`.
 
 <p align="left">
@@ -116,7 +115,7 @@ GitHub-hosted runner uses passwordless sudo for running jobs.
 - This means compromised build tools or dependencies can install attack tools
 - If your job does not need sudo access, you see a policy
   recommendation to disable sudo in the insights page
-- When you set `disable-sudo` to `true`, the job steps run without sudo access to the Ubuntu VM
+- When you set `disable-sudo` to `true`, the job steps run without sudo access to the GitHub-hosted Ubuntu VM
 
 ### 🔔 Get security alerts
 
@@ -128,7 +127,7 @@ Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/s
 
 ## Discussions
 
-If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions). For support for ARC and Private repositories, email info@stepsecurity.io.
+If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions). For support for ARC and Private repositories, email support@stepsecurity.io.
 
 ## How does it work?
 
