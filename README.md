@@ -15,7 +15,7 @@
 
 ## GitHub Actions Runtime Security
 
-Harden-Runner GitHub Action provides Runtime Security for GitHub-Hosted runners and self-hosted Actions Runner Controller (ARC) environments.
+Harden-Runner provides Runtime Security for GitHub-Hosted runners and self-hosted Actions Runner Controller (ARC) environments.
 
 [![Harden Runner Demo](images/RuntimeSecurityDemo.gif)](https://youtu.be/fpdwX5hYACo)
 
@@ -29,19 +29,21 @@ Harden-Runner GitHub Action provides Runtime Security for GitHub-Hosted runners 
 
 Compromised workflows, dependencies, and build tools typically make outbound calls to exfiltrate credentials, or may tamper source code, dependencies, or artifacts during the build.
 
-Harden-Runner GitHub Action monitors process, file, and network activity to:
+Harden-Runner monitors process, file, and network activity to:
 
 |     | Countermeasure                                                                               | Prevent Security Breach                                                                                                                                                                                                                                |
 | --- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.  | Block egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4) to prevent exfiltration of credentials | To prevent [Codecov breach](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md) scenario                                                                                                         |
-| 2.  | Detect if source code is being overwritten during the build process to inject a backdoor     | To detect [SolarWinds incident](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/TamperingDuringBuild.md) scenario                                                                                                           |
+| 1.  | Block egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4) to prevent exfiltration of code and CI/CD credentials | To prevent [Codecov breach](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md) scenario                                                                                                         |
+| 2.  | Detect if source code is being tampered during the build process to inject a backdoor     | To detect [SolarWinds incident](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/TamperingDuringBuild.md) scenario                                                                                                           |
 | 3.  | Detect poisoned workflows and compromised dependencies              | To detect [Dependency confusion](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md#dependency-confusion-attacks) and [Malicious dependencies](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md#compromised-dependencies) |
 
 Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in-github-actions-7b93a9985635) on how Harden-Runner detected malicious packages in the NPM registry.
 
 ## How
 
-1. Add `step-security/harden-runner` to your GitHub Actions workflow file as the first step in each job.
+### GitHub-Hosted Runners
+
+1. Add `step-security/harden-runner` GitHub Action to your GitHub Actions workflow file as the first step in each job.
 
    ```yaml
    steps:
@@ -68,6 +70,14 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
       <img src="images/rec-policy1.png" alt="Policy recommended by harden-runner" >
     </p>
 
+### Actions Runner Controller (ARC) Runners
+
+- Rather than incorporating the Harden-Runner GitHub Action into each workflow, you'll need to install the ARC Harden Runner daemonset on your Kubernetes cluster.
+- Upon deployment, the ARC Harden Runner daemonset constantly monitors each workflow run; you do NOT need to add the Harden-Runner GitHub Action to each job for `audit` mode.
+- You can access security insights and runtime detections under the Runtime Security tab in your dashboard.
+- You do need to add the Harden-Runner GitHub Action for `block` mode.
+- Explore demo workflows using self-hosted ARC Runner and ARC Harden Runner here: https://docs.stepsecurity.io/harden-runner/how-tos/enable-runtime-security-arc
+
 ## Support for ARC and Private Repositories
 
 Actions Runner Controller (ARC) and Private repositories are supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
@@ -86,11 +96,12 @@ For details, check out the documentation at https://docs.stepsecurity.io
 
 ### 🚦 Restrict egress traffic to allowed endpoints
 
+> Applies to both GitHub-Hosted and self-hosted ARC Runners
+
 Once allowed endpoints are set in the policy in the workflow file, or in the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store)
 
 - Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4).
 - It blocks DNS exfiltration, where attacker tries to send data out using DNS resolution
-- Blocks outbound traffic using IP tables
 - Wildcard domains are supported, e.g. you can add `*.data.mcr.microsoft.com:443` to the allowed list, and egress traffic will be allowed to `eastus.data.mcr.microsoft.com:443` and `westus.data.mcr.microsoft.com:443`.
 
 <p align="left">
@@ -98,6 +109,8 @@ Once allowed endpoints are set in the policy in the workflow file, or in the [Po
 </p>
 
 ### 🕵️ Detect tampering of source code during build
+
+> Applies to both GitHub-Hosted and self-hosted ARC Runners
 
 Harden-Runner monitors file writes and can detect if a file is overwritten.
 
@@ -111,14 +124,18 @@ Harden-Runner monitors file writes and can detect if a file is overwritten.
 
 ### 🚫 Run your job without sudo access
 
+> Applies to GitHub-Hosted Runners
+
 GitHub-hosted runner uses passwordless sudo for running jobs.
 
 - This means compromised build tools or dependencies can install attack tools
 - If your job does not need sudo access, you see a policy
   recommendation to disable sudo in the insights page
-- When you set `disable-sudo` to `true`, the job steps run without sudo access to the Ubuntu VM
+- When you set `disable-sudo` to `true`, the job steps run without sudo access to the GitHub-hosted Ubuntu VM
 
 ### 🔔 Get security alerts
+
+> Applies to both GitHub-Hosted and self-hosted ARC Runners
 
 Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to get security alerts.
 
@@ -128,9 +145,13 @@ Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/s
 
 ## Discussions
 
-If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions). For support for ARC and Private repositories, email info@stepsecurity.io.
+- If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions).
+- For support for ARC and Private repositories, email support@stepsecurity.io.
+- If you use a different CI/CD Provider (e.g. Jenkins, Gitlab CI, etc), and would like to use Harden Runner in your environment, please email interest@stepsecurity.io
 
 ## How does it work?
+
+### GitHub-Hosted Runners
 
 For GitHub-hosted runners, Harden-Runner GitHub Action downloads and installs the StepSecurity Agent.
 
@@ -138,7 +159,19 @@ For GitHub-hosted runners, Harden-Runner GitHub Action downloads and installs th
 - The agent is written in Go and is open source at https://github.com/step-security/agent
 - The agent's build is reproducible. You can view the steps to reproduce the build [here](http://app.stepsecurity.io/github/step-security/agent/releases/latest)
 
-## Limitations for GitHub-Hosted Runners
+### Actions Runner Controller (ARC) Runners
+
+- ARC Harden Runner daemonset uses eBPF
+- You can find more details in this blog post: https://www.stepsecurity.io/blog/introducing-harden-runner-for-kubernetes-based-self-hosted-actions-runners
+- ARC Harden Runner is NOT open source.
+
+## Limitations
+
+### GitHub-Hosted Runners
 
 1. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
-2. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`.
+2. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`. Note: This is not a limitation for ARC Harden Runner. With ARC Harden Runner, you can monitor jobs that run in a container.
+
+### Actions Runner Controller (ARC) Runners
+
+1. Since ARC Harden Runner uses eBPF, only Linux jobs are supported. Windows and MacOS jobs are not supported.
