@@ -15,15 +15,23 @@
 
 ## GitHub Actions Runtime Security
 
-Harden-Runner provides Runtime Security for GitHub-Hosted runners and self-hosted Actions Runner Controller (ARC) environments.
+Harden-Runner provides Runtime Security for GitHub-Hosted and self-hosted Actions Runner Controller (ARC) environments.
 
 [![Harden Runner Demo](images/RuntimeSecurityDemo.gif)](https://youtu.be/fpdwX5hYACo)
 
 ## Explore open source projects using Harden-Runner
 
-| [![Microsoft](https://avatars.githubusercontent.com/u/6154722?s=60&v=4)](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/5559160177) | [![Google](https://avatars.githubusercontent.com/u/2810941?s=60&v=4)](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/5546354505) | [![DataDog](https://avatars.githubusercontent.com/u/365230?s=60&v=4)](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/5387101451) | [![Intel](https://avatars.githubusercontent.com/u/17888862?s=60&v=4)](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/5579910614) | [![Kubernetes](https://avatars.githubusercontent.com/u/36015203?s=60&v=4)](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/5581511101) | [![Node.js](https://avatars.githubusercontent.com/u/9950313?s=60&v=4)](https://app.stepsecurity.io/github/nodejs/node/actions/runs/5563468674) | [![OPA](https://avatars.githubusercontent.com/u/16468693?s=60&v=4)](https://app.stepsecurity.io/github/open-policy-agent/gatekeeper/actions/runs/5578825701) | [![Mastercard](https://avatars.githubusercontent.com/u/1653148?s=60&v=4)](https://app.stepsecurity.io/github/Mastercard/flow/actions/runs/5542112873) |
+| [![CISA](https://avatars.githubusercontent.com/u/18539691?s=60&v=4)](https://app.stepsecurity.io/github/cisagov/skeleton-generic/actions/runs/6199340224) | [![Microsoft](https://avatars.githubusercontent.com/u/6154722?s=60&v=4)](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/5559160177) | [![Google](https://avatars.githubusercontent.com/u/2810941?s=60&v=4)](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/5546354505) | [![DataDog](https://avatars.githubusercontent.com/u/365230?s=60&v=4)](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/5387101451) | [![Intel](https://avatars.githubusercontent.com/u/17888862?s=60&v=4)](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/5579910614) | [![Kubernetes](https://avatars.githubusercontent.com/u/36015203?s=60&v=4)](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/5581511101) | [![Node.js](https://avatars.githubusercontent.com/u/9950313?s=60&v=4)](https://app.stepsecurity.io/github/nodejs/node/actions/runs/5563468674) | [![Mastercard](https://avatars.githubusercontent.com/u/1653148?s=60&v=4)](https://app.stepsecurity.io/github/Mastercard/flow/actions/runs/5542112873) |
 | --- | --- | --- | --- | --- | -- | -- | -- |
-| **Microsoft**<br>[Explore](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/5559160177) | **Google**<br>[Explore](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/5546354505) | **DataDog**<br>[Explore](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/5387101451) | **Intel**<br>[Explore](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/5579910614) | **Kubernetes**<br>[Explore](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/5581511101) | **Node.js**<br>[Explore](https://app.stepsecurity.io/github/nodejs/node/actions/runs/5563468674) | **OpenPolicyAgent**<br>[Explore](https://app.stepsecurity.io/github/open-policy-agent/gatekeeper/actions/runs/5578825701) | **Mastercard**<br>[Explore](https://app.stepsecurity.io/github/Mastercard/flow/actions/runs/5542112873) |
+| **CISA**<br>[Explore](https://app.stepsecurity.io/github/cisagov/skeleton-generic/actions/runs/6199340224)| **Microsoft**<br>[Explore](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/5559160177) | **Google**<br>[Explore](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/5546354505) | **DataDog**<br>[Explore](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/5387101451) | **Intel**<br>[Explore](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/5579910614) | **Kubernetes**<br>[Explore](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/5581511101) | **Node.js**<br>[Explore](https://app.stepsecurity.io/github/nodejs/node/actions/runs/5563468674) | **Mastercard**<br>[Explore](https://app.stepsecurity.io/github/Mastercard/flow/actions/runs/5542112873) |
+
+## Hands-On Tutorials
+
+You can use [GitHub Actions Goat](https://github.com/step-security/github-actions-goat) to try Harden-Runner. You only need a GitHub Account and a web browser.
+
+Hands-on Tutorials for GitHub Actions Runtime Security:
+1. [Filter Egress Network Traffic](https://github.com/step-security/github-actions-goat/blob/main/docs/Solutions/RestrictOutboundTraffic.md)
+2. [Detect File Tampering](https://github.com/step-security/github-actions-goat/blob/main/docs/Solutions/MonitorSourceCode.md)
 
 ## Why
 
@@ -72,11 +80,14 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 
 ### Actions Runner Controller (ARC) Runners
 
-- Rather than incorporating the Harden-Runner GitHub Action into each workflow, you'll need to install the ARC Harden Runner daemonset on your Kubernetes cluster.
-- Upon deployment, the ARC Harden Runner daemonset constantly monitors each workflow run; you do NOT need to add the Harden-Runner GitHub Action to each job for `audit` mode.
-- You can access security insights and runtime detections under the Runtime Security tab in your dashboard.
-- You do need to add the Harden-Runner GitHub Action for `block` mode.
-- Explore demo workflows using self-hosted ARC Runner and ARC Harden Runner here: https://docs.stepsecurity.io/harden-runner/how-tos/enable-runtime-security-arc
+> Explore demo workflows using self-hosted ARC Runner and ARC Harden-Runner [here](https://docs.stepsecurity.io/harden-runner/how-tos/enable-runtime-security-arc).
+
+Actions Runner Controller (ARC) is a Kubernetes operator that orchestrates and scales self-hosted runners for GitHub Actions.
+
+- Instead of adding the Harden-Runner GitHub Action in each workflow, you'll need to install the ARC Harden-Runner daemonset on your Kubernetes cluster.
+- Upon installation, the ARC Harden-Runner daemonset constantly monitors each workflow run; you do NOT need to add the Harden-Runner GitHub Action to each job for `audit` mode. You do need to add the Harden-Runner GitHub Action for `block` mode.
+- You can access security insights and runtime detections under the `Runtime Security` tab in your dashboard.
+
 
 ## Support for ARC and Private Repositories
 
@@ -94,21 +105,31 @@ Read this [case study on how Kapiche uses Harden-Runner](https://www.stepsecurit
 
 For details, check out the documentation at https://docs.stepsecurity.io
 
-### 🚦 Restrict egress traffic to allowed endpoints
+### 👀 Monitor egress traffic
+
+> Applies to both GitHub-Hosted and self-hosted ARC Runners
+
+Harden-Runner monitors all outbound traffic from each job at the DNS and network layers
+
+- After the workflow completes, each outbound call is correlated with each step of the job, and shown in the insights page
+- For ARC Harden-Runner, no changes are needed to workflow files to monitor egress traffic
+- A filtering (block) egress policy is suggested in the insights page based on past job runs
+
+### 🚦 Filter egress traffic to allowed endpoints
 
 > Applies to both GitHub-Hosted and self-hosted ARC Runners
 
 Once allowed endpoints are set in the policy in the workflow file, or in the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store)
 
-- Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4).
+- Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4)
 - It blocks DNS exfiltration, where attacker tries to send data out using DNS resolution
-- Wildcard domains are supported, e.g. you can add `*.data.mcr.microsoft.com:443` to the allowed list, and egress traffic will be allowed to `eastus.data.mcr.microsoft.com:443` and `westus.data.mcr.microsoft.com:443`.
+- Wildcard domains are supported, e.g. you can add `*.data.mcr.microsoft.com:443` to the allowed list, and egress traffic will be allowed to `eastus.data.mcr.microsoft.com:443` and `westus.data.mcr.microsoft.com:443`
 
 <p align="left">
   <img src="images/block-outbound-call.png" alt="Policy recommended by harden-runner" >
 </p>
 
-### 🕵️ Detect tampering of source code during build
+### 📁 Detect tampering of source code during build
 
 > Applies to both GitHub-Hosted and self-hosted ARC Runners
 
@@ -170,7 +191,7 @@ For GitHub-hosted runners, Harden-Runner GitHub Action downloads and installs th
 ### GitHub-Hosted Runners
 
 1. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
-2. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`. Note: This is not a limitation for ARC Harden Runner. With ARC Harden Runner, you can monitor jobs that run in a container.
+2. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`. Note: This is not a limitation for ARC Harden-Runner. With ARC Harden-Runner, you can monitor jobs that run in a container.
 
 ### Actions Runner Controller (ARC) Runners
 
