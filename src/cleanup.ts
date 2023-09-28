@@ -37,6 +37,10 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
     return;
   }
 
+  if (process.env.STATE_selfHosted === "true") {
+    return;
+  }
+
   if (
     String(process.env.STATE_monitorStatusCode) ===
     common.STATUS_HARDEN_RUNNER_UNAVAILABLE

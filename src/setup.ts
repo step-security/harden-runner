@@ -134,6 +134,18 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       return;
     }
 
+    if (fs.existsSync("/home/agent/agent")) {
+      fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
+        encoding: "utf8",
+      });
+      if (confg.egress_policy === "block") {
+        const confgStr = JSON.stringify(confg);
+        fs.writeFileSync("/home/agent/block_event.json", confgStr);
+        await sleep(5000);
+      }
+      return;
+    }
+
     let _http = new httpm.HttpClient();
     let statusCode;
     _http.requestOptions = { socketTimeout: 3 * 1000 };

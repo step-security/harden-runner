@@ -69436,6 +69436,17 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             }
             return;
         }
+        if (external_fs_.existsSync("/home/agent/agent")) {
+            external_fs_.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${external_os_.EOL}`, {
+                encoding: "utf8",
+            });
+            if (confg.egress_policy === "block") {
+                const confgStr = JSON.stringify(confg);
+                external_fs_.writeFileSync("/home/agent/block_event.json", confgStr);
+                yield setup_sleep(5000);
+            }
+            return;
+        }
         let _http = new lib.HttpClient();
         let statusCode;
         _http.requestOptions = { socketTimeout: 3 * 1000 };

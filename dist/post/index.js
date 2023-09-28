@@ -61400,6 +61400,9 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         removeStepPolicyFiles();
         return;
     }
+    if (process.env.STATE_selfHosted === "true") {
+        return;
+    }
     if (String(process.env.STATE_monitorStatusCode) ===
         STATUS_HARDEN_RUNNER_UNAVAILABLE) {
         console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
