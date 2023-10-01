@@ -15,12 +15,12 @@
 
 ## GitHub Actions Runtime Security
 
-Harden-Runner provides Runtime Security for GitHub-Hosted and Self-Hosted environments.
+Harden-Runner provides runtime security for GitHub-hosted and self-hosted environments.
 
-For Self-Hosted environments, Harden-Runner supports:
+For self-hosted environments, Harden-Runner supports:
 
 1. Kubernetes runners setup using Actions Runner Controller (ARC)
-2. Virtual Machine runners (e.g. on EC2) - both ephemeral and persistent runners
+2. Virtual Machine runners (e.g. on EC2) - both ephemeral and persistent runners are supported
 
 [![Harden Runner Demo](images/RuntimeSecurityDemo.gif)](https://youtu.be/fpdwX5hYACo)
 
@@ -102,9 +102,9 @@ Actions Runner Controller (ARC) is a Kubernetes operator that orchestrates and s
 - The Harden-Runner agent monitors each job run on the VM, both ephemeral and persistent runners are supported; you do NOT need to add the Harden-Runner GitHub Action to each job for `audit` mode. You do need to add the Harden-Runner GitHub Action for `block` mode.
 - You can access security insights and runtime detections under the `Runtime Security` tab in your dashboard.
 
-## Support for Self-Hosted runners and Private Repositories
+## Support for Self-Hosted Runners and Private Repositories
 
-Runtime Security for Self-Hosted runners and Private repositories are supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
+Runtime security for self-hosted runners and private repositories are supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
 
 Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to use Harden-Runner GitHub Action for `Private` repositories.
 
@@ -120,17 +120,17 @@ For details, check out the documentation at https://docs.stepsecurity.io
 
 ### 👀 Monitor egress traffic
 
-> Applies to both GitHub-Hosted and Self-Hosted runners
+> Applies to both GitHub-hosted and self-hosted runners
 
 Harden-Runner monitors all outbound traffic from each job at the DNS and network layers
 
 - After the workflow completes, each outbound call is correlated with each step of the job, and shown in the insights page
-- For Self-Hosted runners, no changes are needed to workflow files to monitor egress traffic
+- For self-hosted runners, no changes are needed to workflow files to monitor egress traffic
 - A filtering (block) egress policy is suggested in the insights page based on past job runs
 
 ### 🚦 Filter egress traffic to allowed endpoints
 
-> Applies to both GitHub-Hosted and Self-Hosted runners Runners
+> Applies to both GitHub-hosted and self-hosted runners
 
 Once allowed endpoints are set in the policy in the workflow file, or in the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store)
 
@@ -144,14 +144,14 @@ Once allowed endpoints are set in the policy in the workflow file, or in the [Po
 
 ### 📁 Detect tampering of source code during build
 
-> Applies to both GitHub-Hosted and Self-Hosted runners
+> Applies to both GitHub-hosted and self-hosted runners
 
 Harden-Runner monitors file writes and can detect if a file is overwritten.
 
 - Source code overwrite is not expected in a release build
 - All source code files are monitored, which means even changes to IaC files (Kubernetes manifest, Terraform) are detected
 - You can enable notifications to get one-time alert when source code is overwritten
-- For Self-Hosted runners, no changes are needed to workflow files for file monitoring
+- For self-hosted runners, no changes are needed to workflow files for file monitoring
 
 <p align="left">
   <img src="images/fileoverwrite.png" alt="Policy recommended by harden-runner" >
@@ -159,9 +159,9 @@ Harden-Runner monitors file writes and can detect if a file is overwritten.
 
 ### 🚫 Run your job without sudo access
 
-> Applies to GitHub-Hosted Runners
+> Applies to GitHub-hosted runners
 
-GitHub-Hosted runner uses passwordless sudo for running jobs.
+GitHub-hosted runner uses passwordless sudo for running jobs.
 
 - This means compromised build tools or dependencies can install attack tools
 - If your job does not need sudo access, you see a policy
@@ -170,7 +170,7 @@ GitHub-Hosted runner uses passwordless sudo for running jobs.
 
 ### 🔔 Get security alerts
 
-> Applies to both GitHub-Hosted and Self-Hosted runners
+> Applies to both GitHub-hosted and self-hosted runners
 
 Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to get security alerts.
 
@@ -181,7 +181,7 @@ Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/s
 ## Discussions
 
 - If you have questions or ideas, please use [discussions](https://github.com/step-security/harden-runner/discussions).
-- For support for Self-Hosted runners and Private repositories, email support@stepsecurity.io.
+- For support for self-hosted runners and private repositories, email support@stepsecurity.io.
 - If you use a different CI/CD Provider (e.g. Jenkins, Gitlab CI, etc), and would like to use Harden Runner in your environment, please email interest@stepsecurity.io
 
 ## How does it work?
@@ -194,7 +194,7 @@ For GitHub-hosted runners, Harden-Runner GitHub Action downloads and installs th
 - The agent is written in Go and is open source at https://github.com/step-security/agent
 - The agent's build is reproducible. You can view the steps to reproduce the build [here](http://app.stepsecurity.io/github/step-security/agent/releases/latest)
 
-### Actions Runner Controller (ARC) Runners
+### Self-Hosted Actions Runner Controller (ARC) Runners
 
 - ARC Harden Runner daemonset uses eBPF
 - You can find more details in this blog post: https://www.stepsecurity.io/blog/introducing-harden-runner-for-kubernetes-based-self-hosted-actions-runners
@@ -202,8 +202,8 @@ For GitHub-hosted runners, Harden-Runner GitHub Action downloads and installs th
 
 ### Self-Hosted VM Runners (e.g. on EC2)
 
-- For Self-Hosted VMs, you bake the Harden-Runner agent into your runner image (e.g. AMI).
-- Agent for Self-Hosted VMs is NOT open source.
+- For self-hosted VMs, you add the Harden-Runner agent into your runner image (e.g. AMI).
+- Agent for self-hosted VMs is NOT open source.
 
 ## Limitations
 
@@ -212,7 +212,7 @@ For GitHub-hosted runners, Harden-Runner GitHub Action downloads and installs th
 1. Only Ubuntu VM is supported. Windows and MacOS GitHub-hosted runners are not supported. There is a discussion about that [here](https://github.com/step-security/harden-runner/discussions/121).
 2. Harden-Runner is not supported when [job is run in a container](https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container) as it needs sudo access on the Ubuntu VM to run. It can be used to monitor jobs that use containers to run steps. The limitation is if the entire job is run in a container. That is not common for GitHub Actions workflows, as most of them run directly on `ubuntu-latest`. Note: This is not a limitation for Self-Hosted runners.
 
-### Actions Runner Controller (ARC) Runners
+### Self-Hosted Actions Runner Controller (ARC) Runners
 
 1. Since ARC Harden Runner uses eBPF, only Linux jobs are supported. Windows and MacOS jobs are not supported.
 
