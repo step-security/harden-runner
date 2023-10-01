@@ -1,5 +1,5 @@
-name: "Harden Runner"
-description: "Security agent for GitHub-hosted runner to monitor the build process"
+name: "Harden-Runner"
+description: "Harden-Runner provides Runtime Security for GitHub-Hosted and Self-Hosted environments"
 inputs:
   allowed-endpoints:
     description: "Only these endpoints will be allowed if egress-policy is set to block"
