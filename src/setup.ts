@@ -134,12 +134,16 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       return;
     }
 
-    core.info(`RUNNER_NAME:", ${process.env.RUNNER_NAME}`);
-
-    if (fs.existsSync("/home/agent/agent")) {
+    const runnerName = process.env.RUNNER_NAME || "";
+    core.info(`RUNNER_NAME: ${runnerName}`);
+    if (!runnerName.startsWith("GitHub Actions")) {
       fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
         encoding: "utf8",
       });
+      if (!fs.existsSync("/home/agent/agent")) {
+        core.info(common.SELF_HOSTED_NO_AGENT_MESSAGE);
+        return;
+      }
       if (confg.egress_policy === "block") {
         try {
           if (process.env.USER) {
