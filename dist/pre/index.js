@@ -69436,6 +69436,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             }
             return;
         }
+        lib_core.info(`RUNNER_NAME:", ${process.env.RUNNER_NAME}`);
         if (external_fs_.existsSync("/home/agent/agent")) {
             external_fs_.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${external_os_.EOL}`, {
                 encoding: "utf8",

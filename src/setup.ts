@@ -134,6 +134,8 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       return;
     }
 
+    core.info(`RUNNER_NAME:", ${process.env.RUNNER_NAME}`);
+
     if (fs.existsSync("/home/agent/agent")) {
       fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
         encoding: "utf8",
