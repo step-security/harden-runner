@@ -139,10 +139,16 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
         encoding: "utf8",
       });
       if (confg.egress_policy === "block") {
-        cp.execSync("sudo chown -R $USER /home/agent");
-        const confgStr = JSON.stringify(confg);
-        fs.writeFileSync("/home/agent/block_event.json", confgStr);
-        await sleep(5000);
+        try {
+          if (process.env.USER) {
+            cp.execSync(`sudo chown -R ${process.env.USER} /home/agent`);
+          }
+          const confgStr = JSON.stringify(confg);
+          fs.writeFileSync("/home/agent/block_event.json", confgStr);
+          await sleep(5000);
+        } catch (error) {
+          core.info(`[!] Unable to write block_event.json: ${error}`);
+        }
       }
       return;
     }

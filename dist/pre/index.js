@@ -69441,10 +69441,17 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                 encoding: "utf8",
             });
             if (confg.egress_policy === "block") {
-                external_child_process_.execSync("sudo chown -R $USER /home/agent");
-                const confgStr = JSON.stringify(confg);
-                external_fs_.writeFileSync("/home/agent/block_event.json", confgStr);
-                yield setup_sleep(5000);
+                try {
+                    if (process.env.USER) {
+                        external_child_process_.execSync(`sudo chown -R ${process.env.USER} /home/agent`);
+                    }
+                    const confgStr = JSON.stringify(confg);
+                    external_fs_.writeFileSync("/home/agent/block_event.json", confgStr);
+                    yield setup_sleep(5000);
+                }
+                catch (error) {
+                    lib_core.info(`[!] Unable to write block_event.json: ${error}`);
+                }
             }
             return;
         }
