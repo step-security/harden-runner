@@ -134,6 +134,31 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       return;
     }
 
+    const runnerName = process.env.RUNNER_NAME || "";
+    core.info(`RUNNER_NAME: ${runnerName}`);
+    if (!runnerName.startsWith("GitHub Actions")) {
+      fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
+        encoding: "utf8",
+      });
+      if (!fs.existsSync("/home/agent/agent")) {
+        core.info(common.SELF_HOSTED_NO_AGENT_MESSAGE);
+        return;
+      }
+      if (confg.egress_policy === "block") {
+        try {
+          if (process.env.USER) {
+            cp.execSync(`sudo chown -R ${process.env.USER} /home/agent`);
+          }
+          const confgStr = JSON.stringify(confg);
+          fs.writeFileSync("/home/agent/block_event.json", confgStr);
+          await sleep(5000);
+        } catch (error) {
+          core.info(`[!] Unable to write block_event.json: ${error}`);
+        }
+      }
+      return;
+    }
+
     let _http = new httpm.HttpClient();
     let statusCode;
     _http.requestOptions = { socketTimeout: 3 * 1000 };
