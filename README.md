@@ -68,21 +68,21 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 
 2. In the workflow logs and the job markdown summary, you will see a link to security insights and recommendations.
 
-<p align="left">
-  <img src="images/buildlog1.png" alt="Link in build log" >
-</p>
+    <p align="left">
+      <img src="images/buildlog1.png" alt="Link in build log" >
+    </p>
 
 3. Click on the link ([example link](https://app.stepsecurity.io/github/microsoft/msquic/actions/runs/5577342236)). You will see a process monitor view of network and file events correlated with each step of the job.
 
-<p align="left">
-  <img src="images/Insights4.png" alt="Insights from harden-runner" >
-</p>
+    <p align="left">
+      <img src="images/insights-5.png" alt="Insights from harden-runner" >
+    </p>
 
 4. Under the insights section, you'll find a Recommended Policy. You can either update your workflow file with this Policy, or alternatively, use the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store) to apply the policy without modifying the workflow file.
 
-<p align="left">
-  <img src="images/rec-policy1.png" alt="Policy recommended by harden-runner" >
-</p>
+    <p align="left">
+      <img src="images/rec-policy1.png" alt="Policy recommended by harden-runner" >
+    </p>
 
 ### Self-Hosted Actions Runner Controller (ARC) Runners
 
@@ -106,11 +106,9 @@ Actions Runner Controller (ARC) is a Kubernetes operator that orchestrates and s
 
 Runtime security for self-hosted runners and private repositories are supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
 
-Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to use Harden-Runner GitHub Action for `Private` repositories.
-
+- Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to use Harden-Runner GitHub Action for `Private` repositories.
 - If you use Harden-Runner GitHub Action in a private repository, the generated insights URL is NOT public.
 - You need to authenticate first to access insights URL for private repository. Only those who have access to the repository can view it.
-- [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) only needs `actions: read` permissions on your repositories.
 
 Read this [case study on how Kapiche uses Harden-Runner](https://www.stepsecurity.io/case-studies/kapiche/) to improve software supply chain security in their private repositories.
 
@@ -139,7 +137,7 @@ Once allowed endpoints are set in the policy in the workflow file, or in the [Po
 - Wildcard domains are supported, e.g. you can add `*.data.mcr.microsoft.com:443` to the allowed list, and egress traffic will be allowed to `eastus.data.mcr.microsoft.com:443` and `westus.data.mcr.microsoft.com:443`
 
 <p align="left">
-  <img src="images/block-outbound-call.png" alt="Policy recommended by harden-runner" >
+  <img src="images/blocked-outbound-call-2.png" alt="Policy recommended by harden-runner" >
 </p>
 
 ### 📁 Detect tampering of source code during build
@@ -154,7 +152,7 @@ Harden-Runner monitors file writes and can detect if a file is overwritten.
 - For self-hosted runners, no changes are needed to workflow files for file monitoring
 
 <p align="left">
-  <img src="images/fileoverwrite.png" alt="Policy recommended by harden-runner" >
+  <img src="images/file-overwritten.png" alt="Policy recommended by harden-runner" >
 </p>
 
 ### 🚫 Run your job without sudo access
