@@ -96,7 +96,7 @@ Actions Runner Controller (ARC) is a Kubernetes operator that orchestrates and s
 
 ### Self-Hosted VM Runners (e.g. on EC2)
 
-> Explore demo workflows using self-hosted VM Runners and Harden-Runner [here](https://docs.stepsecurity.io/harden-runner/how-tos/enable-runtime-security-arc).
+> Explore demo workflows using self-hosted VM Runners and Harden-Runner [here](https://docs.stepsecurity.io/harden-runner/how-tos/enable-runtime-security-vm).
 
 - Instead of adding the Harden-Runner GitHub Action in each workflow, you'll need to install the Harden-Runner agent on your runner image (e.g. AMI). This is typically done using packer.
 - The Harden-Runner agent monitors each job run on the VM, both ephemeral and persistent runners are supported; you do NOT need to add the Harden-Runner GitHub Action to each job for `audit` mode. You do need to add the Harden-Runner GitHub Action for `block` mode.
