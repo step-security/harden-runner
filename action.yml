@@ -1,5 +1,5 @@
 name: "Harden-Runner"
-description: "Harden-Runner provides Runtime Security for GitHub-Hosted and Self-Hosted environments"
+description: "Harden-Runner provides runtime security for GitHub-hosted and self-hosted runners"
 inputs:
   allowed-endpoints:
     description: "Only these endpoints will be allowed if egress-policy is set to block"
