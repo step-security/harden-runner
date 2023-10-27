@@ -61212,7 +61212,7 @@ function addSummary() {
             return;
         }
         const insightsRow = `<p><b><a href="${insights_url}">📄 View Full Runtime Security Report & Recommended Policy</a></b></p>`;
-        yield core.summary.addSeparator().addRaw(`<h2>🔒 StepSecurity Report</h2>`);
+        yield core.summary.addSeparator().addRaw(`<h2>🛡 StepSecurity Report</h2>`);
         tableEntries.sort((a, b) => {
             if (a.status === "❌ Blocked" && b.status !== "❌ Blocked") {
                 return -1;
@@ -61227,7 +61227,7 @@ function addSummary() {
         tableEntries = tableEntries.slice(0, 3);
         yield core.summary.addRaw(`
   <blockquote>
-  <p>Preview of the network events that occurred on the GitHub-hosted runner during this workflow run.</p></blockquote>
+  <p>Preview of the outbound network calls during this workflow run.</p></blockquote>
   <h3>Network Events</h3>
   <table>
     <thead>
