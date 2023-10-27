@@ -19,7 +19,7 @@ import {
 } from "./cache";
 import { Configuration, PolicyResponse } from "./interfaces";
 import { fetchPolicy, mergeConfigs } from "./policy-utils";
-
+import * as cache from "@actions/cache";
 import { getCacheEntry } from "@actions/cache/lib/internal/cacheHttpClient";
 import * as utils from "@actions/cache/lib/internal/cacheUtils";
 import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
@@ -93,13 +93,20 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       core.setFailed("disable-telemetry must be a boolean value");
     }
 
-    if (isValidEvent()) {
+    if (isValidEvent() && confg.egress_policy === "block") {
       try {
-        let compressionMethod: CompressionMethod =
+        const cacheResult = await cache.saveCache(
+          [path.join(__dirname, "cache.txt")],
+          cacheKey
+        );
+        console.log(cacheResult);
+      } catch (exception) {
+        console.log(exception);
+      }
+      try {
+        const compressionMethod: CompressionMethod =
           await utils.getCompressionMethod();
-
-        let cacheFilePath = path.join(__dirname, "cache.txt");
-        cacheFilePath = cacheFilePath.replace("/pre/", "/post/");
+        const cacheFilePath = path.join(__dirname, "cache.txt");
         core.info(`cacheFilePath ${cacheFilePath}`);
         const cacheEntry: ArtifactCacheEntry = await getCacheEntry(
           [cacheKey],
