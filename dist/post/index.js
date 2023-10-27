@@ -3002,12 +3002,21 @@ function isDocker() {
 
 ;// CONCATENATED MODULE: ./src/arc-runner.ts
 
+
 function isArcRunner() {
     const runnerUserAgent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
+    let isARC = false;
     if (!runnerUserAgent) {
-        return false;
+        isARC = false;
     }
-    return runnerUserAgent.includes("actions-runner-controller/");
+    else {
+        isARC = runnerUserAgent.includes("actions-runner-controller/");
+    }
+    return isARC || isSecondaryPod();
+}
+function isSecondaryPod() {
+    const workDir = "/__w";
+    return external_fs_.existsSync(workDir);
 }
 function getRunnerTempDir() {
     const isTest = process.env["isTest"];
