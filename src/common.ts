@@ -119,8 +119,8 @@ export async function addSummary() {
 
   await core.summary.addRaw(`
   <blockquote>
-  <p>Preview of the GitHub Actions Security Report for this workflow run.</p></blockquote>
-  <h3>Network Events</h3>
+  <p>Preview of the outbound network calls during this workflow run.</p></blockquote>
+  <h3>Network Calls</h3>
   <table>
     <thead>
       <tr>
