@@ -140,6 +140,20 @@ Once allowed endpoints are set in the policy in the workflow file, or in the [Po
   <img src="images/blocked-outbound-call-2.png" alt="Policy recommended by harden-runner" >
 </p>
 
+### 🤖 Select GitHub Actions with Confidence
+
+> Applies to both GitHub-hosted and self-hosted runners
+
+Before integrating a GitHub Action into your workflow, evaluate its network activity.
+
+- Access network behavior data for hundreds of GitHub Actions, compiled from thousands of workflow runs that use Harden-Runner in public repositories
+- Search for a GitHub Action and view a comprehensive report of its outbound network traffic
+- Use this insight to make educated choices about incorporating GitHub Actions into your projects
+
+<p align="left">
+  <img src="images/network-behavior.png" alt="Networking behavior of an Action" >
+</p>
+
 ### 📁 Detect tampering of source code during build
 
 > Applies to both GitHub-hosted and self-hosted runners
