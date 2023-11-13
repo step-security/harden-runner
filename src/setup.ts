@@ -240,6 +240,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
           }
           break;
         }
+        console.log("sleeping");
         await sleep(300);
       } // The file *does* exist
       else {
@@ -252,6 +253,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
   } catch (error) {
     core.setFailed(error.message);
   }
+  console.log("method done");
 })();
 
 export function sleep(ms) {

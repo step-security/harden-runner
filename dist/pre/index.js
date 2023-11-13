@@ -88715,6 +88715,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                     }
                     break;
                 }
+                console.log("sleeping");
                 yield setup_sleep(300);
             } // The file *does* exist
             else {
@@ -88728,6 +88729,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
     catch (error) {
         lib_core.setFailed(error.message);
     }
+    console.log("method done");
 }))();
 function setup_sleep(ms) {
     return new Promise((resolve) => {
