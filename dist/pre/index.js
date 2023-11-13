@@ -88730,6 +88730,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         lib_core.setFailed(error.message);
     }
     console.log("method done");
+    return;
 }))();
 function setup_sleep(ms) {
     return new Promise((resolve) => {
