@@ -1,7 +1,7 @@
 import * as core from "@actions/core";
 import * as cp from "child_process";
 import * as fs from "fs";
-import * as httpm from "@actions/http-client";
+import axios from "axios";
 import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
 import * as common from "./common";
@@ -54,22 +54,6 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       private: context?.payload?.repository?.private || false,
     };
 
-    let policyName = core.getInput("policy");
-    if (policyName !== "") {
-      console.log(`Fetching policy from API with name: ${policyName}`);
-      try {
-        let idToken: string = await core.getIDToken();
-        let result: PolicyResponse = await fetchPolicy(
-          context.repo.owner,
-          policyName,
-          idToken
-        );
-        confg = mergeConfigs(confg, result);
-      } catch (err) {
-        core.info(`[!] ${err}`);
-        core.setFailed(err);
-      }
-    }
     fs.appendFileSync(
       process.env.GITHUB_STATE,
       `disableSudo=${confg.disable_sudo}${EOL}`,
@@ -166,14 +150,15 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       return;
     }
     //return;
-    let _http = new httpm.HttpClient();
+
     let statusCode;
     //_http.requestOptions = { socketTimeout: 3 * 1000 };
     try {
-      const resp: httpm.HttpClientResponse = await _http.get(
+      const resp = await axios.get(
         `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
       );
-      statusCode = resp.message.statusCode; // adding error code to check whether agent is getting installed or not.
+
+      statusCode = resp.status; // adding error code to check whether agent is getting installed or not.
       console.log(`statuscode: ${statusCode}`);
       /*fs.appendFileSync(
         process.env.GITHUB_STATE,
