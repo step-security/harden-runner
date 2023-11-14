@@ -165,7 +165,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       }
       return;
     }
-    return;
+    //return;
     let _http = new httpm.HttpClient();
     let statusCode;
     _http.requestOptions = { socketTimeout: 3 * 1000 };
@@ -190,7 +190,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
       return;
     }
-
+    return;
     const confgStr = JSON.stringify(confg);
     cp.execSync("sudo mkdir -p /home/agent");
     cp.execSync("sudo chown -R $USER /home/agent");
