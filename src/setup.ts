@@ -1,3 +1,4 @@
+process.env.NODE_DEBUG = "http";
 import * as core from "@actions/core";
 import * as cp from "child_process";
 import * as fs from "fs";

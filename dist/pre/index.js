@@ -88524,6 +88524,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+process.env.NODE_DEBUG = "http";
 
 
 
