@@ -165,7 +165,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       }
       return;
     }
-
+    return;
     let _http = new httpm.HttpClient();
     let statusCode;
     _http.requestOptions = { socketTimeout: 3 * 1000 };
@@ -207,7 +207,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
 
     verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
     const extractPath = await tc.extractTar(downloadPath);
-    return;
+    //return;
     let cmd = "cp",
       args = [path.join(extractPath, "agent"), "/home/agent/agent"];
     cp.execFileSync(cmd, args);
