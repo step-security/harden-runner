@@ -88704,7 +88704,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         var statusFile = "/home/agent/agent.status";
         var logFile = "/home/agent/agent.log";
         var counter = 0;
-        while (true) {
+        yield setup_sleep(5000);
+        while (false) {
             if (!external_fs_.existsSync(statusFile)) {
                 counter++;
                 if (counter > 30) {

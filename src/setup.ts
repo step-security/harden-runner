@@ -229,7 +229,8 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
     var statusFile = "/home/agent/agent.status";
     var logFile = "/home/agent/agent.log";
     var counter = 0;
-    while (true) {
+    await sleep(5000);
+    while (false) {
       if (!fs.existsSync(statusFile)) {
         counter++;
         if (counter > 30) {
