@@ -71323,7 +71323,7 @@ function addSummary() {
         if (tableEntries.length === 0) {
             return;
         }
-        const insightsRow = `<p><b><a href="${insights_url}">📄 View Full GitHub Actions Security Report & Recommendations</a></b></p>`;
+        const insightsRow = `<p><b><a href="${insights_url}">📄 View Full Report</a></b></p>`;
         yield core.summary.addSeparator().addRaw(`<h2>🛡 StepSecurity Report</h2>`);
         tableEntries.sort((a, b) => {
             if (a.status === "❌ Blocked" && b.status !== "❌ Blocked") {
