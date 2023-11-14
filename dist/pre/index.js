@@ -88524,7 +88524,6 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-process.env.NODE_DEBUG = "http";
 
 
 
@@ -88664,10 +88663,11 @@ process.env.NODE_DEBUG = "http";
         //return;
         let _http = new lib.HttpClient();
         let statusCode;
-        _http.requestOptions = { socketTimeout: 3 * 1000 };
+        //_http.requestOptions = { socketTimeout: 3 * 1000 };
         try {
             const resp = yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
             statusCode = resp.message.statusCode; // adding error code to check whether agent is getting installed or not.
+            console.log(`statuscode: ${statusCode}`);
             /*fs.appendFileSync(
               process.env.GITHUB_STATE,
               `monitorStatusCode=${statusCode}${EOL}`,

@@ -1,4 +1,3 @@
-process.env.NODE_DEBUG = "http";
 import * as core from "@actions/core";
 import * as cp from "child_process";
 import * as fs from "fs";
@@ -169,12 +168,13 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
     //return;
     let _http = new httpm.HttpClient();
     let statusCode;
-    _http.requestOptions = { socketTimeout: 3 * 1000 };
+    //_http.requestOptions = { socketTimeout: 3 * 1000 };
     try {
       const resp: httpm.HttpClientResponse = await _http.get(
         `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
       );
       statusCode = resp.message.statusCode; // adding error code to check whether agent is getting installed or not.
+      console.log(`statuscode: ${statusCode}`);
       /*fs.appendFileSync(
         process.env.GITHUB_STATE,
         `monitorStatusCode=${statusCode}${EOL}`,
