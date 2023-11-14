@@ -95710,7 +95710,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         let statusCode;
         //_http.requestOptions = { socketTimeout: 3 * 1000 };
         try {
-            const resp = yield lib_axios.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
+            const resp = yield lib_axios.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`, { timeout: 3000 });
             statusCode = resp.status; // adding error code to check whether agent is getting installed or not.
             console.log(`statuscode: ${statusCode}`);
             /*fs.appendFileSync(

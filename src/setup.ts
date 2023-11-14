@@ -155,7 +155,8 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
     //_http.requestOptions = { socketTimeout: 3 * 1000 };
     try {
       const resp = await axios.get(
-        `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
+        `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`,
+        { timeout: 3000 }
       );
 
       statusCode = resp.status; // adding error code to check whether agent is getting installed or not.
