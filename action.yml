@@ -33,7 +33,7 @@ branding:
   icon: "check-square"
   color: "green"
 runs:
-  using: "node20"
+  using: "node16"
   pre: "dist/pre/index.js"
   main: "dist/index.js"
   post: "dist/post/index.js"

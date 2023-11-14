@@ -101,7 +101,7 @@ export async function addSummary() {
     return;
   }
 
-  const insightsRow = `<p><b><a href="${insights_url}">📄 View Full Report</a></b></p>`;
+  const insightsRow = `<p><b><a href="${insights_url}">📄 View Full GitHub Actions Security Report & Recommendations</a></b></p>`;
 
   await core.summary.addSeparator().addRaw(`<h2>🛡 StepSecurity Report</h2>`);
 
