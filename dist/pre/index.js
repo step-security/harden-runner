@@ -88667,19 +88667,24 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         try {
             const resp = yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
             statusCode = resp.message.statusCode; // adding error code to check whether agent is getting installed or not.
-            external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${external_os_.EOL}`, {
+            /*fs.appendFileSync(
+              process.env.GITHUB_STATE,
+              `monitorStatusCode=${statusCode}${EOL}`,
+              {
                 encoding: "utf8",
-            });
+              }
+            );*/
         }
         catch (e) {
             console.log(`error in connecting to ${api_url}: ${e}`);
         }
+        return;
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         if (String(statusCode) === STATUS_HARDEN_RUNNER_UNAVAILABLE) {
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
             return;
         }
-        return;
+        //return;
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
