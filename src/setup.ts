@@ -161,17 +161,17 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
 
       statusCode = resp.status; // adding error code to check whether agent is getting installed or not.
       console.log(`statuscode: ${statusCode}`);
-      /*fs.appendFileSync(
+      fs.appendFileSync(
         process.env.GITHUB_STATE,
         `monitorStatusCode=${statusCode}${EOL}`,
         {
           encoding: "utf8",
         }
-      );*/
+      );
     } catch (e) {
       console.log(`error in connecting to ${api_url}: ${e}`);
     }
-    return;
+    //return;
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
     if (String(statusCode) === common.STATUS_HARDEN_RUNNER_UNAVAILABLE) {
       console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
@@ -217,7 +217,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
     var logFile = "/home/agent/agent.log";
     var counter = 0;
     await sleep(5000);
-    while (false) {
+    while (true) {
       if (!fs.existsSync(statusFile)) {
         counter++;
         if (counter > 30) {

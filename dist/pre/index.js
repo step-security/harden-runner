@@ -95713,18 +95713,14 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             const resp = yield lib_axios.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`, { timeout: 3000 });
             statusCode = resp.status; // adding error code to check whether agent is getting installed or not.
             console.log(`statuscode: ${statusCode}`);
-            /*fs.appendFileSync(
-              process.env.GITHUB_STATE,
-              `monitorStatusCode=${statusCode}${EOL}`,
-              {
+            external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${external_os_.EOL}`, {
                 encoding: "utf8",
-              }
-            );*/
+            });
         }
         catch (e) {
             console.log(`error in connecting to ${api_url}: ${e}`);
         }
-        return;
+        //return;
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         if (String(statusCode) === STATUS_HARDEN_RUNNER_UNAVAILABLE) {
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
@@ -95759,7 +95755,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         var logFile = "/home/agent/agent.log";
         var counter = 0;
         yield sleep(5000);
-        while (false) {
+        while (true) {
             if (!external_fs_.existsSync(statusFile)) {
                 counter++;
                 if (counter > 30) {
