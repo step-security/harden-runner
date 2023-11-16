@@ -1,11 +1,7 @@
 import * as fs from "fs";
 import * as cp from "child_process";
-import * as core from "@actions/core";
 import * as common from "./common";
 import isDocker from "is-docker";
-import * as cache from "@actions/cache";
-import { cacheFile, cacheKey, isValidEvent } from "./cache";
-import path from "path";
 import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
 
 (async () => {
@@ -16,18 +12,6 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
   if (isDocker()) {
     console.log(common.CONTAINER_MESSAGE);
     return;
-  }
-
-  if (isValidEvent()) {
-    try {
-      const cacheResult = await cache.saveCache(
-        [path.join(__dirname, "cache.txt")],
-        cacheKey
-      );
-      console.log(cacheResult);
-    } catch (exception) {
-      console.log(exception);
-    }
   }
 
   if (isArcRunner()) {
@@ -54,8 +38,8 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
     JSON.stringify({ event: "post" })
   );
 
-  var doneFile = "/home/agent/done.json";
-  var counter = 0;
+  const doneFile = "/home/agent/done.json";
+  let counter = 0;
   while (true) {
     if (!fs.existsSync(doneFile)) {
       counter++;
@@ -71,7 +55,7 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
     }
   }
 
-  var log = "/home/agent/agent.log";
+  const log = "/home/agent/agent.log";
   if (fs.existsSync(log)) {
     console.log("log:");
     var content = fs.readFileSync(log, "utf-8");

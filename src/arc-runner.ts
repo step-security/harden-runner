@@ -1,14 +1,24 @@
 import * as cp from "child_process";
+import * as fs from "fs";
 import { sleep } from "./setup";
 
 export function isArcRunner(): boolean {
   const runnerUserAgent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
 
+  let isARC = false;
+
   if (!runnerUserAgent) {
-    return false;
+    isARC = false;
+  } else {
+    isARC = runnerUserAgent.includes("actions-runner-controller/");
   }
 
-  return runnerUserAgent.includes("actions-runner-controller/");
+  return isARC || isSecondaryPod();
+}
+
+function isSecondaryPod(): boolean {
+  const workDir = "/__w";
+  return fs.existsSync(workDir);
 }
 
 function getRunnerTempDir(): string {
