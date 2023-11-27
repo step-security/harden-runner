@@ -1,5 +1,5 @@
-name: "Harden Runner"
-description: "GitHub Actions Runtime Security"
+name: "Harden-Runner"
+description: "Harden-Runner provides runtime security for GitHub-hosted and self-hosted runners"
 inputs:
   allowed-endpoints:
     description: "Only these endpoints will be allowed if egress-policy is set to block"
@@ -9,6 +9,13 @@ inputs:
     description: "Policy for outbound traffic, can be either audit or block"
     required: false
     default: "block"
+  token:
+    description: "Used to avoid github rate limiting"
+    default: ${{ github.token }}
+  disable-telemetry:
+    description: "Disable sending telemetry to StepSecurity API, can be set to true or false. This can only be set to true when egress-policy is set to block"
+    required: false
+    default: "false"
   disable-sudo:
     description: "Disable sudo access for the runner account"
     required: false
@@ -17,11 +24,16 @@ inputs:
     description: "Disable file monitoring"
     required: false
     default: "false"
+  policy:
+    description: "Policy name to be used from the policy store"
+    required: false
+    default: ""
+
 branding:
   icon: "check-square"
   color: "green"
 runs:
-  using: "node12"
+  using: "node16"
   pre: "dist/pre/index.js"
   main: "dist/index.js"
   post: "dist/post/index.js"

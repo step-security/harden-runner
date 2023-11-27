@@ -1,12 +1,34 @@
+import * as common from "./common";
+import * as core from "@actions/core";
+import isDocker from "is-docker";
+
 (async () => {
   if (process.platform !== "linux") {
-    console.log("Only runs on linux");
+    console.log(common.UBUNTU_MESSAGE);
+    return;
+  }
+  if (isDocker()) {
+    console.log(common.CONTAINER_MESSAGE);
     return;
   }
 
-  var web_url = "https://int1.stepsecurity.io";
+  if (
+    String(process.env.STATE_monitorStatusCode) ===
+    common.STATUS_HARDEN_RUNNER_UNAVAILABLE
+  ) {
+    console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+    return;
+  }
 
-  console.log(
-    `View security insights and recommended policy at ${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]} after the run has finished`
-  );
+  if (
+    core.getBooleanInput("disable-telemetry") &&
+    core.getInput("egress-policy") === "block"
+  ) {
+    console.log(
+      "Telemetry will not be sent to StepSecurity API as disable-telemetry is set to true"
+    );
+  } else {
+    var web_url = "https://app.stepsecurity.io";
+    common.printInfo(web_url);
+  }
 })();

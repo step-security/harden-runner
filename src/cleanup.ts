@@ -1,9 +1,39 @@
 import * as fs from "fs";
+<<<<<<< HEAD
 import * as core from "@actions/core";
+=======
+import * as cp from "child_process";
+import * as common from "./common";
+import isDocker from "is-docker";
+import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
+>>>>>>> main
 
 (async () => {
   if (process.platform !== "linux") {
-    console.log("Only runs on linux");
+    console.log(common.UBUNTU_MESSAGE);
+    return;
+  }
+  if (isDocker()) {
+    console.log(common.CONTAINER_MESSAGE);
+    return;
+  }
+
+  if (isArcRunner()) {
+    console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
+    arcCleanUp();
+    removeStepPolicyFiles();
+    return;
+  }
+
+  if (process.env.STATE_selfHosted === "true") {
+    return;
+  }
+
+  if (
+    String(process.env.STATE_monitorStatusCode) ===
+    common.STATUS_HARDEN_RUNNER_UNAVAILABLE
+  ) {
+    console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
     return;
   }
 
@@ -12,8 +42,8 @@ import * as core from "@actions/core";
     JSON.stringify({ event: "post" })
   );
 
-  var doneFile = "/home/agent/done.json";
-  var counter = 0;
+  const doneFile = "/home/agent/done.json";
+  let counter = 0;
   while (true) {
     if (!fs.existsSync(doneFile)) {
       counter++;
@@ -29,10 +59,13 @@ import * as core from "@actions/core";
     }
   }
 
-  var log = "/home/agent/agent.log";
-  console.log("log:");
-  var content = fs.readFileSync(log, "utf-8");
-  console.log(content);
+  const log = "/home/agent/agent.log";
+  if (fs.existsSync(log)) {
+    console.log("log:");
+    var content = fs.readFileSync(log, "utf-8");
+    console.log(content);
+  }
+
   var status = "/home/agent/agent.status";
   if (fs.existsSync(status)) {
     console.log("status:");
@@ -40,6 +73,7 @@ import * as core from "@actions/core";
     console.log(content);
   }
 
+<<<<<<< HEAD
   // write annotations
   var annotationsFile = "/home/agent/annotation.log";
   if (fs.existsSync(annotationsFile)) {
@@ -47,6 +81,21 @@ import * as core from "@actions/core";
     content.split(/\r?\n/).forEach((line) => {
       core.error(line);
     });
+=======
+  var disable_sudo = process.env.STATE_disableSudo;
+  if (disable_sudo !== "true") {
+    var journalLog = cp.execSync("sudo journalctl -u agent.service", {
+      encoding: "utf8",
+    });
+    console.log("Service log:");
+    console.log(journalLog);
+  }
+
+  try {
+    await common.addSummary();
+  } catch (exception) {
+    console.log(exception);
+>>>>>>> main
   }
 })();
 

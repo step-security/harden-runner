@@ -1,0 +1,43 @@
+name: Test a branch on canary
+on:
+  workflow_dispatch:
+    inputs:
+      COMMIT_SHA:
+        description: 'Commit SHA to be tested'
+        required: true
+
+env:
+  COMMIT_SHA: ${{ github.event.inputs.COMMIT_SHA }}
+defaults:
+  run:
+    shell: pwsh
+
+permissions:  # added using https://github.com/step-security/secure-workflows
+  contents: read
+
+jobs:
+  update_tag:
+    name: Update the rc tag to ${{ github.event.inputs.COMMIT_SHA }} commit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v1
+      with:
+        egress-policy: audit
+        allowed-endpoints:
+          api.github.com:443
+          github.com:443
+
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v2
+    - name: Update the rc tag
+      uses: step-security/publish-action@b438f840875fdcb7d1de4fc3d1d30e86cf6acb5d
+      with:
+        rc-sha: ${{ env.COMMIT_SHA }}
+        rc: true
+
+    - name: Canary test
+      uses: docker://ghcr.io/step-security/integration-test/int:latest
+      env:
+        PAT: ${{ secrets.PAT }}
+        canary: true
