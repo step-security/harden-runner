@@ -1,12 +1,8 @@
 import * as fs from "fs";
-<<<<<<< HEAD
-import * as core from "@actions/core";
-=======
 import * as cp from "child_process";
 import * as common from "./common";
 import isDocker from "is-docker";
 import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
->>>>>>> main
 
 (async () => {
   if (process.platform !== "linux") {
@@ -73,15 +69,6 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
     console.log(content);
   }
 
-<<<<<<< HEAD
-  // write annotations
-  var annotationsFile = "/home/agent/annotation.log";
-  if (fs.existsSync(annotationsFile)) {
-    var content = fs.readFileSync(annotationsFile, "utf-8");
-    content.split(/\r?\n/).forEach((line) => {
-      core.error(line);
-    });
-=======
   var disable_sudo = process.env.STATE_disableSudo;
   if (disable_sudo !== "true") {
     var journalLog = cp.execSync("sudo journalctl -u agent.service", {
@@ -95,7 +82,6 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
     await common.addSummary();
   } catch (exception) {
     console.log(exception);
->>>>>>> main
   }
 })();
 

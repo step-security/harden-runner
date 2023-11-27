@@ -1,16 +1,9 @@
 import * as core from "@actions/core";
-<<<<<<< HEAD
-import { context } from "@actions/github";
-=======
->>>>>>> main
 import * as cp from "child_process";
 import * as fs from "fs";
 import * as httpm from "@actions/http-client";
 import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
-<<<<<<< HEAD
-import * as httpm from "@actions/http-client";
-=======
 import * as common from "./common";
 import * as tc from "@actions/tool-cache";
 import { verifyChecksum } from "./checksum";
@@ -30,7 +23,6 @@ import * as cache from "@actions/cache";
 import { getCacheEntry } from "@actions/cache/lib/internal/cacheHttpClient";
 import * as utils from "@actions/cache/lib/internal/cacheUtils";
 import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
->>>>>>> main
 
 (async () => {
   try {
@@ -44,9 +36,9 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
     }
 
     var correlation_id = uuidv4();
-    var env = "agent";
+    var env = "int";
     var api_url = `https://${env}.api.stepsecurity.io/v1`;
-    var web_url = "https://app.stepsecurity.io";
+    var web_url = "https://int1.stepsecurity.io";
 
     let confg: Configuration = {
       repo: process.env["GITHUB_REPOSITORY"],
@@ -56,17 +48,6 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       api_url: api_url,
       allowed_endpoints: core.getInput("allowed-endpoints"),
       egress_policy: core.getInput("egress-policy"),
-<<<<<<< HEAD
-      disable_sudo: core.getBooleanInput("disable-sudo"),
-      disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
-      private: context.payload.repository.private,
-    };
-
-    let _http = new httpm.HttpClient();
-    await _http.get(
-      `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
-    );
-=======
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
       disable_sudo: core.getBooleanInput("disable-sudo"),
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
@@ -209,7 +190,6 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
       return;
     }
->>>>>>> main
 
     const confgStr = JSON.stringify(confg);
     cp.execSync("sudo mkdir -p /home/agent");
@@ -220,16 +200,11 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
     let auth = `token ${token}`;
 
     const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz",
-      undefined,
-      auth
+      `https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/${env}/agent`
     );
 
-    verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
-    const extractPath = await tc.extractTar(downloadPath);
-
     let cmd = "cp",
-      args = [path.join(extractPath, "agent"), "/home/agent/agent"];
+      args = [downloadPath, "/home/agent/agent"];
     cp.execFileSync(cmd, args);
     cp.execSync("chmod +x /home/agent/agent");
 

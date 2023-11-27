@@ -71381,24 +71381,6 @@ const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based ru
 
 // EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
 var tool_cache = __nccwpck_require__(7784);
-// EXTERNAL MODULE: external "crypto"
-var external_crypto_ = __nccwpck_require__(6417);
-;// CONCATENATED MODULE: ./src/checksum.ts
-
-
-
-function verifyChecksum(downloadPath) {
-    const fileBuffer = external_fs_.readFileSync(downloadPath);
-    const checksum = external_crypto_.createHash("sha256")
-        .update(fileBuffer)
-        .digest("hex"); // checksum of downloaded file
-    const expectedChecksum = "ceb925c78e5c79af4f344f08f59bbdcf3376d20d15930a315f9b24b6c4d0328a"; // checksum for v0.13.5
-    if (checksum !== expectedChecksum) {
-        lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
-    }
-    lib_core.debug("Checksum verification passed.");
-}
-
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = require("node:fs");
 ;// CONCATENATED MODULE: ./node_modules/is-docker/index.js
@@ -71573,8 +71555,6 @@ function arcCleanUp() {
     cp.execSync(`echo "cleanup" > "${getRunnerTempDir()}/step_policy_cleanup"`);
 }
 
-// EXTERNAL MODULE: ./node_modules/@actions/http-client/lib/index.js
-var lib = __nccwpck_require__(6255);
 ;// CONCATENATED MODULE: ./src/setup.ts
 var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -71585,7 +71565,6 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-
 
 
 
@@ -71615,9 +71594,9 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             return;
         }
         var correlation_id = v4();
-        var env = "agent";
+        var env = "int";
         var api_url = `https://${env}.api.stepsecurity.io/v1`;
-        var web_url = "https://app.stepsecurity.io";
+        var web_url = "https://int1.stepsecurity.io";
         let confg = {
             repo: process.env["GITHUB_REPOSITORY"],
             run_id: process.env["GITHUB_RUN_ID"],
@@ -71745,10 +71724,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         // Note: to avoid github rate limiting
         let token = lib_core.getInput("token");
         let auth = `token ${token}`;
-        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz", undefined, auth);
-        verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
-        const extractPath = yield tool_cache.extractTar(downloadPath);
-        let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
+        const downloadPath = yield tool_cache.downloadTool(`https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/${env}/agent`);
+        let cmd = "cp", args = [downloadPath, "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
         external_child_process_.execSync("chmod +x /home/agent/agent");
         external_fs_.writeFileSync("/home/agent/agent.json", confgStr);
