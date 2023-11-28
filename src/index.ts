@@ -28,7 +28,7 @@ import isDocker from "is-docker";
       "Telemetry will not be sent to StepSecurity API as disable-telemetry is set to true"
     );
   } else {
-    var web_url = "https://app.stepsecurity.io";
+    var web_url = "https://int1.stepsecurity.io";
     common.printInfo(web_url);
   }
 })();

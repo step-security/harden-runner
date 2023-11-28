@@ -3034,7 +3034,7 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
         console.log("Telemetry will not be sent to StepSecurity API as disable-telemetry is set to true");
     }
     else {
-        var web_url = "https://app.stepsecurity.io";
+        var web_url = "https://int1.stepsecurity.io";
         printInfo(web_url);
     }
 }))();
