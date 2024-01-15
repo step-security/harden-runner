@@ -1,6 +1,7 @@
 import nock from "nock";
-import { API_ENDPOINT, fetchPolicy, mergeConfigs } from "./policy-utils";
+import { fetchPolicy, mergeConfigs } from "./policy-utils";
 import { Configuration, PolicyResponse } from "./interfaces";
+import { STEPSECURITY_API_URL } from "./configs";
 
 test("success: fetching policy", async () => {
   let owner = "h0x0er";
@@ -14,7 +15,7 @@ test("success: fetching policy", async () => {
     disable_sudo: false,
     disable_file_monitoring: false,
   };
-  const policyScope = nock(`${API_ENDPOINT}`)
+  const policyScope = nock(`${STEPSECURITY_API_URL}`)
     .get(`/github/${owner}/actions/policies/${policyName}`)
     .reply(200, response);
 
@@ -37,6 +38,7 @@ test("merge configs", async () => {
     disable_sudo: false,
     disable_file_monitoring: false,
     private: "true",
+    is_self_hosted: false,
   };
   let policyResponse: PolicyResponse = {
     owner: "h0x0er",
@@ -60,6 +62,7 @@ test("merge configs", async () => {
     disable_sudo: false,
     disable_file_monitoring: false,
     private: "true",
+    is_self_hosted: false,
   };
 
   localConfig = mergeConfigs(localConfig, policyResponse);
