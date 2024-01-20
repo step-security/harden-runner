@@ -75,13 +75,13 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 3. Click on the link ([example link](https://app.stepsecurity.io/github/microsoft/msquic/actions/runs/7588119198)). You will see a process monitor view of network and file events correlated with each step of the job.
 
     <p align="left">
-      <img src="images/insights-5.png" alt="Insights from harden-runner" >
+      <img src="images/insights.png" alt="Insights from harden-runner" >
     </p>
 
 4. Under the process monitor view, you'll find a recommended block policy based on outbound calls aggregated from the current and past runs of the job. You can update your workflow file with this policy, or alternatively, use the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store) to apply the policy without modifying the workflow file. From now on, any outbound calls not in the allowed list will be blocked.
 
     <p align="left">
-      <img src="images/rec-policy1.png" alt="Policy recommended by harden-runner" >
+      <img src="images/rec-policy.png" alt="Policy recommended by harden-runner" >
     </p>
 
 ## Support for Self-Hosted Runners and Private Repositories
@@ -116,7 +116,7 @@ Actions Runner Controller (ARC) is a Kubernetes operator that orchestrates self-
 
 For details, check out the documentation at https://docs.stepsecurity.io
 
-### 👀 Monitor egress traffic
+### 👀 View outbound network traffic
 
 > Applies to both GitHub-hosted and self-hosted runners
 
@@ -124,9 +124,18 @@ Harden-Runner monitors all outbound traffic from each job at the DNS and network
 
 - After the workflow completes, each outbound call is correlated with each step of the job, and shown in the insights page
 - For self-hosted runners, no changes are needed to workflow files to monitor egress traffic
-- A filtering (block) egress policy is suggested in the insights page based on past job runs
+- A filtering (block) egress policy is suggested in the insights page based on the current and past job runs
 
-### 🚦 Filter egress traffic to allowed endpoints
+### ⚠️ Detect anomalous outbound network traffic
+
+> Applies to both GitHub-hosted and self-hosted runners
+
+Harden-Runner creates a baseline of outbound traffic for each job during the first few runs that it monitors
+
+- After the baseline is created, any new outbound destinations are marked as anomalous in the insights page
+- You can view the list of all anomalous outbound network traffic in the `Runtime detections` page on the dashboard
+
+### 🚦 Filter outbound network traffic to allowed endpoints
 
 > Applies to both GitHub-hosted and self-hosted runners
 
