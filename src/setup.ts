@@ -53,7 +53,7 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
       disable_sudo: core.getBooleanInput("disable-sudo"),
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
       private: context?.payload?.repository?.private || false,
-      is_self_hosted: !isGithubHosted(),
+      is_github_hosted: isGithubHosted(),
     };
 
     let policyName = core.getInput("policy");
