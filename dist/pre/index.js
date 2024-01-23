@@ -71702,7 +71702,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             disable_sudo: lib_core.getBooleanInput("disable-sudo"),
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
             private: ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.private) || false,
-            is_self_hosted: !isGithubHosted(),
+            is_github_hosted: isGithubHosted(),
         };
         let policyName = lib_core.getInput("policy");
         if (policyName !== "") {
