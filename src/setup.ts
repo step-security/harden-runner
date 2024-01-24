@@ -202,16 +202,13 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
     let auth = `token ${token}`;
 
     let downloadPath: string;
-    let cmd: string;
-    let args: string[];
 
     if (await isTLSEnabled(context.repo.owner)) {
       downloadPath = await tc.downloadTool(
-        `https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/self-hosted/int/agent`,
+        `https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/hosted/int/agent_linux_amd64.tar.gz`,
         undefined
       );
-      // TODO: Validate checksum for tls-enabled agent
-      (cmd = "cp"), (args = [downloadPath, "/home/agent/agent"]);
+      verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
     } else {
       downloadPath = await tc.downloadTool(
         "https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz",
@@ -219,12 +216,13 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
         auth
       );
 
-      verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
-
-      const extractPath = await tc.extractTar(downloadPath);
-      cmd = "cp";
-      args = [path.join(extractPath, "agent"), "/home/agent/agent"];
+      verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
     }
+
+    const extractPath = await tc.extractTar(downloadPath);
+
+    let cmd = "cp",
+      args = [path.join(extractPath, "agent"), "/home/agent/agent"];
 
     cp.execFileSync(cmd, args);
 
