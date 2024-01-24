@@ -71823,7 +71823,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         let auth = `token ${token}`;
         let downloadPath;
         if (yield isTLSEnabled(github.context.repo.owner)) {
-            downloadPath = yield tool_cache.downloadTool(`https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/hosted/int/agent_linux_amd64.tar.gz`, undefined);
+            downloadPath = yield tool_cache.downloadTool("https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/hosted/int/agent_linux_amd64.tar.gz", undefined, auth);
             verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
         }
         else {

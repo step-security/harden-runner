@@ -205,8 +205,9 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
 
     if (await isTLSEnabled(context.repo.owner)) {
       downloadPath = await tc.downloadTool(
-        `https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/hosted/int/agent_linux_amd64.tar.gz`,
-        undefined
+        "https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/hosted/int/agent_linux_amd64.tar.gz",
+        undefined,
+        auth
       );
       verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
     } else {
