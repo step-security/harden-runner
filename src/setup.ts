@@ -166,7 +166,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       return;
     }
 
-    const _http = new httpm.HttpClient("harden-runner");
+    const _http = new httpm.HttpClient();
     let statusCode;
     //_http.requestOptions = { socketTimeout: 3 * 1000 };
     try {

@@ -95448,7 +95448,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             }
             return;
         }
-        const _http = new lib.HttpClient("harden-runner");
+        const _http = new lib.HttpClient();
         let statusCode;
         //_http.requestOptions = { socketTimeout: 3 * 1000 };
         try {
