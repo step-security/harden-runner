@@ -95448,9 +95448,9 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             }
             return;
         }
-        const _http = new lib.HttpClient();
+        let _http = new lib.HttpClient();
         let statusCode;
-        //_http.requestOptions = { socketTimeout: 3 * 1000 };
+        _http.requestOptions = { socketTimeout: 3 * 1000 };
         try {
             const resp = yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
             statusCode = resp.message.statusCode; // adding error code to check whether agent is getting installed or not.
