@@ -252,6 +252,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
   } catch (error) {
     core.setFailed(error.message);
   }
+  process.exit(0);
 })();
 
 export function sleep(ms) {
