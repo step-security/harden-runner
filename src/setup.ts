@@ -166,9 +166,9 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       return;
     }
 
-    let _http = new httpm.HttpClient();
+    const _http = new httpm.HttpClient();
     let statusCode;
-    _http.requestOptions = { socketTimeout: 3 * 1000 };
+    //_http.requestOptions = { socketTimeout: 3 * 1000 };
     try {
       const resp: httpm.HttpClientResponse = await _http.get(
         `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
