@@ -5,6 +5,7 @@ import * as core from "@actions/core";
 export async function isTLSEnabled(owner: string): Promise<boolean> {
   let tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
   let httpClient = new HttpClient();
+  httpClient.requestOptions = { socketTimeout: 3 * 1000 };
   core.info(`[!] Checking TLS_STATUS: ${owner}`);
   let isEnabled = false;
   try {

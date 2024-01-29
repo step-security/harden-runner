@@ -266,6 +266,8 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
   } catch (error) {
     core.setFailed(error.message);
   }
+  // see https://github.com/ruby/setup-ruby/issues/543
+  process.exit(0);
 })();
 
 export function sleep(ms) {
