@@ -71423,7 +71423,7 @@ function verifyChecksum(downloadPath, is_tls) {
     let expectedChecksum = "ceb925c78e5c79af4f344f08f59bbdcf3376d20d15930a315f9b24b6c4d0328a"; // checksum for v0.13.5
     if (is_tls) {
         expectedChecksum =
-            "cea9c168c01ebae520da40130613a0bc193cf6354d96dcc363636e75d1c90212"; // checksum for tls_agent
+            "29f6c8414f9f0e0a4cb9510b8f349a7ecfee33622dd1b74dd57256f901b256ae"; // checksum for tls_agent
     }
     if (checksum !== expectedChecksum) {
         lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
