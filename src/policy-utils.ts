@@ -1,19 +1,17 @@
 import { HttpClient } from "@actions/http-client";
 import { PolicyResponse, Configuration } from "./interfaces";
-
-export const API_ENDPOINT = "https://agent.api.stepsecurity.io/v1";
+import { STEPSECURITY_API_URL } from "./configs";
 
 export async function fetchPolicy(
   owner: string,
   policyName: string,
   idToken: string
 ): Promise<PolicyResponse> {
-
   if (idToken === "") {
     throw new Error("[PolicyFetch]: id-token in empty");
   }
 
-  let policyEndpoint = `${API_ENDPOINT}/github/${owner}/actions/policies/${policyName}`;
+  let policyEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/policies/${policyName}`;
 
   let httpClient = new HttpClient();
 
@@ -25,24 +23,24 @@ export async function fetchPolicy(
   let err = undefined;
 
   let retry = 0;
-  while(retry < 3){
-    try{
-      console.log(`Attempt: ${retry+1}`)
+  while (retry < 3) {
+    try {
+      console.log(`Attempt: ${retry + 1}`);
       response = await httpClient.getJson<PolicyResponse>(
         policyEndpoint,
         headers
       );
       break;
-    }catch(e){
-      err = e
+    } catch (e) {
+      err = e;
     }
-    retry += 1
+    retry += 1;
     await sleep(1000);
   }
 
-  if(response === undefined && err !== undefined){
-    throw new Error(`[Policy Fetch] ${err}`)
-  }else{
+  if (response === undefined && err !== undefined) {
+    throw new Error(`[Policy Fetch] ${err}`);
+  } else {
     return response.result;
   }
 }
