@@ -71387,12 +71387,16 @@ var external_crypto_ = __nccwpck_require__(6417);
 
 
 
-function verifyChecksum(downloadPath) {
+function verifyChecksum(downloadPath, is_tls) {
     const fileBuffer = external_fs_.readFileSync(downloadPath);
     const checksum = external_crypto_.createHash("sha256")
         .update(fileBuffer)
         .digest("hex"); // checksum of downloaded file
-    const expectedChecksum = "ceb925c78e5c79af4f344f08f59bbdcf3376d20d15930a315f9b24b6c4d0328a"; // checksum for v0.13.5
+    let expectedChecksum = "ceb925c78e5c79af4f344f08f59bbdcf3376d20d15930a315f9b24b6c4d0328a"; // checksum for v0.13.5
+    if (is_tls) {
+        expectedChecksum =
+            "204c82116e8c0eebf5409bb2b81aa5d96fe32f0c5abc1cb0364ee70937c32056"; // checksum for tls_agent
+    }
     if (checksum !== expectedChecksum) {
         lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
     }
@@ -71453,6 +71457,11 @@ function isValidEvent() {
     return RefKey in process.env && Boolean(process.env[RefKey]);
 }
 
+;// CONCATENATED MODULE: ./src/configs.ts
+const STEPSECURITY_ENV = "agent"; // agent or int
+const STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
+const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
+
 ;// CONCATENATED MODULE: ./src/policy-utils.ts
 var policy_utils_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -71464,13 +71473,13 @@ var policy_utils_awaiter = (undefined && undefined.__awaiter) || function (thisA
     });
 };
 
-const API_ENDPOINT = "https://agent.api.stepsecurity.io/v1";
+
 function fetchPolicy(owner, policyName, idToken) {
     return policy_utils_awaiter(this, void 0, void 0, function* () {
         if (idToken === "") {
             throw new Error("[PolicyFetch]: id-token in empty");
         }
-        let policyEndpoint = `${API_ENDPOINT}/github/${owner}/actions/policies/${policyName}`;
+        let policyEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/policies/${policyName}`;
         let httpClient = new lib.HttpClient();
         let headers = {};
         headers["Authorization"] = `Bearer ${idToken}`;
@@ -71573,6 +71582,47 @@ function arcCleanUp() {
     cp.execSync(`echo "cleanup" > "${getRunnerTempDir()}/step_policy_cleanup"`);
 }
 
+;// CONCATENATED MODULE: ./src/tls-inspect.ts
+var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+function isTLSEnabled(owner) {
+    return tls_inspect_awaiter(this, void 0, void 0, function* () {
+        let tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
+        let httpClient = new lib.HttpClient();
+        httpClient.requestOptions = { socketTimeout: 3 * 1000 };
+        lib_core.info(`[!] Checking TLS_STATUS: ${owner}`);
+        let isEnabled = false;
+        try {
+            let resp = yield httpClient.get(tlsStatusEndpoint);
+            if (resp.message.statusCode === 200) {
+                isEnabled = true;
+                lib_core.info(`[!] TLS_ENABLED: ${owner}`);
+            }
+            else {
+                lib_core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
+            }
+        }
+        catch (e) {
+            lib_core.info(`[!] Unable to check TLS_STATUS`);
+        }
+        return isEnabled;
+    });
+}
+function isGithubHosted() {
+    const runnerName = process.env.RUNNER_NAME || "";
+    return runnerName.startsWith("GitHub Actions");
+}
+
 ;// CONCATENATED MODULE: ./src/setup.ts
 var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -71583,6 +71633,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
+
 
 
 
@@ -71613,9 +71665,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             return;
         }
         var correlation_id = v4();
-        var env = "agent";
-        var api_url = `https://${env}.api.stepsecurity.io/v1`;
-        var web_url = "https://app.stepsecurity.io";
+        var api_url = STEPSECURITY_API_URL;
+        var web_url = STEPSECURITY_WEB_URL;
         let confg = {
             repo: process.env["GITHUB_REPOSITORY"],
             run_id: process.env["GITHUB_RUN_ID"],
@@ -71628,6 +71679,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             disable_sudo: lib_core.getBooleanInput("disable-sudo"),
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
             private: ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.private) || false,
+            is_github_hosted: isGithubHosted(),
         };
         let policyName = lib_core.getInput("policy");
         if (policyName !== "") {
@@ -71696,7 +71748,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         }
         const runnerName = process.env.RUNNER_NAME || "";
         lib_core.info(`RUNNER_NAME: ${runnerName}`);
-        if (!runnerName.startsWith("GitHub Actions")) {
+        if (!isGithubHosted()) {
             external_fs_.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${external_os_.EOL}`, {
                 encoding: "utf8",
             });
@@ -71743,8 +71795,15 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         // Note: to avoid github rate limiting
         let token = lib_core.getInput("token");
         let auth = `token ${token}`;
-        const downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz", undefined, auth);
-        verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
+        let downloadPath;
+        if (yield isTLSEnabled(github.context.repo.owner)) {
+            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.1.0_linux_amd64.tar.gz");
+            verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
+        }
+        else {
+            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz", undefined, auth);
+            verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
+        }
         const extractPath = yield tool_cache.extractTar(downloadPath);
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
@@ -71787,6 +71846,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
     catch (error) {
         lib_core.setFailed(error.message);
     }
+    // see https://github.com/ruby/setup-ruby/issues/543
+    process.exit(0);
 }))();
 function setup_sleep(ms) {
     return new Promise((resolve) => {

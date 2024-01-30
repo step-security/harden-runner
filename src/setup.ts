@@ -23,6 +23,8 @@ import * as cache from "@actions/cache";
 import { getCacheEntry } from "@actions/cache/lib/internal/cacheHttpClient";
 import * as utils from "@actions/cache/lib/internal/cacheUtils";
 import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
+import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
+import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
 
 (async () => {
   try {
@@ -36,9 +38,8 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
     }
 
     var correlation_id = uuidv4();
-    var env = "agent";
-    var api_url = `https://${env}.api.stepsecurity.io/v1`;
-    var web_url = "https://app.stepsecurity.io";
+    var api_url = STEPSECURITY_API_URL;
+    var web_url = STEPSECURITY_WEB_URL;
 
     let confg: Configuration = {
       repo: process.env["GITHUB_REPOSITORY"],
@@ -52,6 +53,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
       disable_sudo: core.getBooleanInput("disable-sudo"),
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
       private: context?.payload?.repository?.private || false,
+      is_github_hosted: isGithubHosted(),
     };
 
     let policyName = core.getInput("policy");
@@ -143,7 +145,7 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
 
     const runnerName = process.env.RUNNER_NAME || "";
     core.info(`RUNNER_NAME: ${runnerName}`);
-    if (!runnerName.startsWith("GitHub Actions")) {
+    if (!isGithubHosted()) {
       fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
         encoding: "utf8",
       });
@@ -199,18 +201,30 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
     let token = core.getInput("token");
     let auth = `token ${token}`;
 
-    const downloadPath: string = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz",
-      undefined,
-      auth
-    );
+    let downloadPath: string;
 
-    verifyChecksum(downloadPath); // NOTE: verifying agent's checksum, before extracting
+    if (await isTLSEnabled(context.repo.owner)) {
+      downloadPath = await tc.downloadTool(
+        "https://packages.stepsecurity.io/github-hosted/harden-runner_1.1.0_linux_amd64.tar.gz"
+      );
+      verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
+    } else {
+      downloadPath = await tc.downloadTool(
+        "https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz",
+        undefined,
+        auth
+      );
+
+      verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
+    }
+
     const extractPath = await tc.extractTar(downloadPath);
 
     let cmd = "cp",
       args = [path.join(extractPath, "agent"), "/home/agent/agent"];
+
     cp.execFileSync(cmd, args);
+
     cp.execSync("chmod +x /home/agent/agent");
 
     fs.writeFileSync("/home/agent/agent.json", confgStr);
@@ -252,6 +266,8 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
   } catch (error) {
     core.setFailed(error.message);
   }
+  // see https://github.com/ruby/setup-ruby/issues/543
+  process.exit(0);
 })();
 
 export function sleep(ms) {

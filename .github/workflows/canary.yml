@@ -41,3 +41,9 @@ jobs:
       env:
         PAT: ${{ secrets.PAT }}
         canary: true
+
+    - name: Canary TLS test
+      uses: docker://ghcr.io/step-security/integration-test/int:latest
+      env:
+        PAT: ${{ secrets.PAT }}
+        canary-tls: true
