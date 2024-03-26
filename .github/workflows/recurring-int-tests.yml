@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
+      uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -22,3 +22,18 @@ jobs:
       env:
         PAT: ${{ secrets.PAT }}
         canary: true
+
+  int-tls-tests:
+    name: int tls tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - name: Canary test
+      uses: docker://ghcr.io/step-security/integration-test/int:latest
+      env:
+        PAT: ${{ secrets.PAT }}
+        canary-tls: true

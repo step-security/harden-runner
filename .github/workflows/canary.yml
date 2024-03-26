@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v1
+    - uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v1
       with:
         egress-policy: audit
         allowed-endpoints:
@@ -41,3 +41,9 @@ jobs:
       env:
         PAT: ${{ secrets.PAT }}
         canary: true
+
+    - name: Canary TLS test
+      uses: docker://ghcr.io/step-security/integration-test/int:latest
+      env:
+        PAT: ${{ secrets.PAT }}
+        canary-tls: true

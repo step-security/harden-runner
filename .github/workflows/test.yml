@@ -13,10 +13,13 @@ concurrency:
   group: ${{ github.workflow }}
 jobs:
   test:
+    permissions:
+      checks: write
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
         with:
           disable-sudo: true
           egress-policy: audit
@@ -35,3 +38,9 @@ jobs:
       - name: Run coverage
         run: npm test -- --coverage
       - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
+      - name: Publish Test Results
+        uses: step-security/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: |
+            reports/*.xml

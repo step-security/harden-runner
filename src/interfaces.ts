@@ -9,6 +9,7 @@ export interface Configuration {
   disable_telemetry: boolean;
   disable_sudo: boolean;
   disable_file_monitoring: boolean;
+  is_github_hosted: boolean;
   private: string;
 }
 
