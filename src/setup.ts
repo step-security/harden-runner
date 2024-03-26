@@ -37,10 +37,10 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
       return;
     }
 
-    var correlation_id = uuidv4();
     var env = "int";
-    var api_url = `https://${env}.api.stepsecurity.io/v1`;
-    var web_url = "https://int1.stepsecurity.io";
+    var correlation_id = uuidv4();
+    var api_url = STEPSECURITY_API_URL;
+    var web_url = STEPSECURITY_WEB_URL;
 
     let confg: Configuration = {
       repo: process.env["GITHUB_REPOSITORY"],

@@ -71458,9 +71458,9 @@ function isValidEvent() {
 }
 
 ;// CONCATENATED MODULE: ./src/configs.ts
-const STEPSECURITY_ENV = "agent"; // agent or int
+const STEPSECURITY_ENV = "int"; // agent or int
 const STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
-const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
+const STEPSECURITY_WEB_URL = "https://int1.stepsecurity.io";
 
 ;// CONCATENATED MODULE: ./src/policy-utils.ts
 var policy_utils_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -71664,6 +71664,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log(CONTAINER_MESSAGE);
             return;
         }
+        var env = "int";
         var correlation_id = v4();
         var api_url = STEPSECURITY_API_URL;
         var web_url = STEPSECURITY_WEB_URL;
@@ -71801,8 +71802,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
         }
         else {
-            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz", undefined, auth);
-            verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
+            downloadPath = yield tool_cache.downloadTool(`https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/${env}/agent`);
+            //verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
         }
         const extractPath = yield tool_cache.extractTar(downloadPath);
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
