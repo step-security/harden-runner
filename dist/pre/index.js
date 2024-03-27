@@ -71801,12 +71801,13 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.1.0_linux_amd64.tar.gz");
             verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
             downloadPath = yield tool_cache.extractTar(downloadPath);
+            downloadPath = external_path_.join(downloadPath, "agent");
         }
         else {
             downloadPath = yield tool_cache.downloadTool(`https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/${env}/agent`);
             //verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
         }
-        let cmd = "cp", args = [external_path_.join(downloadPath, "agent"), "/home/agent/agent"];
+        let cmd = "cp", args = [downloadPath, "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
         external_child_process_.execSync("chmod +x /home/agent/agent");
         external_fs_.writeFileSync("/home/agent/agent.json", confgStr);

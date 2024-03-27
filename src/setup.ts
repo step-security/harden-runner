@@ -210,6 +210,7 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
       );
       verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
       downloadPath = await tc.extractTar(downloadPath);
+      downloadPath = path.join(downloadPath, "agent");
     } else {
       downloadPath = await tc.downloadTool(
         `https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/${env}/agent`
@@ -219,7 +220,7 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
     }
 
     let cmd = "cp",
-      args = [path.join(downloadPath, "agent"), "/home/agent/agent"];
+      args = [downloadPath, "/home/agent/agent"];
 
     cp.execFileSync(cmd, args);
 
