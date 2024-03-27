@@ -209,6 +209,7 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
         "https://packages.stepsecurity.io/github-hosted/harden-runner_1.1.0_linux_amd64.tar.gz"
       );
       verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
+      downloadPath = await tc.extractTar(downloadPath);
     } else {
       downloadPath = await tc.downloadTool(
         `https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/${env}/agent`
@@ -217,10 +218,8 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
       //verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
     }
 
-    const extractPath = await tc.extractTar(downloadPath);
-
     let cmd = "cp",
-      args = [path.join(extractPath, "agent"), "/home/agent/agent"];
+      args = [path.join(downloadPath, "agent"), "/home/agent/agent"];
 
     cp.execFileSync(cmd, args);
 
