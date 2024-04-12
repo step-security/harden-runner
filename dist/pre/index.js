@@ -20024,12 +20024,11 @@ exports.setSpanContext = setSpanContext;
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-
 var abortController = __nccwpck_require__(2557);
 var crypto = __nccwpck_require__(6417);
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * Creates an abortable promise.
  * @param buildPromise - A function that takes the resolve and reject functions as parameters.
@@ -20070,6 +20069,7 @@ function createAbortablePromise(buildPromise, options) {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 const StandardAbortMessage = "The delay was aborted.";
 /**
  * A wrapper for setTimeout that resolves a promise after timeInMs milliseconds.
@@ -20087,6 +20087,27 @@ function delay(timeInMs, options) {
         abortSignal,
         abortErrorMsg: abortErrorMsg !== null && abortErrorMsg !== void 0 ? abortErrorMsg : StandardAbortMessage,
     });
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+/**
+ * promise.race() wrapper that aborts rest of promises as soon as the first promise settles.
+ */
+async function cancelablePromiseRace(abortablePromiseBuilders, options) {
+    var _a, _b;
+    const aborter = new abortController.AbortController();
+    function abortHandler() {
+        aborter.abort();
+    }
+    (_a = options === null || options === void 0 ? void 0 : options.abortSignal) === null || _a === void 0 ? void 0 : _a.addEventListener("abort", abortHandler);
+    try {
+        return await Promise.race(abortablePromiseBuilders.map((p) => p({ abortSignal: aborter.signal })));
+    }
+    finally {
+        aborter.abort();
+        (_b = options === null || options === void 0 ? void 0 : options.abortSignal) === null || _b === void 0 ? void 0 : _b.removeEventListener("abort", abortHandler);
+    }
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -20125,6 +20146,7 @@ function isObject(input) {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * Typeguard for an error object shape (has name and message)
  * @param e - Something caught by a catch clause.
@@ -20165,6 +20187,7 @@ function getErrorMessage(e) {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * Generates a SHA-256 HMAC signature.
  * @param key - The HMAC key represented as a base64 string, used to generate the cryptographic HMAC hash.
@@ -20290,15 +20313,19 @@ const isWebWorker = typeof self === "object" &&
         ((_b = self.constructor) === null || _b === void 0 ? void 0 : _b.name) === "ServiceWorkerGlobalScope" ||
         ((_c = self.constructor) === null || _c === void 0 ? void 0 : _c.name) === "SharedWorkerGlobalScope");
 /**
- * A constant that indicates whether the environment the code is running is Node.JS.
- */
-const isNode = typeof process !== "undefined" && Boolean(process.version) && Boolean((_d = process.versions) === null || _d === void 0 ? void 0 : _d.node);
-/**
  * A constant that indicates whether the environment the code is running is Deno.
  */
 const isDeno = typeof Deno !== "undefined" &&
     typeof Deno.version !== "undefined" &&
     typeof Deno.version.deno !== "undefined";
+/**
+ * A constant that indicates whether the environment the code is running is Node.JS.
+ */
+const isNode = typeof process !== "undefined" &&
+    Boolean(process.version) &&
+    Boolean((_d = process.versions) === null || _d === void 0 ? void 0 : _d.node) &&
+    // Deno thought it was a good idea to spoof process.versions.node, see https://deno.land/std@0.177.0/node/process.ts?s=versions
+    !isDeno;
 /**
  * A constant that indicates whether the environment the code is running is Bun.sh.
  */
@@ -20318,14 +20345,7 @@ const isReactNative = typeof navigator !== "undefined" && (navigator === null ||
  * @returns a string of the encoded string
  */
 function uint8ArrayToString(bytes, format) {
-    switch (format) {
-        case "utf-8":
-            return uint8ArrayToUtf8String(bytes);
-        case "base64":
-            return uint8ArrayToBase64(bytes);
-        case "base64url":
-            return uint8ArrayToBase64Url(bytes);
-    }
+    return Buffer.from(bytes).toString(format);
 }
 /**
  * The helper that transforms string to specific character encoded bytes array.
@@ -20334,58 +20354,10 @@ function uint8ArrayToString(bytes, format) {
  * @returns a uint8array
  */
 function stringToUint8Array(value, format) {
-    switch (format) {
-        case "utf-8":
-            return utf8StringToUint8Array(value);
-        case "base64":
-            return base64ToUint8Array(value);
-        case "base64url":
-            return base64UrlToUint8Array(value);
-    }
-}
-/**
- * Decodes a Uint8Array into a Base64 string.
- * @internal
- */
-function uint8ArrayToBase64(bytes) {
-    return Buffer.from(bytes).toString("base64");
-}
-/**
- * Decodes a Uint8Array into a Base64Url string.
- * @internal
- */
-function uint8ArrayToBase64Url(bytes) {
-    return Buffer.from(bytes).toString("base64url");
-}
-/**
- * Decodes a Uint8Array into a javascript string.
- * @internal
- */
-function uint8ArrayToUtf8String(bytes) {
-    return Buffer.from(bytes).toString("utf-8");
-}
-/**
- * Encodes a JavaScript string into a Uint8Array.
- * @internal
- */
-function utf8StringToUint8Array(value) {
-    return Buffer.from(value);
-}
-/**
- * Encodes a Base64 string into a Uint8Array.
- * @internal
- */
-function base64ToUint8Array(value) {
-    return Buffer.from(value, "base64");
-}
-/**
- * Encodes a Base64Url string into a Uint8Array.
- * @internal
- */
-function base64UrlToUint8Array(value) {
-    return Buffer.from(value, "base64url");
+    return Buffer.from(value, format);
 }
 
+exports.cancelablePromiseRace = cancelablePromiseRace;
 exports.computeSha256Hash = computeSha256Hash;
 exports.computeSha256Hmac = computeSha256Hmac;
 exports.createAbortablePromise = createAbortablePromise;
@@ -71274,6 +71246,11 @@ const validate = dist.validate;
 const stringify = dist.stringify;
 const parse = dist.parse;
 
+;// CONCATENATED MODULE: ./src/configs.ts
+const STEPSECURITY_ENV = "agent"; // agent or int
+const STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
+const configs_STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
+
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -71284,6 +71261,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 function printInfo(web_url) {
@@ -71310,10 +71288,10 @@ const processLogLine = (line, tableEntries) => {
 };
 function addSummary() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (process.env.STATE_monitorStatusCode !== "200") {
+        if (process.env.STATE_addSummary !== "true") {
             return;
         }
-        const web_url = "https://app.stepsecurity.io";
+        const web_url = STEPSECURITY_WEB_URL;
         const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
         const log = "/home/agent/agent.log";
         if (!fs.existsSync(log)) {
@@ -71484,11 +71462,6 @@ const RefKey = "GITHUB_REF";
 function isValidEvent() {
     return RefKey in process.env && Boolean(process.env[RefKey]);
 }
-
-;// CONCATENATED MODULE: ./src/configs.ts
-const STEPSECURITY_ENV = "agent"; // agent or int
-const STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
-const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
 
 ;// CONCATENATED MODULE: ./src/policy-utils.ts
 var policy_utils_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -71694,7 +71667,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         }
         var correlation_id = v4();
         var api_url = STEPSECURITY_API_URL;
-        var web_url = STEPSECURITY_WEB_URL;
+        var web_url = configs_STEPSECURITY_WEB_URL;
         let confg = {
             repo: process.env["GITHUB_REPOSITORY"],
             run_id: process.env["GITHUB_RUN_ID"],
@@ -71802,16 +71775,29 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         let _http = new lib.HttpClient();
         let statusCode;
         _http.requestOptions = { socketTimeout: 3 * 1000 };
+        let addSummary = "false";
         try {
-            const resp = yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
-            statusCode = resp.message.statusCode; // adding error code to check whether agent is getting installed or not.
+            const monitorRequestData = {
+                correlation_id: correlation_id,
+                job: process.env["GITHUB_JOB"],
+            };
+            const resp = yield _http.postJson(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`, monitorRequestData);
+            const responseData = resp.result;
+            statusCode = resp.statusCode; // adding error code to check whether agent is getting installed or not.
             external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${external_os_.EOL}`, {
                 encoding: "utf8",
             });
+            if (statusCode === 200 && responseData) {
+                console.log(`Runner IP Address: ${responseData.runner_ip_address}`);
+                addSummary = responseData.monitoring_started ? "true" : "false";
+            }
         }
         catch (e) {
             console.log(`error in connecting to ${api_url}: ${e}`);
         }
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `addSummary=${addSummary}${external_os_.EOL}`, {
+            encoding: "utf8",
+        });
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         if (String(statusCode) === STATUS_HARDEN_RUNNER_UNAVAILABLE) {
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);

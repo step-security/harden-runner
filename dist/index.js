@@ -2836,6 +2836,11 @@ __nccwpck_require__.r(__webpack_exports__);
 var lib_core = __nccwpck_require__(186);
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __nccwpck_require__(747);
+;// CONCATENATED MODULE: ./src/configs.ts
+const STEPSECURITY_ENV = "agent"; // agent or int
+const STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
+const configs_STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
+
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -2846,6 +2851,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 function printInfo(web_url) {
@@ -2872,10 +2878,10 @@ const processLogLine = (line, tableEntries) => {
 };
 function addSummary() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (process.env.STATE_monitorStatusCode !== "200") {
+        if (process.env.STATE_addSummary !== "true") {
             return;
         }
-        const web_url = "https://app.stepsecurity.io";
+        const web_url = STEPSECURITY_WEB_URL;
         const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
         const log = "/home/agent/agent.log";
         if (!fs.existsSync(log)) {
@@ -3015,6 +3021,7 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
 
 
 
+
 (() => src_awaiter(void 0, void 0, void 0, function* () {
     if (process.platform !== "linux") {
         console.log(UBUNTU_MESSAGE);
@@ -3034,7 +3041,7 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
         console.log("Telemetry will not be sent to StepSecurity API as disable-telemetry is set to true");
     }
     else {
-        var web_url = "https://app.stepsecurity.io";
+        var web_url = configs_STEPSECURITY_WEB_URL;
         printInfo(web_url);
     }
 }))();

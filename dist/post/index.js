@@ -139,7 +139,7 @@ const command_1 = __nccwpck_require__(351);
 const file_command_1 = __nccwpck_require__(717);
 const utils_1 = __nccwpck_require__(278);
 const os = __importStar(__nccwpck_require__(87));
-const path = __importStar(__nccwpck_require__(622));
+const path = __importStar(__nccwpck_require__(277));
 const oidc_utils_1 = __nccwpck_require__(41);
 /**
  * The code to exit an action
@@ -618,7 +618,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.toPlatformPath = exports.toWin32Path = exports.toPosixPath = void 0;
-const path = __importStar(__nccwpck_require__(622));
+const path = __importStar(__nccwpck_require__(277));
 /**
  * toPosixPath converts the given path to the posix form. On Windows, \\ will be
  * replaced with /.
@@ -2752,7 +2752,7 @@ module.exports = require("os");
 
 /***/ }),
 
-/***/ 622:
+/***/ 277:
 /***/ ((module) => {
 
 "use strict";
@@ -2838,6 +2838,11 @@ var external_fs_ = __nccwpck_require__(747);
 const external_child_process_namespaceObject = require("child_process");
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(186);
+;// CONCATENATED MODULE: ./src/configs.ts
+const STEPSECURITY_ENV = "agent"; // agent or int
+const STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
+const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
+
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -2848,6 +2853,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 function printInfo(web_url) {
@@ -2874,10 +2880,10 @@ const processLogLine = (line, tableEntries) => {
 };
 function addSummary() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (process.env.STATE_monitorStatusCode !== "200") {
+        if (process.env.STATE_addSummary !== "true") {
             return;
         }
-        const web_url = "https://app.stepsecurity.io";
+        const web_url = STEPSECURITY_WEB_URL;
         const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
         const log = "/home/agent/agent.log";
         if (!external_fs_.existsSync(log)) {
