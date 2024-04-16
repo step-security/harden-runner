@@ -39,6 +39,7 @@ test("merge configs", async () => {
     disable_file_monitoring: false,
     private: "true",
     is_github_hosted: true,
+    is_debug: false,
   };
   let policyResponse: PolicyResponse = {
     owner: "h0x0er",
@@ -63,6 +64,7 @@ test("merge configs", async () => {
     disable_file_monitoring: false,
     private: "true",
     is_github_hosted: true,
+    is_debug: false,
   };
 
   localConfig = mergeConfigs(localConfig, policyResponse);
