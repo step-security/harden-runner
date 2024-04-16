@@ -11,6 +11,7 @@ export interface Configuration {
   disable_file_monitoring: boolean;
   is_github_hosted: boolean;
   private: string;
+  is_debug: boolean;
 }
 
 export interface PolicyResponse {
