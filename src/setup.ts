@@ -213,7 +213,7 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
       downloadPath = path.join(downloadPath, "agent");
     } else {
       downloadPath = await tc.downloadTool(
-        `https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/${env}/agent`
+        `https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/self-hosted/${env}/agent`
       );
 
       //verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
