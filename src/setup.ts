@@ -231,7 +231,7 @@ interface MonitorResponse {
 
     if (await isTLSEnabled(context.repo.owner)) {
       downloadPath = await tc.downloadTool(
-        "https://packages.stepsecurity.io/github-hosted/harden-runner_1.1.2_linux_amd64.tar.gz"
+        "https://packages.stepsecurity.io/github-hosted/harden-runner_1.1.3_linux_amd64.tar.gz"
       );
       verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
     } else {
