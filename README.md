@@ -17,12 +17,9 @@
 
 Harden-Runner provides network egress filtering and runtime security for GitHub-hosted and self-hosted runners.
 
-For self-hosted environments, Harden-Runner supports:
+Check out this [case study video](https://www.stepsecurity.io/case-studies/flank) on how Harden-Runner detected a supply chain attack on a Google's open-source project.
 
-1. Kubernetes runners setup using Actions Runner Controller (ARC)
-2. Virtual Machine runners (e.g. on EC2) - both ephemeral and persistent runners are supported
-
-![Harden Runner Demo](images/main.png)
+[![Harden Runner Demo](images/flank.png)](https://www.stepsecurity.io/case-studies/flank)
 
 ## Explore open source projects using Harden-Runner
 
@@ -41,10 +38,8 @@ Harden-Runner monitors process, file, and network activity to:
 |     | Countermeasure                                                                                                                      | Prevent Security Breach                                                                                                                                                                                                                                                                                                                             |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1.  | Monitor and block outbound network traffic at the DNS, HTTPS (Layer 7), and network layers (Layers 3 and 4) to prevent exfiltration of code and CI/CD credentials | To prevent the [Codecov breach](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md) scenario                                                                                                                                                                                                |
-| 2.  | Detect if source code is being tampered during the build process to inject a backdoor                                               | To detect the [SolarWinds incident](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/TamperingDuringBuild.md) scenario                                                                                                                                                                                               |
+| 2.  | Detect if source code is being tampered during the build process to inject a backdoor                                               | To detect the [XZ Utils](https://www.stepsecurity.io/blog/analysis-of-backdoored-xz-utils-build-process-with-harden-runner) and [SolarWinds incident](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/TamperingDuringBuild.md) scenario                                                                                                                                                                                               |
 | 3.  | Detect poisoned workflows and compromised dependencies                                                                              | To detect [Dependency confusion](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md#dependency-confusion-attacks) and [Malicious dependencies](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md#compromised-dependencies) |
-
-Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in-github-actions-7b93a9985635) on how Harden-Runner detected malicious packages in the NPM registry.
 
 ## How
 
@@ -68,13 +63,13 @@ Read this [case study](https://infosecwriteups.com/detecting-malware-packages-in
 3. Click on the link ([example link](https://app.stepsecurity.io/github/step-security/github-actions-goat/actions/runs/7704454287)). You will see a process monitor view of network and file events correlated with each step of the job.
 
     <p align="left">
-      <img src="images/network-events.png" alt="Insights from harden-runner" >
+      <img src="images/network-events1.png" alt="Insights from harden-runner" >
     </p>
 
 4. In the `Recommended Policy` tab, you'll find a recommended block policy based on outbound calls aggregated from the current and past runs of the job. You can update your workflow file with this policy, or alternatively, use the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store) to apply the policy without modifying the workflow file. From now on, any outbound calls not in the allowed list will be blocked.
 
     <p align="left">
-      <img src="images/recommended-policy.png" alt="Policy recommended by harden-runner" >
+      <img src="images/recommended-policy1.png" alt="Policy recommended by harden-runner" >
     </p>
 
 ## Hands-On Tutorials
