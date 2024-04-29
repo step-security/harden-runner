@@ -19,7 +19,7 @@ Harden-Runner provides network egress filtering and runtime security for GitHub-
 
 Learn how Harden-Runner works through the video below, which shows how it detected a supply chain attack on a Google open-source project.
 
-<a href="https://youtu.be/Yz72qAOrN9s" target="_blank"><img src="images/case-study-thumbnail.png" alt="Harden-Runner detected supply chain attack in a Google open-source project" title="This case study video shows how StepSecurity Harden-Runner detected a CI/CD supply chain attack in real-time in Google’s open-source project Flank"></a>
+<a href="https://youtu.be/Yz72qAOrN9s" target="_blank"><img src="images/case-study-thumbnail1.png" alt="Harden-Runner detected supply chain attack in a Google open-source project" title="This case study video shows how StepSecurity Harden-Runner detected a CI/CD supply chain attack in real-time in Google’s open-source project Flank"></a>
 
 ## 3,000+ open source projects use Harden-Runner
 
