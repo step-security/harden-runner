@@ -1,6 +1,7 @@
 import * as common from "./common";
 import * as core from "@actions/core";
 import isDocker from "is-docker";
+import { STEPSECURITY_WEB_URL } from "./configs";
 
 (async () => {
   if (process.platform !== "linux") {
@@ -28,7 +29,7 @@ import isDocker from "is-docker";
       "Telemetry will not be sent to StepSecurity API as disable-telemetry is set to true"
     );
   } else {
-    var web_url = "https://app.stepsecurity.io";
+    var web_url = STEPSECURITY_WEB_URL;
     common.printInfo(web_url);
   }
 })();

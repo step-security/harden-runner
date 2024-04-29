@@ -71246,6 +71246,11 @@ const validate = dist.validate;
 const stringify = dist.stringify;
 const parse = dist.parse;
 
+;// CONCATENATED MODULE: ./src/configs.ts
+const STEPSECURITY_ENV = "agent"; // agent or int
+const STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
+const configs_STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
+
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -71256,6 +71261,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 function printInfo(web_url) {
@@ -71282,10 +71288,10 @@ const processLogLine = (line, tableEntries) => {
 };
 function addSummary() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (process.env.STATE_monitorStatusCode !== "200") {
+        if (process.env.STATE_addSummary !== "true") {
             return;
         }
-        const web_url = "https://app.stepsecurity.io";
+        const web_url = STEPSECURITY_WEB_URL;
         const insights_url = `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
         const log = "/home/agent/agent.log";
         if (!fs.existsSync(log)) {
@@ -71395,7 +71401,7 @@ function verifyChecksum(downloadPath, is_tls) {
     let expectedChecksum = "ceb925c78e5c79af4f344f08f59bbdcf3376d20d15930a315f9b24b6c4d0328a"; // checksum for v0.13.5
     if (is_tls) {
         expectedChecksum =
-            "204c82116e8c0eebf5409bb2b81aa5d96fe32f0c5abc1cb0364ee70937c32056"; // checksum for tls_agent
+            "e0cd0f0da1ac48df713acd8c4f0e591274de0f2c251b8526cf956c654f024ec2"; // checksum for tls_agent
     }
     if (checksum !== expectedChecksum) {
         lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
@@ -71456,11 +71462,6 @@ const RefKey = "GITHUB_REF";
 function isValidEvent() {
     return RefKey in process.env && Boolean(process.env[RefKey]);
 }
-
-;// CONCATENATED MODULE: ./src/configs.ts
-const STEPSECURITY_ENV = "agent"; // agent or int
-const STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
-const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
 
 ;// CONCATENATED MODULE: ./src/policy-utils.ts
 var policy_utils_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -71666,7 +71667,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         }
         var correlation_id = v4();
         var api_url = STEPSECURITY_API_URL;
-        var web_url = STEPSECURITY_WEB_URL;
+        var web_url = configs_STEPSECURITY_WEB_URL;
         let confg = {
             repo: process.env["GITHUB_REPOSITORY"],
             run_id: process.env["GITHUB_RUN_ID"],
@@ -71680,6 +71681,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
             private: ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.private) || false,
             is_github_hosted: isGithubHosted(),
+            is_debug: lib_core.isDebug(),
         };
         let policyName = lib_core.getInput("policy");
         if (policyName !== "") {
@@ -71774,16 +71776,29 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         let _http = new lib.HttpClient();
         let statusCode;
         _http.requestOptions = { socketTimeout: 3 * 1000 };
+        let addSummary = "false";
         try {
-            const resp = yield _http.get(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`);
-            statusCode = resp.message.statusCode; // adding error code to check whether agent is getting installed or not.
+            const monitorRequestData = {
+                correlation_id: correlation_id,
+                job: process.env["GITHUB_JOB"],
+            };
+            const resp = yield _http.postJson(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`, monitorRequestData);
+            const responseData = resp.result;
+            statusCode = resp.statusCode; // adding error code to check whether agent is getting installed or not.
             external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${external_os_.EOL}`, {
                 encoding: "utf8",
             });
+            if (statusCode === 200 && responseData) {
+                console.log(`Runner IP Address: ${responseData.runner_ip_address}`);
+                addSummary = responseData.monitoring_started ? "true" : "false";
+            }
         }
         catch (e) {
             console.log(`error in connecting to ${api_url}: ${e}`);
         }
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `addSummary=${addSummary}${external_os_.EOL}`, {
+            encoding: "utf8",
+        });
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
         if (String(statusCode) === STATUS_HARDEN_RUNNER_UNAVAILABLE) {
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
@@ -71797,7 +71812,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         let auth = `token ${token}`;
         let downloadPath;
         if (yield isTLSEnabled(github.context.repo.owner)) {
-            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.1.0_linux_amd64.tar.gz");
+            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.1.3_linux_amd64.tar.gz");
             verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
         }
         else {

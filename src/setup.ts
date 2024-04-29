@@ -26,6 +26,11 @@ import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
 import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
 import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
 
+interface MonitorResponse {
+  runner_ip_address?: string;
+  monitoring_started?: boolean;
+}
+
 (async () => {
   try {
     if (process.platform !== "linux") {
@@ -54,6 +59,7 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
       private: context?.payload?.repository?.private || false,
       is_github_hosted: isGithubHosted(),
+      is_debug: core.isDebug(),
     };
 
     let policyName = core.getInput("policy");
@@ -171,11 +177,19 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
     let _http = new httpm.HttpClient();
     let statusCode;
     _http.requestOptions = { socketTimeout: 3 * 1000 };
+    let addSummary = "false";
     try {
-      const resp: httpm.HttpClientResponse = await _http.get(
-        `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`
+      const monitorRequestData = {
+        correlation_id: correlation_id,
+        job: process.env["GITHUB_JOB"],
+      };
+      const resp = await _http.postJson<MonitorResponse>(
+        `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`,
+        monitorRequestData
       );
-      statusCode = resp.message.statusCode; // adding error code to check whether agent is getting installed or not.
+
+      const responseData = resp.result;
+      statusCode = resp.statusCode; // adding error code to check whether agent is getting installed or not.
       fs.appendFileSync(
         process.env.GITHUB_STATE,
         `monitorStatusCode=${statusCode}${EOL}`,
@@ -183,9 +197,21 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
           encoding: "utf8",
         }
       );
+
+      if (statusCode === 200 && responseData) {
+        console.log(`Runner IP Address: ${responseData.runner_ip_address}`);
+        addSummary = responseData.monitoring_started ? "true" : "false";
+      }
     } catch (e) {
       console.log(`error in connecting to ${api_url}: ${e}`);
     }
+    fs.appendFileSync(
+      process.env.GITHUB_STATE,
+      `addSummary=${addSummary}${EOL}`,
+      {
+        encoding: "utf8",
+      }
+    );
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
     if (String(statusCode) === common.STATUS_HARDEN_RUNNER_UNAVAILABLE) {
@@ -205,7 +231,7 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
 
     if (await isTLSEnabled(context.repo.owner)) {
       downloadPath = await tc.downloadTool(
-        "https://packages.stepsecurity.io/github-hosted/harden-runner_1.1.0_linux_amd64.tar.gz"
+        "https://packages.stepsecurity.io/github-hosted/harden-runner_1.1.3_linux_amd64.tar.gz"
       );
       verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
     } else {
