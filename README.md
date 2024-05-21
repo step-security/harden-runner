@@ -186,7 +186,7 @@ View process names, PIDs, and process arguments. This feature is supported with 
 - You can walk up the process tree and view process arguments to understand the build process and detect suspicious activity.
 
 <p align="left">
-  <img src="images/process-events-2.png" alt="View process names and arguments" >
+  <img src="images/process-events-3.png" alt="View process names and arguments" >
 </p>
 
 ### 📁 Detect tampering of source code during build
