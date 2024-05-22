@@ -161,6 +161,34 @@ Once allowed endpoints are set in the policy in the workflow file, or in the [Po
   <img src="images/blocked-outbound-call-3.png" alt="Policy recommended by harden-runner" >
 </p>
 
+### 📋 View the name and path of every file written during the build process
+
+> Applies to both GitHub-hosted and self-hosted runners
+
+View the name and path of every file that was written during the build process. This feature is supported with a commercial license.
+
+- Harden-Runner tracks every file written to the GitHub Actions working directory during the build process.
+- In the insights page in the `File Write Events` tab you can see a file explorer view of each file that was written to.
+- Clicking on any file reveals a list of processes that wrote to it, providing complete transparency.
+
+<p align="left">
+  <img src="images/file-write-events.png" alt="View the name and path of every file written during the build process" >
+</p>
+
+### 🔄 View process names and arguments
+
+> Applies to both GitHub-hosted and self-hosted runners
+
+View process names, PIDs, and process arguments. This feature is supported with a commercial license.
+
+- Harden-Runner tracks every process that is run during the build process.
+- Clicking on any file reveals a list of processes that wrote to it.
+- You can walk up the process tree and view process arguments to understand the build process and detect suspicious activity.
+
+<p align="left">
+  <img src="images/process-events-3.png" alt="View process names and arguments" >
+</p>
+
 ### 📁 Detect tampering of source code during build
 
 > Applies to both GitHub-hosted and self-hosted runners
