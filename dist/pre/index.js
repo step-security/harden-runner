@@ -71619,8 +71619,8 @@ function isTLSEnabled(owner) {
     });
 }
 function isGithubHosted() {
-    const runnerName = process.env.RUNNER_NAME || "";
-    return runnerName.startsWith("GitHub Actions");
+    const runnerEnvironment = process.env.RUNNER_ENVIRONMENT || "";
+    return runnerEnvironment === "github-hosted";
 }
 
 ;// CONCATENATED MODULE: ./src/setup.ts
