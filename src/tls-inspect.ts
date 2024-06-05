@@ -24,6 +24,6 @@ export async function isTLSEnabled(owner: string): Promise<boolean> {
 }
 
 export function isGithubHosted() {
-  const runnerName = process.env.RUNNER_NAME || "";
-  return runnerName.startsWith("GitHub Actions");
+  const runnerEnvironment = process.env.RUNNER_ENVIRONMENT || "";
+  return runnerEnvironment === "github-hosted";
 }
