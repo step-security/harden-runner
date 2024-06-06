@@ -71426,7 +71426,7 @@ function verifyChecksum(downloadPath, is_tls) {
     const checksum = external_crypto_.createHash("sha256")
         .update(fileBuffer)
         .digest("hex"); // checksum of downloaded file
-    let expectedChecksum = "ceb925c78e5c79af4f344f08f59bbdcf3376d20d15930a315f9b24b6c4d0328a"; // checksum for v0.13.5
+    let expectedChecksum = "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a"; // checksum for v0.13.7
     if (is_tls) {
         expectedChecksum =
             "74dbe0fb19e2792aab332c434a059e8cb44005ffe1a1594bf29612f219514af4"; // checksum for tls_agent
@@ -71846,7 +71846,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
         }
         else {
-            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz", undefined, auth);
+            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz", undefined, auth);
             verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
         }
         const extractPath = yield tool_cache.extractTar(downloadPath);
