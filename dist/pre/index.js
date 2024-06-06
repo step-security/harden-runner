@@ -20024,11 +20024,12 @@ exports.setSpanContext = setSpanContext;
 "use strict";
 
 
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
 var abortController = __nccwpck_require__(2557);
 var crypto = __nccwpck_require__(6417);
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 /**
  * Creates an abortable promise.
  * @param buildPromise - A function that takes the resolve and reject functions as parameters.
@@ -20069,7 +20070,6 @@ function createAbortablePromise(buildPromise, options) {
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 const StandardAbortMessage = "The delay was aborted.";
 /**
  * A wrapper for setTimeout that resolves a promise after timeInMs milliseconds.
@@ -20087,27 +20087,6 @@ function delay(timeInMs, options) {
         abortSignal,
         abortErrorMsg: abortErrorMsg !== null && abortErrorMsg !== void 0 ? abortErrorMsg : StandardAbortMessage,
     });
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-/**
- * promise.race() wrapper that aborts rest of promises as soon as the first promise settles.
- */
-async function cancelablePromiseRace(abortablePromiseBuilders, options) {
-    var _a, _b;
-    const aborter = new abortController.AbortController();
-    function abortHandler() {
-        aborter.abort();
-    }
-    (_a = options === null || options === void 0 ? void 0 : options.abortSignal) === null || _a === void 0 ? void 0 : _a.addEventListener("abort", abortHandler);
-    try {
-        return await Promise.race(abortablePromiseBuilders.map((p) => p({ abortSignal: aborter.signal })));
-    }
-    finally {
-        aborter.abort();
-        (_b = options === null || options === void 0 ? void 0 : options.abortSignal) === null || _b === void 0 ? void 0 : _b.removeEventListener("abort", abortHandler);
-    }
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -20146,7 +20125,6 @@ function isObject(input) {
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 /**
  * Typeguard for an error object shape (has name and message)
  * @param e - Something caught by a catch clause.
@@ -20187,7 +20165,6 @@ function getErrorMessage(e) {
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 /**
  * Generates a SHA-256 HMAC signature.
  * @param key - The HMAC key represented as a base64 string, used to generate the cryptographic HMAC hash.
@@ -20313,19 +20290,15 @@ const isWebWorker = typeof self === "object" &&
         ((_b = self.constructor) === null || _b === void 0 ? void 0 : _b.name) === "ServiceWorkerGlobalScope" ||
         ((_c = self.constructor) === null || _c === void 0 ? void 0 : _c.name) === "SharedWorkerGlobalScope");
 /**
+ * A constant that indicates whether the environment the code is running is Node.JS.
+ */
+const isNode = typeof process !== "undefined" && Boolean(process.version) && Boolean((_d = process.versions) === null || _d === void 0 ? void 0 : _d.node);
+/**
  * A constant that indicates whether the environment the code is running is Deno.
  */
 const isDeno = typeof Deno !== "undefined" &&
     typeof Deno.version !== "undefined" &&
     typeof Deno.version.deno !== "undefined";
-/**
- * A constant that indicates whether the environment the code is running is Node.JS.
- */
-const isNode = typeof process !== "undefined" &&
-    Boolean(process.version) &&
-    Boolean((_d = process.versions) === null || _d === void 0 ? void 0 : _d.node) &&
-    // Deno thought it was a good idea to spoof process.versions.node, see https://deno.land/std@0.177.0/node/process.ts?s=versions
-    !isDeno;
 /**
  * A constant that indicates whether the environment the code is running is Bun.sh.
  */
@@ -20345,7 +20318,14 @@ const isReactNative = typeof navigator !== "undefined" && (navigator === null ||
  * @returns a string of the encoded string
  */
 function uint8ArrayToString(bytes, format) {
-    return Buffer.from(bytes).toString(format);
+    switch (format) {
+        case "utf-8":
+            return uint8ArrayToUtf8String(bytes);
+        case "base64":
+            return uint8ArrayToBase64(bytes);
+        case "base64url":
+            return uint8ArrayToBase64Url(bytes);
+    }
 }
 /**
  * The helper that transforms string to specific character encoded bytes array.
@@ -20354,10 +20334,58 @@ function uint8ArrayToString(bytes, format) {
  * @returns a uint8array
  */
 function stringToUint8Array(value, format) {
-    return Buffer.from(value, format);
+    switch (format) {
+        case "utf-8":
+            return utf8StringToUint8Array(value);
+        case "base64":
+            return base64ToUint8Array(value);
+        case "base64url":
+            return base64UrlToUint8Array(value);
+    }
+}
+/**
+ * Decodes a Uint8Array into a Base64 string.
+ * @internal
+ */
+function uint8ArrayToBase64(bytes) {
+    return Buffer.from(bytes).toString("base64");
+}
+/**
+ * Decodes a Uint8Array into a Base64Url string.
+ * @internal
+ */
+function uint8ArrayToBase64Url(bytes) {
+    return Buffer.from(bytes).toString("base64url");
+}
+/**
+ * Decodes a Uint8Array into a javascript string.
+ * @internal
+ */
+function uint8ArrayToUtf8String(bytes) {
+    return Buffer.from(bytes).toString("utf-8");
+}
+/**
+ * Encodes a JavaScript string into a Uint8Array.
+ * @internal
+ */
+function utf8StringToUint8Array(value) {
+    return Buffer.from(value);
+}
+/**
+ * Encodes a Base64 string into a Uint8Array.
+ * @internal
+ */
+function base64ToUint8Array(value) {
+    return Buffer.from(value, "base64");
+}
+/**
+ * Encodes a Base64Url string into a Uint8Array.
+ * @internal
+ */
+function base64UrlToUint8Array(value) {
+    return Buffer.from(value, "base64url");
 }
 
-exports.cancelablePromiseRace = cancelablePromiseRace;
 exports.computeSha256Hash = computeSha256Hash;
 exports.computeSha256Hmac = computeSha256Hmac;
 exports.createAbortablePromise = createAbortablePromise;
@@ -71401,7 +71429,7 @@ function verifyChecksum(downloadPath, is_tls) {
     let expectedChecksum = "ceb925c78e5c79af4f344f08f59bbdcf3376d20d15930a315f9b24b6c4d0328a"; // checksum for v0.13.5
     if (is_tls) {
         expectedChecksum =
-            "846ae66c6cfab958fe61736cec0b58bdb7651b36af04c279405c7114675d7033"; // checksum for tls_agent
+            "74dbe0fb19e2792aab332c434a059e8cb44005ffe1a1594bf29612f219514af4"; // checksum for tls_agent
     }
     if (checksum !== expectedChecksum) {
         lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
@@ -71682,6 +71710,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             private: ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.private) || false,
             is_github_hosted: isGithubHosted(),
             is_debug: lib_core.isDebug(),
+            one_time_key: "",
         };
         let policyName = lib_core.getInput("policy");
         if (policyName !== "") {
@@ -71790,6 +71819,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             });
             if (statusCode === 200 && responseData) {
                 console.log(`Runner IP Address: ${responseData.runner_ip_address}`);
+                confg.one_time_key = responseData.one_time_key;
                 addSummary = responseData.monitoring_started ? "true" : "false";
             }
         }
@@ -71812,7 +71842,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         let auth = `token ${token}`;
         let downloadPath;
         if (yield isTLSEnabled(github.context.repo.owner)) {
-            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.0_linux_amd64.tar.gz");
+            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.1_linux_amd64.tar.gz");
             verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
         }
         else {
