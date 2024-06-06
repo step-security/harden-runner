@@ -239,7 +239,7 @@ interface MonitorResponse {
       verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
     } else {
       downloadPath = await tc.downloadTool(
-        "https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz",
+        "https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz",
         undefined,
         auth
       );
