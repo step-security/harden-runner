@@ -71401,7 +71401,7 @@ function verifyChecksum(downloadPath, is_tls) {
     let expectedChecksum = "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a"; // checksum for v0.13.7
     if (is_tls) {
         expectedChecksum =
-            "74dbe0fb19e2792aab332c434a059e8cb44005ffe1a1594bf29612f219514af4"; // checksum for tls_agent
+            "e45b85e29216eb1d217aad368bdb056bbd868a308925e7b2cf9133b06ab435d0"; // checksum for tls_agent
     }
     if (checksum !== expectedChecksum) {
         lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
@@ -71814,7 +71814,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         let auth = `token ${token}`;
         let downloadPath;
         if (yield isTLSEnabled(github.context.repo.owner)) {
-            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.1_linux_amd64.tar.gz");
+            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.2_linux_amd64.tar.gz");
             verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
         }
         else {
