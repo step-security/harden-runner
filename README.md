@@ -15,20 +15,22 @@
 
 ## Table of Contents
 
-- [Harden GitHub-hosted and self-hosted runners](#harden-github-hosted-and-self-hosted-runners)
+- [Introduction](#introduction)
 - [3,500+ open source projects use Harden-Runner](#3500-open-source-projects-use-harden-runner)
   - [Trusted By](#trusted-by)
   - [Case Studies](#case-studies)
 - [Why use Harden-Runner](#why-use-harden-runner)
 - [Getting Started](#getting-started)
-  - [GitHub-Hosted Runners](#github-hosted-runners)
+  - [Hardening GitHub-Hosted Runners](#hardening-github-hosted-runners)
     - [Hands-On Tutorials](#hands-on-tutorials)
-  - [Support for Self-Hosted Runners and Private Repositories](#support-for-self-hosted-runners-and-private-repositories)
+  - [Support for Private Repositories](#support-for-private-repositories)
+  - [Hardening Self-Hosted Runners](#hardening-self-hosted-runners)
     - [Self-Hosted Actions Runner Controller (ARC) Runners](#self-hosted-actions-runner-controller-arc-runners)
     - [Self-Hosted VM Runners (e.g. on EC2)](#self-hosted-vm-runners-eg-on-ec2)
 - [Features at a glance](#features-at-a-glance)
-  - [View outbound network traffic](#view-outbound-network-traffic)
-  - [View outbound HTTPS traffic](#view-outbound-https-traffic)
+  - [View outbound network traffic at the job level](#view-outbound-network-traffic-at-the-job-level)
+  - [View outbound network traffic at the organization level](#view-outbound-network-traffic-at-the-organization-level)
+  - [View outbound HTTPS traffic at the job level](#view-outbound-https-traffic-at-the-job-level)
   - [Detect anomalous outbound network traffic](#detect-anomalous-outbound-network-traffic)
   - [Filter outbound network traffic to allowed endpoints](#filter-outbound-network-traffic-to-allowed-endpoints)
   - [View recommendation for minimum GITHUB_TOKEN permissions](#view-recommendation-for-minimum-github_token-permissions)
@@ -48,9 +50,9 @@
   - [Self-Hosted VM Runners (e.g. on EC2)](#self-hosted-vm-runners-eg-on-ec2-2)
 
 
-## Harden GitHub-hosted and self-hosted runners
+## Introduction
 
-Harden-Runner provides network egress filtering and runtime security for GitHub-hosted and self-hosted runners.
+Harden-Runner provides network egress filtering and runtime security for GitHub-hosted and self-hosted runners. It is called Harden-Runner because it `hardens` the `runner` on which GitHub Actions workflows run.
 
 Learn how Harden-Runner works through the video below, which shows how it detected a supply chain attack on a Google open-source project.
 
@@ -92,9 +94,9 @@ Harden-Runner monitors process, file, and network activity to:
 
 ## Getting Started
 
-### GitHub-Hosted Runners
+### Hardening GitHub-Hosted Runners
 
-1. Add the `step-security/harden-runner` GitHub Action to your GitHub Actions workflow file as the first step in each job. You can automate this step by pasting your workflow in the [StepSecurity online tool](https://app.stepsecurity.io/secureworkflow).
+1. Add the `step-security/harden-runner` GitHub Action to your GitHub Actions workflow file as the first step in each job. You can automate adding Harden-Runner Action to your workflow file by pasting your workflow in the [StepSecurity online tool](https://app.stepsecurity.io/secureworkflow).
 
    ```yaml
    steps:
@@ -130,15 +132,19 @@ Hands-on Tutorials for GitHub Actions Runtime Security:
 1. [Filter Egress Network Traffic](https://github.com/step-security/github-actions-goat/blob/main/docs/Solutions/RestrictOutboundTraffic.md)
 2. [Detect File Tampering](https://github.com/step-security/github-actions-goat/blob/main/docs/Solutions/MonitorSourceCode.md)
 
-### Support for Self-Hosted Runners and Private Repositories
+### Support for Private Repositories
 
-Hardening for self-hosted runners and GitHub-hosted runners used in private repositories is supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
+Hardening of runners used in private repositories is supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
 
 - To use Harden-Runner in a `Private` repository, you must install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security).
 - This is needed to access the GitHub Actions API and to authenticate users to access the insights URL for private repositories.
 - If you use Harden-Runner GitHub Action in a private repository, the generated insights URL is NOT public. Only those who have access to the repository can view it.
 
 Read this [case study on how Kapiche uses Harden-Runner](https://www.stepsecurity.io/case-studies/kapiche/) to improve software supply chain security in their private repositories.
+
+### Hardening Self-Hosted Runners
+
+Hardening for self-hosted runners is supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
 
 #### Self-Hosted Actions Runner Controller (ARC) Runners
 
@@ -162,7 +168,7 @@ Actions Runner Controller (ARC) is a Kubernetes operator that orchestrates self-
 
 For details, check out the documentation at https://docs.stepsecurity.io
 
-### View outbound network traffic
+### View outbound network traffic at the job level
 
 > Applies to both GitHub-hosted and self-hosted runners
 
@@ -172,7 +178,22 @@ Harden-Runner monitors all outbound traffic from each job at the DNS and network
 - For self-hosted runners, no changes are needed to workflow files to monitor egress traffic
 - A filtering (block) egress policy is suggested in the insights page based on the current and past job runs
 
-### View outbound HTTPS traffic
+### View outbound network traffic at the organization level
+
+> Applies to both GitHub-hosted and self-hosted runners
+
+You can view all unique network destinations from all workflow runs in your organization on the `Runtime Security` tab.
+
+- The `All Observed Endpoints` menu provides a detailed list of all network destinations contacted by your Actions runners.
+- For each listed endpoint, the `View Sample Workflow Runs` option enables you to examine individual GitHub Actions workflow runs that interacted with the endpoint.
+
+For more details refer [Unified Network Egress View: Centralize GitHub Actions Network Destinations for Your Enterprise](https://www.stepsecurity.io/blog/unified-network-egress-view-centralize-github-actions-network-destinations-for-your-enterprise)
+
+<p align="left">
+  <img src="images/org-level.png" width="400" alt="View outbound network traffic at the organization level" >
+</p>
+
+### View outbound HTTPS traffic at the job level
 
 > Applies to GitHub-hosted and self-hosted VM runners
 
@@ -183,7 +204,7 @@ Harden-Runner can monitor outbound HTTPS requests. This feature is supported wit
 - As of now, only HTTPS calls to `github.com`, `api.github.com`, `*.pkg.github.com`, and `ghcr.io` hosts are monitoried.
 
 <p align="left">
-  <img src="images/https-events.png" alt="Policy recommended by harden-runner" >
+  <img src="images/https-events.png" alt="View outbound HTTPS traffic at the job level" >
 </p>
 
 ### Detect anomalous outbound network traffic
@@ -287,8 +308,8 @@ GitHub-hosted runner uses passwordless sudo for running jobs.
 
 Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to get security alerts.
 
-- Email and Slack notifications are supported
-- Notifications are sent when outbound traffic is blocked or source code is overwritten
+- Email, Slack, and Teams notifications are supported
+- Notifications are sent when anomalous outbound network/ HTTPS traffic is detected, outbound traffic is blocked, or source code is overwritten
 - Notifications are not repeated for the same alert for a given workflow
 
 ## Discussions
