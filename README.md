@@ -33,12 +33,12 @@
   - [View outbound HTTPS traffic at the job level](#view-outbound-https-traffic-at-the-job-level)
   - [Detect anomalous outbound network traffic](#detect-anomalous-outbound-network-traffic)
   - [Filter outbound network traffic to allowed endpoints](#filter-outbound-network-traffic-to-allowed-endpoints)
-  - [View recommendation for minimum GITHUB_TOKEN permissions](#view-recommendation-for-minimum-github_token-permissions)
+  - [Determine minimum GITHUB_TOKEN permissions using Harden-Runner](#determine-minimum-github_token-permissions-using-harden-runner)
   - [View the name and path of every file written during the build process](#view-the-name-and-path-of-every-file-written-during-the-build-process)
   - [View process names and arguments](#view-process-names-and-arguments)
   - [Detect tampering of source code during build](#detect-tampering-of-source-code-during-build)
   - [Run your job without sudo access](#run-your-job-without-sudo-access)
-  - [Get security alerts](#get-security-alerts)
+  - [Get real-time security alerts](#get-real-time-security-alerts)
 - [Discussions](#discussions)
 - [How does it work?](#how-does-it-work)
   - [GitHub-Hosted Runners](#github-hosted-runners-1)
@@ -65,9 +65,9 @@ Harden-Runner is trusted by leading open source projects and enterprises to secu
 ### Trusted by
 
 
-| [![CISA](https://avatars.githubusercontent.com/u/18539691?s=60&v=4)](https://app.stepsecurity.io/github/cisagov/skeleton-generic/actions/runs/7588528684) | [![Microsoft](https://avatars.githubusercontent.com/u/6154722?s=60&v=4)](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/7587031851) | [![Google](https://avatars.githubusercontent.com/u/2810941?s=60&v=4)](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/7576989995) | [![DataDog](https://avatars.githubusercontent.com/u/365230?s=60&v=4)](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/7446169664) | [![Intel](https://avatars.githubusercontent.com/u/17888862?s=60&v=4)](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/7590975903) | [![Kubernetes](https://avatars.githubusercontent.com/u/36015203?s=60&v=4)](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/7591172950) | [![Node.js](https://avatars.githubusercontent.com/u/9950313?s=60&v=4)](https://app.stepsecurity.io/github/nodejs/node/actions/runs/7591405720) | [![AWS](https://avatars.githubusercontent.com/u/2232217?s=60&v=4)](https://app.stepsecurity.io/github/aws/aperf/actions/runs/7631366761) |
+| [![CISA](https://avatars.githubusercontent.com/u/18539691?s=60&v=4)](https://app.stepsecurity.io/github/cisagov/skeleton-generic/actions/runs/9947319332?jobid=27479776091&tab=network-events) | [![Microsoft](https://avatars.githubusercontent.com/u/6154722?s=60&v=4)](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/7587031851) | [![Google](https://avatars.githubusercontent.com/u/2810941?s=60&v=4)](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/7576989995) | [![DataDog](https://avatars.githubusercontent.com/u/365230?s=60&v=4)](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/7446169664) | [![Intel](https://avatars.githubusercontent.com/u/17888862?s=60&v=4)](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/7590975903) | [![Kubernetes](https://avatars.githubusercontent.com/u/36015203?s=60&v=4)](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/7591172950) | [![Node.js](https://avatars.githubusercontent.com/u/9950313?s=60&v=4)](https://app.stepsecurity.io/github/nodejs/node/actions/runs/7591405720) | [![AWS](https://avatars.githubusercontent.com/u/2232217?s=60&v=4)](https://app.stepsecurity.io/github/aws/aperf/actions/runs/7631366761) |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **CISA**<br>[Explore](https://app.stepsecurity.io/github/cisagov/skeleton-generic/actions/runs/7588528684)                                                | **Microsoft**<br>[Explore](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/7587031851)                                               | **Google**<br>[Explore](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/7576989995)                                               | **DataDog**<br>[Explore](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/7446169664)                                              | **Intel**<br>[Explore](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/7590975903)                                                | **Kubernetes**<br>[Explore](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/7591172950)                                                | **Node.js**<br>[Explore](https://app.stepsecurity.io/github/nodejs/node/actions/runs/7591405720)                                               | **AWS**<br>[Explore](https://app.stepsecurity.io/github/aws/aperf/actions/runs/7631366761)                                               |
+| **CISA**<br>[Explore](https://app.stepsecurity.io/github/cisagov/skeleton-generic/actions/runs/9947319332?jobid=27479776091&tab=network-events)                                                | **Microsoft**<br>[Explore](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/7587031851)                                               | **Google**<br>[Explore](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/7576989995)                                               | **DataDog**<br>[Explore](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/7446169664)                                              | **Intel**<br>[Explore](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/7590975903)                                                | **Kubernetes**<br>[Explore](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/7591172950)                                                | **Node.js**<br>[Explore](https://app.stepsecurity.io/github/nodejs/node/actions/runs/7591405720)                                               | **AWS**<br>[Explore](https://app.stepsecurity.io/github/aws/aperf/actions/runs/7631366761)                                               |
 
 ### Case Studies
 
@@ -136,15 +136,15 @@ Hands-on Tutorials for GitHub Actions Runtime Security:
 
 Hardening of runners used in private repositories is supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
 
-- To use Harden-Runner in a `Private` repository, you must install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security).
-- This is needed to access the GitHub Actions API and to authenticate users to access the insights URL for private repositories.
+- To use Harden-Runner in a `Private` repository, you must install the [StepSecurity GitHub App](https://github.com/apps/stepsecurity-actions-security).
+- This is needed to access the GitHub Actions API and to authenticate users to access the dashboard for private repositories.
 - If you use Harden-Runner GitHub Action in a private repository, the generated insights URL is NOT public. Only those who have access to the repository can view it.
 
 Read this [case study on how Kapiche uses Harden-Runner](https://www.stepsecurity.io/case-studies/kapiche/) to improve software supply chain security in their private repositories.
 
 ### Hardening Self-Hosted Runners
 
-Hardening for self-hosted runners is supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
+Hardening of self-hosted runners is supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details. For hardening of self-hosted runners you must install the [StepSecurity GitHub App](https://github.com/apps/stepsecurity-actions-security).
 
 #### Self-Hosted Actions Runner Controller (ARC) Runners
 
@@ -177,6 +177,10 @@ Harden-Runner monitors all outbound traffic from each job at the DNS and network
 - After the workflow completes, each outbound call is correlated with each step of the job, and shown in the insights page
 - For self-hosted runners, no changes are needed to workflow files to monitor egress traffic
 - A filtering (block) egress policy is suggested in the insights page based on the current and past job runs
+
+  <p align="left">
+        <img src="images/network-events1.png" alt="Insights from harden-runner" >
+  </p>
 
 ### View outbound network traffic at the organization level
 
@@ -211,16 +215,25 @@ Harden-Runner can monitor outbound HTTPS requests. This feature is supported wit
 
 > Applies to both GitHub-hosted and self-hosted runners
 
-Harden-Runner creates a baseline of outbound traffic for each job during the first few runs that it monitors
+You can detect suspicious/ anomalous traffic using this feature even in `egress-policy:audit` mode.
 
-- After the baseline is created, any new outbound destinations are marked as anomalous in the insights page
+- Anomaly detection feature creates a machine learning model of outbound network calls by analyzing the historical data of the same workflow in previous runs
+- After the baseline is created, any anomalous outbound destinations are marked as anomalous in the insights page, and real-time alerts are triggered
 - You can view the list of all anomalous outbound network traffic in the `Runtime detections` page on the dashboard
+
+For more details, refer to [Anomalous Outbound Call Detection Using Machine Learning](https://www.stepsecurity.io/blog/announcing-anomalous-outbound-call-detection-using-machine-learning)
 
 ### Filter outbound network traffic to allowed endpoints
 
 > Applies to both GitHub-hosted and self-hosted runners
 
-Once allowed endpoints are set in the policy in the workflow file, or in the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store)
+You can see recommended egress block policy in the `Recommendations` tab for each job. This is based on observed traffic across multiple runs of the job.
+
+  <p align="left">
+        <img src="images/recommended-policy1.png" alt="Policy recommended by harden-runner" >
+  </p>
+
+Once you set these allowed endpoints in the workflow file, or in the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store) and switch to using `egress-policy:block`
 
 - Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4)
 - It blocks DNS exfiltration, where attacker tries to send data out using DNS resolution
@@ -230,7 +243,7 @@ Once allowed endpoints are set in the policy in the workflow file, or in the [Po
   <img src="images/blocked-outbound-call-3.png" alt="Policy recommended by harden-runner" >
 </p>
 
-### View recommendation for minimum GITHUB_TOKEN permissions
+### Determine minimum GITHUB_TOKEN permissions using Harden-Runner
 
 > Applies to GitHub-hosted runners
 
@@ -302,11 +315,15 @@ GitHub-hosted runner uses passwordless sudo for running jobs.
   recommendation to disable sudo in the insights page
 - When you set `disable-sudo` to `true`, the job steps run without sudo access to the GitHub-hosted Ubuntu VM
 
-### Get security alerts
+  <p align="left">
+        <img src="images/recommended-policy1.png" alt="Policy recommended by harden-runner" >
+  </p>
+
+### Get real-time security alerts
 
 > Applies to both GitHub-hosted and self-hosted runners
 
-Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to get security alerts.
+Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to get security alerts/ notifications.
 
 - Email, Slack, and Teams notifications are supported
 - Notifications are sent when anomalous outbound network/ HTTPS traffic is detected, outbound traffic is blocked, or source code is overwritten
