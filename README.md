@@ -29,7 +29,7 @@
 - [Features at a glance](#features-at-a-glance)
   - [View outbound network traffic](#view-outbound-network-traffic)
   - [View outbound HTTPS traffic](#view-outbound-https-traffic)
-  - [Detect anomalous outbound network traffic](#️detect-anomalous-outbound-network-traffic)
+  - [Detect anomalous outbound network traffic](#detect-anomalous-outbound-network-traffic)
   - [Filter outbound network traffic to allowed endpoints](#filter-outbound-network-traffic-to-allowed-endpoints)
   - [View recommendation for minimum GITHUB_TOKEN permissions](#view-recommendation-for-minimum-github_token-permissions)
   - [View the name and path of every file written during the build process](#view-the-name-and-path-of-every-file-written-during-the-build-process)
