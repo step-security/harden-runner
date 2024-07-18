@@ -28,6 +28,7 @@ import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
 
 interface MonitorResponse {
   runner_ip_address?: string;
+  one_time_key?: string;
   monitoring_started?: boolean;
 }
 
@@ -60,6 +61,7 @@ interface MonitorResponse {
       private: context?.payload?.repository?.private || false,
       is_github_hosted: isGithubHosted(),
       is_debug: core.isDebug(),
+      one_time_key: "",
     };
 
     let policyName = core.getInput("policy");
@@ -200,6 +202,7 @@ interface MonitorResponse {
 
       if (statusCode === 200 && responseData) {
         console.log(`Runner IP Address: ${responseData.runner_ip_address}`);
+        confg.one_time_key = responseData.one_time_key;
         addSummary = responseData.monitoring_started ? "true" : "false";
       }
     } catch (e) {
@@ -231,12 +234,12 @@ interface MonitorResponse {
 
     if (await isTLSEnabled(context.repo.owner)) {
       downloadPath = await tc.downloadTool(
-        "https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.0_linux_amd64.tar.gz"
+        "https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.2_linux_amd64.tar.gz"
       );
       verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
     } else {
       downloadPath = await tc.downloadTool(
-        "https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz",
+        "https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz",
         undefined,
         auth
       );

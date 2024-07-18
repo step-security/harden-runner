@@ -13,39 +13,90 @@
 
 </div>
 
-## Harden Github-hosted and self-hosted runners
+## Table of Contents
 
-Harden-Runner provides network egress filtering and runtime security for GitHub-hosted and self-hosted runners.
+- [Introduction](#introduction)
+- [3,500+ open source projects use Harden-Runner](#3500-open-source-projects-use-harden-runner)
+  - [Trusted By](#trusted-by)
+  - [Case Studies](#case-studies)
+- [Why use Harden-Runner](#why-use-harden-runner)
+- [Getting Started](#getting-started)
+  - [Hardening GitHub-Hosted Runners](#hardening-github-hosted-runners)
+    - [Hands-On Tutorials](#hands-on-tutorials)
+  - [Support for Private Repositories](#support-for-private-repositories)
+  - [Hardening Self-Hosted Runners](#hardening-self-hosted-runners)
+    - [Self-Hosted Actions Runner Controller (ARC) Runners](#self-hosted-actions-runner-controller-arc-runners)
+    - [Self-Hosted VM Runners (e.g. on EC2)](#self-hosted-vm-runners-eg-on-ec2)
+- [Features at a glance](#features-at-a-glance)
+  - [View outbound network traffic at the job level](#view-outbound-network-traffic-at-the-job-level)
+  - [View outbound network traffic at the organization level](#view-outbound-network-traffic-at-the-organization-level)
+  - [View outbound HTTPS traffic at the job level](#view-outbound-https-traffic-at-the-job-level)
+  - [Detect anomalous outbound network traffic](#detect-anomalous-outbound-network-traffic)
+  - [Filter outbound network traffic to allowed endpoints](#filter-outbound-network-traffic-to-allowed-endpoints)
+  - [Determine minimum GITHUB_TOKEN permissions using Harden-Runner](#determine-minimum-github_token-permissions-using-harden-runner)
+  - [View the name and path of every file written during the build process](#view-the-name-and-path-of-every-file-written-during-the-build-process)
+  - [View process names and arguments](#view-process-names-and-arguments)
+  - [Detect tampering of source code during build](#detect-tampering-of-source-code-during-build)
+  - [Run your job without sudo access](#run-your-job-without-sudo-access)
+  - [Get real-time security alerts](#get-real-time-security-alerts)
+- [Discussions](#discussions)
+- [How does it work?](#how-does-it-work)
+  - [GitHub-Hosted Runners](#github-hosted-runners-1)
+  - [Self-Hosted Actions Runner Controller (ARC) Runners](#self-hosted-actions-runner-controller-arc-runners-1)
+  - [Self-Hosted VM Runners (e.g. on EC2)](#self-hosted-vm-runners-eg-on-ec2-1)
+- [Limitations](#limitations)
+  - [GitHub-Hosted Runners](#github-hosted-runners-2)
+  - [Self-Hosted Actions Runner Controller (ARC) Runners](#self-hosted-actions-runner-controller-arc-runners-2)
+  - [Self-Hosted VM Runners (e.g. on EC2)](#self-hosted-vm-runners-eg-on-ec2-2)
+
+
+## Introduction
+
+Harden-Runner provides network egress filtering and runtime security for GitHub-hosted and self-hosted runners. It is called Harden-Runner because it `hardens` the `runner` on which GitHub Actions workflows run.
 
 Learn how Harden-Runner works through the video below, which shows how it detected a supply chain attack on a Google open-source project.
 
 <a href="https://youtu.be/Yz72qAOrN9s" target="_blank"><img src="images/case-study-thumbnail1.png" alt="Harden-Runner detected supply chain attack in a Google open-source project" title="This case study video shows how StepSecurity Harden-Runner detected a CI/CD supply chain attack in real-time in Google’s open-source project Flank"></a>
 
-## 3,000+ open source projects use Harden-Runner
+## 3,500+ open source projects use Harden-Runner
 
-| [![CISA](https://avatars.githubusercontent.com/u/18539691?s=60&v=4)](https://app.stepsecurity.io/github/cisagov/skeleton-generic/actions/runs/7588528684) | [![Microsoft](https://avatars.githubusercontent.com/u/6154722?s=60&v=4)](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/7587031851) | [![Google](https://avatars.githubusercontent.com/u/2810941?s=60&v=4)](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/7576989995) | [![DataDog](https://avatars.githubusercontent.com/u/365230?s=60&v=4)](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/7446169664) | [![Intel](https://avatars.githubusercontent.com/u/17888862?s=60&v=4)](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/7590975903) | [![Kubernetes](https://avatars.githubusercontent.com/u/36015203?s=60&v=4)](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/7591172950) | [![Node.js](https://avatars.githubusercontent.com/u/9950313?s=60&v=4)](https://app.stepsecurity.io/github/nodejs/node/actions/runs/7591405720) | [![AWS](https://avatars.githubusercontent.com/u/2232217?s=60&v=4)](https://app.stepsecurity.io/github/aws/aperf/actions/runs/7631366761) |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **CISA**<br>[Explore](https://app.stepsecurity.io/github/cisagov/skeleton-generic/actions/runs/7588528684)                                                | **Microsoft**<br>[Explore](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/7587031851)                                               | **Google**<br>[Explore](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/7576989995)                                               | **DataDog**<br>[Explore](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/7446169664)                                              | **Intel**<br>[Explore](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/7590975903)                                                | **Kubernetes**<br>[Explore](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/7591172950)                                                | **Node.js**<br>[Explore](https://app.stepsecurity.io/github/nodejs/node/actions/runs/7591405720)                                               | **AWS**<br>[Explore](https://app.stepsecurity.io/github/aws/aperf/actions/runs/7631366761)                                               |
+Harden-Runner is trusted by leading open source projects and enterprises to secure their CI/CD pipelines.
 
-## Why
+### Trusted by
+
+
+| [![CISA](https://avatars.githubusercontent.com/u/18539691?s=60&v=4)](https://app.stepsecurity.io/github/cisagov/skeleton-generic/actions/runs/9947319332?jobid=27479776091&tab=network-events) | [![Microsoft](https://avatars.githubusercontent.com/u/6154722?s=60&v=4)](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/7587031851) | [![Google](https://avatars.githubusercontent.com/u/2810941?s=60&v=4)](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/7576989995) | [![DataDog](https://avatars.githubusercontent.com/u/365230?s=60&v=4)](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/7446169664) | [![Intel](https://avatars.githubusercontent.com/u/17888862?s=60&v=4)](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/7590975903) | [![Kubernetes](https://avatars.githubusercontent.com/u/36015203?s=60&v=4)](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/7591172950) | [![Node.js](https://avatars.githubusercontent.com/u/9950313?s=60&v=4)](https://app.stepsecurity.io/github/nodejs/node/actions/runs/7591405720) | [![AWS](https://avatars.githubusercontent.com/u/2232217?s=60&v=4)](https://app.stepsecurity.io/github/aws/aperf/actions/runs/7631366761) |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **CISA**<br>[Explore](https://app.stepsecurity.io/github/cisagov/skeleton-generic/actions/runs/9947319332?jobid=27479776091&tab=network-events)                                                | **Microsoft**<br>[Explore](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/7587031851)                                               | **Google**<br>[Explore](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/7576989995)                                               | **DataDog**<br>[Explore](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/7446169664)                                              | **Intel**<br>[Explore](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/7590975903)                                                | **Kubernetes**<br>[Explore](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/7591172950)                                                | **Node.js**<br>[Explore](https://app.stepsecurity.io/github/nodejs/node/actions/runs/7591405720)                                               | **AWS**<br>[Explore](https://app.stepsecurity.io/github/aws/aperf/actions/runs/7631366761)                                               |
+
+### Case Studies
+
+- [Harden-Runner Detects CI/CD Supply Chain Attack in Google’s Open-Source Project Flank](https://www.stepsecurity.io/case-studies/flank)
+- [Kapiche secures their GitHub Actions software supply chain with Harden-Runner](https://www.stepsecurity.io/case-studies/kapiche)
+- [Arcjet Enhances CI/CD Security with Harden-Runner](https://www.stepsecurity.io/case-studies/arcjet)
+
+
+## Why use Harden-Runner
 
 There are two main threats from compromised workflows, dependencies, and build tools in a CI/CD environment:
+
 1. Exfiltration of CI/CD credentials and source code
 2. Tampering of source code, dependencies, or artifacts during the build to inject a backdoor
 
 Harden-Runner monitors process, file, and network activity to:
 
-|     | Countermeasure                                                                                                                      | Prevent Security Breach                                                                                                                                                                                                                                                                                                                             |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.  | Monitor and block outbound network traffic at the DNS, HTTPS (Layer 7), and network layers (Layers 3 and 4) to prevent exfiltration of code and CI/CD credentials | To prevent the [Codecov breach](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md) scenario                                                                                                                                                                                                |
-| 2.  | Detect if source code is being tampered during the build process to inject a backdoor                                               | To detect the [XZ Utils](https://www.stepsecurity.io/blog/analysis-of-backdoored-xz-utils-build-process-with-harden-runner) and [SolarWinds incident](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/TamperingDuringBuild.md) scenario                                                                                                                                                                                               |
-| 3.  | Detect poisoned workflows and compromised dependencies                                                                              | To detect [Dependency confusion](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md#dependency-confusion-attacks) and [Malicious dependencies](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md#compromised-dependencies) |
+|     | Countermeasure                                                                                                                                                    | Prevent Security Breach                                                                                                                                                                                                                                                                                                                                       |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.  | Monitor and block outbound network traffic at the DNS, HTTPS (Layer 7), and network layers (Layers 3 and 4) to prevent exfiltration of code and CI/CD credentials | To prevent the [Codecov breach](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md) scenario                                                                                                                                                                                                      |
+| 2.  | Detect if source code is being tampered during the build process to inject a backdoor                                                                             | To detect the [XZ Utils](https://www.stepsecurity.io/blog/analysis-of-backdoored-xz-utils-build-process-with-harden-runner) and [SolarWinds incident](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/TamperingDuringBuild.md) scenarios                                                                                  |
+| 3.  | Detect poisoned workflows and compromised dependencies that exhibit suspicious behavior                                                                           | To detect [Dependency confusion](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md#dependency-confusion-attacks) and [Malicious dependencies](https://github.com/step-security/github-actions-goat/blob/main/docs/Vulnerabilities/ExfiltratingCICDSecrets.md#compromised-dependencies) scenarios |
+| 4.  | Determine minimum GITHUB_TOKEN permissions by monitoring HTTPS calls to GitHub APIs                                                                               | To set [minimum GITHUB_TOKEN permissions](https://www.stepsecurity.io/blog/determine-minimum-github-token-permissions-using-ebpf-with-stepsecurity-harden-runner) to reduce the impact of exfiltration                                                                                                                                                                                                                                                                                  |
 
-## How
+## Getting Started
 
-### GitHub-Hosted Runners
+### Hardening GitHub-Hosted Runners
 
-1. Add the `step-security/harden-runner` GitHub Action to your GitHub Actions workflow file as the first step in each job.
+1. Add the `step-security/harden-runner` GitHub Action to your GitHub Actions workflow file as the first step in each job. You can automate adding Harden-Runner Action to your workflow file by pasting your workflow in the [StepSecurity online tool](https://app.stepsecurity.io/secureworkflow).
 
    ```yaml
    steps:
@@ -72,7 +123,7 @@ Harden-Runner monitors process, file, and network activity to:
       <img src="images/recommended-policy1.png" alt="Policy recommended by harden-runner" >
     </p>
 
-## Hands-On Tutorials
+#### Hands-On Tutorials
 
 You can use [GitHub Actions Goat](https://github.com/step-security/github-actions-goat) to try Harden-Runner. You only need a GitHub Account and a web browser.
 
@@ -81,17 +132,21 @@ Hands-on Tutorials for GitHub Actions Runtime Security:
 1. [Filter Egress Network Traffic](https://github.com/step-security/github-actions-goat/blob/main/docs/Solutions/RestrictOutboundTraffic.md)
 2. [Detect File Tampering](https://github.com/step-security/github-actions-goat/blob/main/docs/Solutions/MonitorSourceCode.md)
 
-## Support for Self-Hosted Runners and Private Repositories
+### Support for Private Repositories
 
-Hardening for self-hosted runners and GitHub-hosted runners used in private repositories is supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
+Hardening of runners used in private repositories is supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details.
 
-- To use Harden-Runner in a `Private` repository, you must install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security).
-- This is needed to access the GitHub Actions API and to authenticate users to access the insights URL for private repositories.
+- To use Harden-Runner in a `Private` repository, you must install the [StepSecurity GitHub App](https://github.com/apps/stepsecurity-actions-security).
+- This is needed to access the GitHub Actions API and to authenticate users to access the dashboard for private repositories.
 - If you use Harden-Runner GitHub Action in a private repository, the generated insights URL is NOT public. Only those who have access to the repository can view it.
 
 Read this [case study on how Kapiche uses Harden-Runner](https://www.stepsecurity.io/case-studies/kapiche/) to improve software supply chain security in their private repositories.
 
-### Self-Hosted Actions Runner Controller (ARC) Runners
+### Hardening Self-Hosted Runners
+
+Hardening of self-hosted runners is supported with a commercial license. Check out the [documentation](https://docs.stepsecurity.io/stepsecurity-platform/billing) for more details. For hardening of self-hosted runners you must install the [StepSecurity GitHub App](https://github.com/apps/stepsecurity-actions-security).
+
+#### Self-Hosted Actions Runner Controller (ARC) Runners
 
 > Explore demo workflows using self-hosted ARC Runner and ARC Harden-Runner [here](https://docs.stepsecurity.io/harden-runner/how-tos/enable-runtime-security-arc).
 
@@ -99,21 +154,21 @@ Actions Runner Controller (ARC) is a Kubernetes operator that orchestrates self-
 
 - Instead of adding the Harden-Runner GitHub Action in each job, you'll need to install the ARC Harden-Runner daemonset on your Kubernetes cluster.
 - Upon installation, the ARC Harden-Runner daemonset monitors all jobs run on the cluster; you do NOT need to add the Harden-Runner GitHub Action to each job for `audit` mode. You do need to add the Harden-Runner GitHub Action to jobs where you want to enable `block` mode.
-- Please email support@stepsecurity.io for instructions on how to install the ARC-Harden-Runner daemonset on your Kubernetes cluster.
+- The instructions for installing the ARC-Harden-Runner daemonset are shown in the dashboard. To enable access to these instructions, please email support@stepsecurity.io.
 
-### Self-Hosted VM Runners (e.g. on EC2)
+#### Self-Hosted VM Runners (e.g. on EC2)
 
 > Explore demo workflows using self-hosted VM Runners and Harden-Runner [here](https://docs.stepsecurity.io/harden-runner/how-tos/enable-runtime-security-vm).
 
 - Instead of adding the Harden-Runner GitHub Action in each job, you'll need to install the Harden-Runner agent on your runner image (e.g. AMI). This is typically done using packer or as a post-install step when using the https://github.com/philips-labs/terraform-aws-github-runner project to setup runners.
 - The Harden-Runner agent monitors all jobs run on the VM, both ephemeral and persistent runners are supported; you do NOT need to add the Harden-Runner GitHub Action to each job for `audit` mode. You do need to add the Harden-Runner GitHub Action to jobs where you want to enable `block` mode.
-- Please email support@stepsecurity.io for instructions on how to install the Harden-Runner agent on your self-hosted VM runners. This agent is different than the one used for GitHub-hosted runners.
+- The instructions for installing the Harden-Runner agent on your self-hosted VM runners are shown in the dashboard. To enable access to these instructions, please email support@stepsecurity.io. This agent is different than the one used for GitHub-hosted runners.
 
 ## Features at a glance
 
 For details, check out the documentation at https://docs.stepsecurity.io
 
-### 📶 View outbound network traffic
+### View outbound network traffic at the job level
 
 > Applies to both GitHub-hosted and self-hosted runners
 
@@ -123,35 +178,62 @@ Harden-Runner monitors all outbound traffic from each job at the DNS and network
 - For self-hosted runners, no changes are needed to workflow files to monitor egress traffic
 - A filtering (block) egress policy is suggested in the insights page based on the current and past job runs
 
-### 🌐 View outbound HTTPS traffic
+  <p align="left">
+        <img src="images/network-events1.png" alt="Insights from harden-runner" >
+  </p>
 
-> Applies to  GitHub-hosted and self-hosted VM runners
+### View outbound network traffic at the organization level
+
+> Applies to both GitHub-hosted and self-hosted runners
+
+You can view all unique network destinations from all workflow runs in your organization on the `Runtime Security` tab.
+
+- The `All Observed Endpoints` menu provides a detailed list of all network destinations contacted by your Actions runners.
+- For each listed endpoint, the `View Sample Workflow Runs` option enables you to examine individual GitHub Actions workflow runs that interacted with the endpoint.
+
+For more details refer [Unified Network Egress View: Centralize GitHub Actions Network Destinations for Your Enterprise](https://www.stepsecurity.io/blog/unified-network-egress-view-centralize-github-actions-network-destinations-for-your-enterprise)
+
+<p align="left">
+  <img src="images/org-level.png" width="400" alt="View outbound network traffic at the organization level" >
+</p>
+
+### View outbound HTTPS traffic at the job level
+
+> Applies to GitHub-hosted and self-hosted VM runners
 
 Harden-Runner can monitor outbound HTTPS requests. This feature is supported with a commercial license.
 
 - HTTPS events are monitored using eBPF (no MITM proxy is used)
-- If a HTTP PUT/ POST/ PATCH call is made to `github.com` or `api.github.com` hosts to a HTTP Path with a different organization than where the workflow is running, the call is marked as anomalous
-- As of now, only HTTPS calls to `github.com` and `api.github.com` hosts are monitoried.
+- If a HTTP PUT/ POST/ PATCH call is made to GitHub APIs to a HTTP Path with a different organization than where the workflow is running, the call is marked as anomalous
+- As of now, only HTTPS calls to `github.com`, `api.github.com`, `*.pkg.github.com`, and `ghcr.io` hosts are monitoried.
 
 <p align="left">
-  <img src="images/https-events.png" alt="Policy recommended by harden-runner" >
+  <img src="images/https-events.png" alt="View outbound HTTPS traffic at the job level" >
 </p>
 
-### ⚠️ Detect anomalous outbound network traffic
+### Detect anomalous outbound network traffic
 
 > Applies to both GitHub-hosted and self-hosted runners
 
-Harden-Runner creates a baseline of outbound traffic for each job during the first few runs that it monitors
+You can detect suspicious/ anomalous traffic using this feature even in `egress-policy:audit` mode.
 
-- After the baseline is created, any new outbound destinations are marked as anomalous in the insights page
+- Anomaly detection feature creates a machine learning model of outbound network calls by analyzing the historical data of the same workflow in previous runs
+- After the baseline is created, any anomalous outbound destinations are marked as anomalous in the insights page, and real-time alerts are triggered
 - You can view the list of all anomalous outbound network traffic in the `Runtime detections` page on the dashboard
 
+For more details, refer to [Anomalous Outbound Call Detection Using Machine Learning](https://www.stepsecurity.io/blog/announcing-anomalous-outbound-call-detection-using-machine-learning)
 
-### 🚦 Filter outbound network traffic to allowed endpoints
+### Filter outbound network traffic to allowed endpoints
 
 > Applies to both GitHub-hosted and self-hosted runners
 
-Once allowed endpoints are set in the policy in the workflow file, or in the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store)
+You can see recommended egress block policy in the `Recommendations` tab for each job. This is based on observed traffic across multiple runs of the job.
+
+  <p align="left">
+        <img src="images/recommended-policy1.png" alt="Policy recommended by harden-runner" >
+  </p>
+
+Once you set these allowed endpoints in the workflow file, or in the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store) and switch to using `egress-policy:block`
 
 - Harden-Runner blocks egress traffic at the DNS (Layer 7) and network layers (Layers 3 and 4)
 - It blocks DNS exfiltration, where attacker tries to send data out using DNS resolution
@@ -161,7 +243,25 @@ Once allowed endpoints are set in the policy in the workflow file, or in the [Po
   <img src="images/blocked-outbound-call-3.png" alt="Policy recommended by harden-runner" >
 </p>
 
-### 📋 View the name and path of every file written during the build process
+### Determine minimum GITHUB_TOKEN permissions using Harden-Runner
+
+> Applies to GitHub-hosted runners
+
+Harden-Runner monitors outbound HTTPS requests using eBPF and uses the PATHs and VERBs of these HTTPS calls to recommend the minimum GITHUB_TOKEN permissions for each job in your workflow. This feature is supported with a commercial license.
+
+- GITHUB_TOKEN is an automatically generated secret used to authenticate to GitHub APIs from GitHub Actions workflows.
+- Harden-Runner can monitor the VERBs (e.g., `GET`, `POST`) and PATHs (e.g., `/repos/owner/repo/issues`) for calls made to the GitHub APIs from the runner.
+- Each GitHub Actions API call requires a corresponding GITHUB_TOKEN permission. For instance, a GET request to the `/repos/org/repo/info/refs?service=git-upload-pack` endpoint requires the `contents: read` permission.
+- The recommendation for the minimum GITHUB_TOKEN permissions are show in the `Recommendations` tab.
+
+For more details, refer to [Determine Minimum GITHUB_TOKEN Permissions Using eBPF with Harden-Runner.
+](https://www.stepsecurity.io/blog/determine-minimum-github-token-permissions-using-ebpf-with-stepsecurity-harden-runner)
+
+<p align="left">
+  <img src="images/token-perms-recommendation.png" alt="View recommendation for minimum GITHUB_TOKEN permissions" >
+</p>
+
+### View the name and path of every file written during the build process
 
 > Applies to both GitHub-hosted and self-hosted runners
 
@@ -175,21 +275,21 @@ View the name and path of every file that was written during the build process. 
   <img src="images/file-write-events.png" alt="View the name and path of every file written during the build process" >
 </p>
 
-### 🔄 View process names and arguments
+### View process names and arguments
 
 > Applies to both GitHub-hosted and self-hosted runners
 
 View process names, PIDs, and process arguments. This feature is supported with a commercial license.
 
 - Harden-Runner tracks every process that is run during the build process.
-- Clicking on any file reveals a list of processes that wrote to it.
-- You can walk up the process tree and view process arguments to understand the build process and detect suspicious activity.
+- Clicking on any process ID (PID) in the network events, file events, or HTTPS events shows the process that caused the event, along with the process arguments.
+- You can walk up the process tree by clicking `View Parent Process` to understand the build process and detect suspicious activity.
 
 <p align="left">
   <img src="images/process-events-3.png" alt="View process names and arguments" >
 </p>
 
-### 📁 Detect tampering of source code during build
+### Detect tampering of source code during build
 
 > Applies to both GitHub-hosted and self-hosted runners
 
@@ -204,7 +304,7 @@ Harden-Runner monitors file writes and can detect if a file is overwritten.
   <img src="images/file-events.png" alt="Policy recommended by harden-runner" >
 </p>
 
-### 🚫 Run your job without sudo access
+### Run your job without sudo access
 
 > Applies to GitHub-hosted runners
 
@@ -215,14 +315,18 @@ GitHub-hosted runner uses passwordless sudo for running jobs.
   recommendation to disable sudo in the insights page
 - When you set `disable-sudo` to `true`, the job steps run without sudo access to the GitHub-hosted Ubuntu VM
 
-### 🔔 Get security alerts
+  <p align="left">
+        <img src="images/recommended-policy1.png" alt="Policy recommended by harden-runner" >
+  </p>
+
+### Get real-time security alerts
 
 > Applies to both GitHub-hosted and self-hosted runners
 
-Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to get security alerts.
+Install the [StepSecurity GitHub App](https://github.com/apps/stepsecurity-actions-security) to get security alerts/ notifications.
 
-- Email and Slack notifications are supported
-- Notifications are sent when outbound traffic is blocked or source code is overwritten
+- Email, Slack, and Teams notifications are supported
+- Notifications are sent when anomalous outbound network/ HTTPS traffic is detected, outbound traffic is blocked, or source code is overwritten
 - Notifications are not repeated for the same alert for a given workflow
 
 ## Discussions

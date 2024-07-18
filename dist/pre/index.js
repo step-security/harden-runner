@@ -71398,10 +71398,10 @@ function verifyChecksum(downloadPath, is_tls) {
     const checksum = external_crypto_.createHash("sha256")
         .update(fileBuffer)
         .digest("hex"); // checksum of downloaded file
-    let expectedChecksum = "ceb925c78e5c79af4f344f08f59bbdcf3376d20d15930a315f9b24b6c4d0328a"; // checksum for v0.13.5
+    let expectedChecksum = "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a"; // checksum for v0.13.7
     if (is_tls) {
         expectedChecksum =
-            "846ae66c6cfab958fe61736cec0b58bdb7651b36af04c279405c7114675d7033"; // checksum for tls_agent
+            "e45b85e29216eb1d217aad368bdb056bbd868a308925e7b2cf9133b06ab435d0"; // checksum for tls_agent
     }
     if (checksum !== expectedChecksum) {
         lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
@@ -71682,6 +71682,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             private: ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.private) || false,
             is_github_hosted: isGithubHosted(),
             is_debug: lib_core.isDebug(),
+            one_time_key: "",
         };
         let policyName = lib_core.getInput("policy");
         if (policyName !== "") {
@@ -71790,6 +71791,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             });
             if (statusCode === 200 && responseData) {
                 console.log(`Runner IP Address: ${responseData.runner_ip_address}`);
+                confg.one_time_key = responseData.one_time_key;
                 addSummary = responseData.monitoring_started ? "true" : "false";
             }
         }
@@ -71812,11 +71814,11 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         let auth = `token ${token}`;
         let downloadPath;
         if (yield isTLSEnabled(github.context.repo.owner)) {
-            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.0_linux_amd64.tar.gz");
+            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.2_linux_amd64.tar.gz");
             verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
         }
         else {
-            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.5/agent_0.13.5_linux_amd64.tar.gz", undefined, auth);
+            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz", undefined, auth);
             verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
         }
         const extractPath = yield tool_cache.extractTar(downloadPath);
