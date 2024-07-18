@@ -323,7 +323,7 @@ GitHub-hosted runner uses passwordless sudo for running jobs.
 
 > Applies to both GitHub-hosted and self-hosted runners
 
-Install the [StepSecurity Actions Security GitHub App](https://github.com/apps/stepsecurity-actions-security) to get security alerts/ notifications.
+Install the [StepSecurity GitHub App](https://github.com/apps/stepsecurity-actions-security) to get security alerts/ notifications.
 
 - Email, Slack, and Teams notifications are supported
 - Notifications are sent when anomalous outbound network/ HTTPS traffic is detected, outbound traffic is blocked, or source code is overwritten
