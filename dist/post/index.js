@@ -2873,8 +2873,8 @@ const processLogLine = (line, tableEntries) => {
                 process &&
                 domain &&
                 ipAddress &&
-                !domain.endsWith(".actions.githubusercontent.com") &&
-                !domain.endsWith(".blob.core.windows.net")) {
+                !domain.endsWith(".actions.githubusercontent.com.") &&
+                !domain.endsWith(".blob.core.windows.net.")) {
                 const status = ipAddress.startsWith("54.185.253.63")
                     ? "❌ Blocked"
                     : "✅ Allowed";
