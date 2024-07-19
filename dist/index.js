@@ -2866,8 +2866,13 @@ const processLogLine = (line, tableEntries) => {
         const matches = line.match(/ip address:port ([\d.:]+), domain: ([\w.-]+), pid: (\d+), process: (\w+)/);
         if (matches) {
             const [ipAddress, domain, pid, process] = matches.slice(1);
-            // Check if all values are non-empty
-            if (pid && process && domain && ipAddress) {
+            // Check if all values are non-empty and domain does not end with specified patterns
+            if (pid &&
+                process &&
+                domain &&
+                ipAddress &&
+                !domain.endsWith(".actions.githubusercontent.com") &&
+                !domain.endsWith(".blob.core.windows.net")) {
                 const status = ipAddress.startsWith("54.185.253.63")
                     ? "❌ Blocked"
                     : "✅ Allowed";

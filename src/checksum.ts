@@ -14,7 +14,7 @@ export function verifyChecksum(downloadPath: string, is_tls: boolean) {
 
   if (is_tls) {
     expectedChecksum =
-      "e45b85e29216eb1d217aad368bdb056bbd868a308925e7b2cf9133b06ab435d0"; // checksum for tls_agent
+      "fa9defcf9e125a62cb29747574d6a07aee4f04153e7bce4a3c7ce29681469e92"; // checksum for tls_agent
   }
 
   if (checksum !== expectedChecksum) {
