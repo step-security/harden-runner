@@ -34,6 +34,8 @@ interface MonitorResponse {
 
 (async () => {
   try {
+    console.log("[harden-runner] pre-step");
+
     if (process.platform !== "linux") {
       console.log(common.UBUNTU_MESSAGE);
       return;

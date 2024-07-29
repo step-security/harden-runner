@@ -4,6 +4,8 @@ import isDocker from "is-docker";
 import { STEPSECURITY_WEB_URL } from "./configs";
 
 (async () => {
+  console.log("[harden-runner] main-step");
+
   if (process.platform !== "linux") {
     console.log(common.UBUNTU_MESSAGE);
     return;

@@ -3076,6 +3076,7 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
 
 
 (() => cleanup_awaiter(void 0, void 0, void 0, function* () {
+    console.log("[harden-runner] post-step");
     if (process.platform !== "linux") {
         console.log(UBUNTU_MESSAGE);
         return;

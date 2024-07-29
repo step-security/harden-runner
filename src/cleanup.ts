@@ -5,6 +5,8 @@ import isDocker from "is-docker";
 import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
 
 (async () => {
+  console.log("[harden-runner] post-step");
+
   if (process.platform !== "linux") {
     console.log(common.UBUNTU_MESSAGE);
     return;
