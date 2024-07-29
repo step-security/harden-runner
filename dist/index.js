@@ -3028,6 +3028,7 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
 
 
 (() => src_awaiter(void 0, void 0, void 0, function* () {
+    console.log("[harden-runner] main-step");
     if (process.platform !== "linux") {
         console.log(UBUNTU_MESSAGE);
         return;

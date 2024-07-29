@@ -71662,6 +71662,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
 (() => setup_awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
+        console.log("[harden-runner] pre-step");
         if (process.platform !== "linux") {
             console.log(UBUNTU_MESSAGE);
             return;
