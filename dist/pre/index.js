@@ -71276,8 +71276,13 @@ const processLogLine = (line, tableEntries) => {
         const matches = line.match(/ip address:port ([\d.:]+), domain: ([\w.-]+), pid: (\d+), process: (\w+)/);
         if (matches) {
             const [ipAddress, domain, pid, process] = matches.slice(1);
-            // Check if all values are non-empty
-            if (pid && process && domain && ipAddress) {
+            // Check if all values are non-empty and domain does not end with specified patterns
+            if (pid &&
+                process &&
+                domain &&
+                ipAddress &&
+                !domain.endsWith(".actions.githubusercontent.com.") &&
+                !domain.endsWith(".blob.core.windows.net.")) {
                 const status = ipAddress.startsWith("54.185.253.63")
                     ? "❌ Blocked"
                     : "✅ Allowed";
@@ -71401,7 +71406,7 @@ function verifyChecksum(downloadPath, is_tls) {
     let expectedChecksum = "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a"; // checksum for v0.13.7
     if (is_tls) {
         expectedChecksum =
-            "e45b85e29216eb1d217aad368bdb056bbd868a308925e7b2cf9133b06ab435d0"; // checksum for tls_agent
+            "fa9defcf9e125a62cb29747574d6a07aee4f04153e7bce4a3c7ce29681469e92"; // checksum for tls_agent
     }
     if (checksum !== expectedChecksum) {
         lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
@@ -71657,6 +71662,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
 (() => setup_awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
+        console.log("[harden-runner] pre-step");
         if (process.platform !== "linux") {
             console.log(UBUNTU_MESSAGE);
             return;
@@ -71814,7 +71820,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         let auth = `token ${token}`;
         let downloadPath;
         if (yield isTLSEnabled(github.context.repo.owner)) {
-            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.2_linux_amd64.tar.gz");
+            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.3_linux_amd64.tar.gz");
             verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
         }
         else {
