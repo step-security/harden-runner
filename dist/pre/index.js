@@ -71701,7 +71701,7 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://packages.stepsecurity.io/github-hosted/harden-runner_1.3.0_linux_${variant}.tar.gz`);
+            downloadPath = yield tool_cache.downloadTool(`https://packages.stepsecurity.io/self-hosted/harden-runner_1.3.0_linux_${variant}.tar.gz`);
         }
         else {
             if (variant === "arm64") {
