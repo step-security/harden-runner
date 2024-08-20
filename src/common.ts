@@ -181,3 +181,6 @@ export const HARDEN_RUNNER_UNAVAILABLE_MESSAGE =
 
 export const ARC_RUNNER_MESSAGE =
   "Workflow is currently being executed in ARC based runner";
+
+export const ARM64_RUNNER_MESSAGE =
+  "Sorry, arm64 runners for public repos are not supported yet.";

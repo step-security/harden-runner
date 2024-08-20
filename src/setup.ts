@@ -5,8 +5,6 @@ import * as httpm from "@actions/http-client";
 import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
 import * as common from "./common";
-import * as tc from "@actions/tool-cache";
-import { verifyChecksum } from "./checksum";
 import isDocker from "is-docker";
 import { context } from "@actions/github";
 import { EOL } from "os";
@@ -25,6 +23,7 @@ import * as utils from "@actions/cache/lib/internal/cacheUtils";
 import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
 import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
 import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
+import { installAgent } from "./install-agent";
 
 interface MonitorResponse {
   runner_ip_address?: string;
@@ -228,47 +227,9 @@ interface MonitorResponse {
     cp.execSync("sudo mkdir -p /home/agent");
     cp.execSync("sudo chown -R $USER /home/agent");
 
-    // Note: to avoid github rate limiting
-    let token = core.getInput("token");
-    let auth = `token ${token}`;
+    let isTLS = await isTLSEnabled(context.repo.owner);
 
-    let downloadPath: string;
-
-    if (await isTLSEnabled(context.repo.owner)) {
-      downloadPath = await tc.downloadTool(
-        "https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.3_linux_amd64.tar.gz"
-      );
-      verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
-    } else {
-      downloadPath = await tc.downloadTool(
-        "https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz",
-        undefined,
-        auth
-      );
-
-      verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
-    }
-
-    const extractPath = await tc.extractTar(downloadPath);
-
-    let cmd = "cp",
-      args = [path.join(extractPath, "agent"), "/home/agent/agent"];
-
-    cp.execFileSync(cmd, args);
-
-    cp.execSync("chmod +x /home/agent/agent");
-
-    fs.writeFileSync("/home/agent/agent.json", confgStr);
-
-    cmd = "sudo";
-    args = [
-      "cp",
-      path.join(__dirname, "agent.service"),
-      "/etc/systemd/system/agent.service",
-    ];
-    cp.execFileSync(cmd, args);
-    cp.execSync("sudo systemctl daemon-reload");
-    cp.execSync("sudo service agent start", { timeout: 15000 });
+    await installAgent(isTLS, confgStr);
 
     // Check that the file exists locally
     var statusFile = "/home/agent/agent.status";
