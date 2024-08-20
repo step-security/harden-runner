@@ -229,30 +229,32 @@ interface MonitorResponse {
 
     let isTLS = await isTLSEnabled(context.repo.owner);
 
-    await installAgent(isTLS, confgStr);
+    const agentInstalled = await installAgent(isTLS, confgStr);
 
-    // Check that the file exists locally
-    var statusFile = "/home/agent/agent.status";
-    var logFile = "/home/agent/agent.log";
-    var counter = 0;
-    while (true) {
-      if (!fs.existsSync(statusFile)) {
-        counter++;
-        if (counter > 30) {
-          console.log("timed out");
-          if (fs.existsSync(logFile)) {
-            var content = fs.readFileSync(logFile, "utf-8");
-            console.log(content);
+    if (agentInstalled) {
+      // Check that the file exists locally
+      var statusFile = "/home/agent/agent.status";
+      var logFile = "/home/agent/agent.log";
+      var counter = 0;
+      while (true) {
+        if (!fs.existsSync(statusFile)) {
+          counter++;
+          if (counter > 30) {
+            console.log("timed out");
+            if (fs.existsSync(logFile)) {
+              var content = fs.readFileSync(logFile, "utf-8");
+              console.log(content);
+            }
+            break;
           }
+          await sleep(300);
+        } // The file *does* exist
+        else {
+          // Read the file
+          var content = fs.readFileSync(statusFile, "utf-8");
+          console.log(content);
           break;
         }
-        await sleep(300);
-      } // The file *does* exist
-      else {
-        // Read the file
-        var content = fs.readFileSync(statusFile, "utf-8");
-        console.log(content);
-        break;
       }
     }
   } catch (error) {

@@ -7,17 +7,17 @@ import { verifyChecksum } from "./checksum";
 import { EOL } from "os";
 import { ARM64_RUNNER_MESSAGE } from "./common";
 
-export async function installAgent(isTLS: boolean, configStr: string) {
+export async function installAgent(
+  isTLS: boolean,
+  configStr: string
+): Promise<boolean> {
   // Note: to avoid github rate limiting
-  let token = core.getInput("token");
-  let auth = `token ${token}`;
+  const token = core.getInput("token", { required: true });
+  const auth = `token ${token}`;
+
+  const variant = process.arch === "x64" ? "amd64" : "arm64";
 
   let downloadPath: string;
-
-  let variant = "arm64";
-  if (process.arch === "x64") {
-    variant = "amd64";
-  }
 
   fs.appendFileSync(process.env.GITHUB_STATE, `isTLS=${isTLS}${EOL}`, {
     encoding: "utf8",
@@ -30,7 +30,7 @@ export async function installAgent(isTLS: boolean, configStr: string) {
   } else {
     if (variant === "arm64") {
       console.log(ARM64_RUNNER_MESSAGE);
-      process.exit(0);
+      return false;
     }
     downloadPath = await tc.downloadTool(
       "https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz",
@@ -61,4 +61,5 @@ export async function installAgent(isTLS: boolean, configStr: string) {
   cp.execFileSync(cmd, args);
   cp.execSync("sudo systemctl daemon-reload");
   cp.execSync("sudo service agent start", { timeout: 15000 });
+  return true;
 }

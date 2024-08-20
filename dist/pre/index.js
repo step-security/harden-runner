@@ -20024,12 +20024,11 @@ exports.setSpanContext = setSpanContext;
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-
 var abortController = __nccwpck_require__(2557);
 var crypto = __nccwpck_require__(6417);
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * Creates an abortable promise.
  * @param buildPromise - A function that takes the resolve and reject functions as parameters.
@@ -20070,6 +20069,7 @@ function createAbortablePromise(buildPromise, options) {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 const StandardAbortMessage = "The delay was aborted.";
 /**
  * A wrapper for setTimeout that resolves a promise after timeInMs milliseconds.
@@ -20087,6 +20087,27 @@ function delay(timeInMs, options) {
         abortSignal,
         abortErrorMsg: abortErrorMsg !== null && abortErrorMsg !== void 0 ? abortErrorMsg : StandardAbortMessage,
     });
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+/**
+ * promise.race() wrapper that aborts rest of promises as soon as the first promise settles.
+ */
+async function cancelablePromiseRace(abortablePromiseBuilders, options) {
+    var _a, _b;
+    const aborter = new abortController.AbortController();
+    function abortHandler() {
+        aborter.abort();
+    }
+    (_a = options === null || options === void 0 ? void 0 : options.abortSignal) === null || _a === void 0 ? void 0 : _a.addEventListener("abort", abortHandler);
+    try {
+        return await Promise.race(abortablePromiseBuilders.map((p) => p({ abortSignal: aborter.signal })));
+    }
+    finally {
+        aborter.abort();
+        (_b = options === null || options === void 0 ? void 0 : options.abortSignal) === null || _b === void 0 ? void 0 : _b.removeEventListener("abort", abortHandler);
+    }
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -20125,6 +20146,7 @@ function isObject(input) {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * Typeguard for an error object shape (has name and message)
  * @param e - Something caught by a catch clause.
@@ -20165,6 +20187,7 @@ function getErrorMessage(e) {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * Generates a SHA-256 HMAC signature.
  * @param key - The HMAC key represented as a base64 string, used to generate the cryptographic HMAC hash.
@@ -20290,15 +20313,19 @@ const isWebWorker = typeof self === "object" &&
         ((_b = self.constructor) === null || _b === void 0 ? void 0 : _b.name) === "ServiceWorkerGlobalScope" ||
         ((_c = self.constructor) === null || _c === void 0 ? void 0 : _c.name) === "SharedWorkerGlobalScope");
 /**
- * A constant that indicates whether the environment the code is running is Node.JS.
- */
-const isNode = typeof process !== "undefined" && Boolean(process.version) && Boolean((_d = process.versions) === null || _d === void 0 ? void 0 : _d.node);
-/**
  * A constant that indicates whether the environment the code is running is Deno.
  */
 const isDeno = typeof Deno !== "undefined" &&
     typeof Deno.version !== "undefined" &&
     typeof Deno.version.deno !== "undefined";
+/**
+ * A constant that indicates whether the environment the code is running is Node.JS.
+ */
+const isNode = typeof process !== "undefined" &&
+    Boolean(process.version) &&
+    Boolean((_d = process.versions) === null || _d === void 0 ? void 0 : _d.node) &&
+    // Deno thought it was a good idea to spoof process.versions.node, see https://deno.land/std@0.177.0/node/process.ts?s=versions
+    !isDeno;
 /**
  * A constant that indicates whether the environment the code is running is Bun.sh.
  */
@@ -20318,14 +20345,7 @@ const isReactNative = typeof navigator !== "undefined" && (navigator === null ||
  * @returns a string of the encoded string
  */
 function uint8ArrayToString(bytes, format) {
-    switch (format) {
-        case "utf-8":
-            return uint8ArrayToUtf8String(bytes);
-        case "base64":
-            return uint8ArrayToBase64(bytes);
-        case "base64url":
-            return uint8ArrayToBase64Url(bytes);
-    }
+    return Buffer.from(bytes).toString(format);
 }
 /**
  * The helper that transforms string to specific character encoded bytes array.
@@ -20334,58 +20354,10 @@ function uint8ArrayToString(bytes, format) {
  * @returns a uint8array
  */
 function stringToUint8Array(value, format) {
-    switch (format) {
-        case "utf-8":
-            return utf8StringToUint8Array(value);
-        case "base64":
-            return base64ToUint8Array(value);
-        case "base64url":
-            return base64UrlToUint8Array(value);
-    }
-}
-/**
- * Decodes a Uint8Array into a Base64 string.
- * @internal
- */
-function uint8ArrayToBase64(bytes) {
-    return Buffer.from(bytes).toString("base64");
-}
-/**
- * Decodes a Uint8Array into a Base64Url string.
- * @internal
- */
-function uint8ArrayToBase64Url(bytes) {
-    return Buffer.from(bytes).toString("base64url");
-}
-/**
- * Decodes a Uint8Array into a javascript string.
- * @internal
- */
-function uint8ArrayToUtf8String(bytes) {
-    return Buffer.from(bytes).toString("utf-8");
-}
-/**
- * Encodes a JavaScript string into a Uint8Array.
- * @internal
- */
-function utf8StringToUint8Array(value) {
-    return Buffer.from(value);
-}
-/**
- * Encodes a Base64 string into a Uint8Array.
- * @internal
- */
-function base64ToUint8Array(value) {
-    return Buffer.from(value, "base64");
-}
-/**
- * Encodes a Base64Url string into a Uint8Array.
- * @internal
- */
-function base64UrlToUint8Array(value) {
-    return Buffer.from(value, "base64url");
+    return Buffer.from(value, format);
 }
 
+exports.cancelablePromiseRace = cancelablePromiseRace;
 exports.computeSha256Hash = computeSha256Hash;
 exports.computeSha256Hmac = computeSha256Hmac;
 exports.createAbortablePromise = createAbortablePromise;
@@ -71416,8 +71388,8 @@ const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner doe
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
 const SELF_HOSTED_NO_AGENT_MESSAGE = "This job is running on a self-hosted runner, but the runner does not have Harden-Runner installed. This job will not be monitored.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
-const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner";
-const ARM64_RUNNER_MESSAGE = "Sorry, arm64 runners for public repos are not supported yet.";
+const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner.";
+const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner community tier.";
 
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = require("node:fs");
@@ -71690,13 +71662,10 @@ var install_agent_awaiter = (undefined && undefined.__awaiter) || function (this
 function installAgent(isTLS, configStr) {
     return install_agent_awaiter(this, void 0, void 0, function* () {
         // Note: to avoid github rate limiting
-        let token = lib_core.getInput("token");
-        let auth = `token ${token}`;
+        const token = lib_core.getInput("token", { required: true });
+        const auth = `token ${token}`;
+        const variant = process.arch === "x64" ? "amd64" : "arm64";
         let downloadPath;
-        let variant = "arm64";
-        if (process.arch === "x64") {
-            variant = "amd64";
-        }
         external_fs_.appendFileSync(process.env.GITHUB_STATE, `isTLS=${isTLS}${external_os_.EOL}`, {
             encoding: "utf8",
         });
@@ -71706,7 +71675,7 @@ function installAgent(isTLS, configStr) {
         else {
             if (variant === "arm64") {
                 console.log(ARM64_RUNNER_MESSAGE);
-                process.exit(0);
+                return false;
             }
             downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz", undefined, auth);
         }
@@ -71725,6 +71694,7 @@ function installAgent(isTLS, configStr) {
         external_child_process_.execFileSync(cmd, args);
         external_child_process_.execSync("sudo systemctl daemon-reload");
         external_child_process_.execSync("sudo service agent start", { timeout: 15000 });
+        return true;
     });
 }
 
@@ -71914,29 +71884,31 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
         let isTLS = yield isTLSEnabled(github.context.repo.owner);
-        yield installAgent(isTLS, confgStr);
-        // Check that the file exists locally
-        var statusFile = "/home/agent/agent.status";
-        var logFile = "/home/agent/agent.log";
-        var counter = 0;
-        while (true) {
-            if (!external_fs_.existsSync(statusFile)) {
-                counter++;
-                if (counter > 30) {
-                    console.log("timed out");
-                    if (external_fs_.existsSync(logFile)) {
-                        var content = external_fs_.readFileSync(logFile, "utf-8");
-                        console.log(content);
+        const agentInstalled = yield installAgent(isTLS, confgStr);
+        if (agentInstalled) {
+            // Check that the file exists locally
+            var statusFile = "/home/agent/agent.status";
+            var logFile = "/home/agent/agent.log";
+            var counter = 0;
+            while (true) {
+                if (!external_fs_.existsSync(statusFile)) {
+                    counter++;
+                    if (counter > 30) {
+                        console.log("timed out");
+                        if (external_fs_.existsSync(logFile)) {
+                            var content = external_fs_.readFileSync(logFile, "utf-8");
+                            console.log(content);
+                        }
+                        break;
                     }
+                    yield setup_sleep(300);
+                } // The file *does* exist
+                else {
+                    // Read the file
+                    var content = external_fs_.readFileSync(statusFile, "utf-8");
+                    console.log(content);
                     break;
                 }
-                yield setup_sleep(300);
-            } // The file *does* exist
-            else {
-                // Read the file
-                var content = external_fs_.readFileSync(statusFile, "utf-8");
-                console.log(content);
-                break;
             }
         }
     }
