@@ -20024,11 +20024,12 @@ exports.setSpanContext = setSpanContext;
 "use strict";
 
 
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
 var abortController = __nccwpck_require__(2557);
 var crypto = __nccwpck_require__(6417);
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 /**
  * Creates an abortable promise.
  * @param buildPromise - A function that takes the resolve and reject functions as parameters.
@@ -20069,7 +20070,6 @@ function createAbortablePromise(buildPromise, options) {
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 const StandardAbortMessage = "The delay was aborted.";
 /**
  * A wrapper for setTimeout that resolves a promise after timeInMs milliseconds.
@@ -20087,27 +20087,6 @@ function delay(timeInMs, options) {
         abortSignal,
         abortErrorMsg: abortErrorMsg !== null && abortErrorMsg !== void 0 ? abortErrorMsg : StandardAbortMessage,
     });
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-/**
- * promise.race() wrapper that aborts rest of promises as soon as the first promise settles.
- */
-async function cancelablePromiseRace(abortablePromiseBuilders, options) {
-    var _a, _b;
-    const aborter = new abortController.AbortController();
-    function abortHandler() {
-        aborter.abort();
-    }
-    (_a = options === null || options === void 0 ? void 0 : options.abortSignal) === null || _a === void 0 ? void 0 : _a.addEventListener("abort", abortHandler);
-    try {
-        return await Promise.race(abortablePromiseBuilders.map((p) => p({ abortSignal: aborter.signal })));
-    }
-    finally {
-        aborter.abort();
-        (_b = options === null || options === void 0 ? void 0 : options.abortSignal) === null || _b === void 0 ? void 0 : _b.removeEventListener("abort", abortHandler);
-    }
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -20146,7 +20125,6 @@ function isObject(input) {
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 /**
  * Typeguard for an error object shape (has name and message)
  * @param e - Something caught by a catch clause.
@@ -20187,7 +20165,6 @@ function getErrorMessage(e) {
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 /**
  * Generates a SHA-256 HMAC signature.
  * @param key - The HMAC key represented as a base64 string, used to generate the cryptographic HMAC hash.
@@ -20313,19 +20290,15 @@ const isWebWorker = typeof self === "object" &&
         ((_b = self.constructor) === null || _b === void 0 ? void 0 : _b.name) === "ServiceWorkerGlobalScope" ||
         ((_c = self.constructor) === null || _c === void 0 ? void 0 : _c.name) === "SharedWorkerGlobalScope");
 /**
+ * A constant that indicates whether the environment the code is running is Node.JS.
+ */
+const isNode = typeof process !== "undefined" && Boolean(process.version) && Boolean((_d = process.versions) === null || _d === void 0 ? void 0 : _d.node);
+/**
  * A constant that indicates whether the environment the code is running is Deno.
  */
 const isDeno = typeof Deno !== "undefined" &&
     typeof Deno.version !== "undefined" &&
     typeof Deno.version.deno !== "undefined";
-/**
- * A constant that indicates whether the environment the code is running is Node.JS.
- */
-const isNode = typeof process !== "undefined" &&
-    Boolean(process.version) &&
-    Boolean((_d = process.versions) === null || _d === void 0 ? void 0 : _d.node) &&
-    // Deno thought it was a good idea to spoof process.versions.node, see https://deno.land/std@0.177.0/node/process.ts?s=versions
-    !isDeno;
 /**
  * A constant that indicates whether the environment the code is running is Bun.sh.
  */
@@ -20345,7 +20318,14 @@ const isReactNative = typeof navigator !== "undefined" && (navigator === null ||
  * @returns a string of the encoded string
  */
 function uint8ArrayToString(bytes, format) {
-    return Buffer.from(bytes).toString(format);
+    switch (format) {
+        case "utf-8":
+            return uint8ArrayToUtf8String(bytes);
+        case "base64":
+            return uint8ArrayToBase64(bytes);
+        case "base64url":
+            return uint8ArrayToBase64Url(bytes);
+    }
 }
 /**
  * The helper that transforms string to specific character encoded bytes array.
@@ -20354,10 +20334,58 @@ function uint8ArrayToString(bytes, format) {
  * @returns a uint8array
  */
 function stringToUint8Array(value, format) {
-    return Buffer.from(value, format);
+    switch (format) {
+        case "utf-8":
+            return utf8StringToUint8Array(value);
+        case "base64":
+            return base64ToUint8Array(value);
+        case "base64url":
+            return base64UrlToUint8Array(value);
+    }
+}
+/**
+ * Decodes a Uint8Array into a Base64 string.
+ * @internal
+ */
+function uint8ArrayToBase64(bytes) {
+    return Buffer.from(bytes).toString("base64");
+}
+/**
+ * Decodes a Uint8Array into a Base64Url string.
+ * @internal
+ */
+function uint8ArrayToBase64Url(bytes) {
+    return Buffer.from(bytes).toString("base64url");
+}
+/**
+ * Decodes a Uint8Array into a javascript string.
+ * @internal
+ */
+function uint8ArrayToUtf8String(bytes) {
+    return Buffer.from(bytes).toString("utf-8");
+}
+/**
+ * Encodes a JavaScript string into a Uint8Array.
+ * @internal
+ */
+function utf8StringToUint8Array(value) {
+    return Buffer.from(value);
+}
+/**
+ * Encodes a Base64 string into a Uint8Array.
+ * @internal
+ */
+function base64ToUint8Array(value) {
+    return Buffer.from(value, "base64");
+}
+/**
+ * Encodes a Base64Url string into a Uint8Array.
+ * @internal
+ */
+function base64UrlToUint8Array(value) {
+    return Buffer.from(value, "base64url");
 }
 
-exports.cancelablePromiseRace = cancelablePromiseRace;
 exports.computeSha256Hash = computeSha256Hash;
 exports.computeSha256Hmac = computeSha256Hmac;
 exports.createAbortablePromise = createAbortablePromise;
@@ -71389,30 +71417,7 @@ const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runne
 const SELF_HOSTED_NO_AGENT_MESSAGE = "This job is running on a self-hosted runner, but the runner does not have Harden-Runner installed. This job will not be monitored.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner";
-
-// EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
-var tool_cache = __nccwpck_require__(7784);
-// EXTERNAL MODULE: external "crypto"
-var external_crypto_ = __nccwpck_require__(6417);
-;// CONCATENATED MODULE: ./src/checksum.ts
-
-
-
-function verifyChecksum(downloadPath, is_tls) {
-    const fileBuffer = external_fs_.readFileSync(downloadPath);
-    const checksum = external_crypto_.createHash("sha256")
-        .update(fileBuffer)
-        .digest("hex"); // checksum of downloaded file
-    let expectedChecksum = "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a"; // checksum for v0.13.7
-    if (is_tls) {
-        expectedChecksum =
-            "fa9defcf9e125a62cb29747574d6a07aee4f04153e7bce4a3c7ce29681469e92"; // checksum for tls_agent
-    }
-    if (checksum !== expectedChecksum) {
-        lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
-    }
-    lib_core.debug("Checksum verification passed.");
-}
+const ARM64_RUNNER_MESSAGE = "Sorry, arm64 runners for public repos are not supported yet.";
 
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = require("node:fs");
@@ -71629,6 +71634,100 @@ function isGithubHosted() {
     return runnerEnvironment === "github-hosted";
 }
 
+// EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
+var tool_cache = __nccwpck_require__(7784);
+// EXTERNAL MODULE: external "crypto"
+var external_crypto_ = __nccwpck_require__(6417);
+;// CONCATENATED MODULE: ./src/checksum.ts
+
+
+
+const CHECKSUMS = {
+    tls: {
+        amd64: "a37a8dc6b93ae5bc83cfed2c7e8b9f4034fec067ef977f31ab98c255837815ee",
+        arm64: "dcac3df8bb633d2230f15a3fc4dc9f01418d0a076eb9594c6b941cf768ede2d6",
+    },
+    non_tls: {
+        amd64: "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a", // v0.13.7
+    },
+};
+function verifyChecksum(downloadPath, isTLS, variant) {
+    const fileBuffer = external_fs_.readFileSync(downloadPath);
+    const checksum = external_crypto_.createHash("sha256")
+        .update(fileBuffer)
+        .digest("hex"); // checksum of downloaded file
+    let expectedChecksum = "";
+    if (isTLS) {
+        expectedChecksum = CHECKSUMS["tls"][variant];
+    }
+    else {
+        expectedChecksum = CHECKSUMS["non_tls"][variant];
+    }
+    if (checksum !== expectedChecksum) {
+        lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
+    }
+    lib_core.debug("Checksum verification passed.");
+}
+
+;// CONCATENATED MODULE: ./src/install-agent.ts
+var install_agent_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+
+
+
+
+function installAgent(isTLS, configStr) {
+    return install_agent_awaiter(this, void 0, void 0, function* () {
+        // Note: to avoid github rate limiting
+        let token = lib_core.getInput("token");
+        let auth = `token ${token}`;
+        let downloadPath;
+        let variant = "arm64";
+        if (process.arch === "x64") {
+            variant = "amd64";
+        }
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `isTLS=${isTLS}${external_os_.EOL}`, {
+            encoding: "utf8",
+        });
+        if (isTLS) {
+            downloadPath = yield tool_cache.downloadTool(`https://packages.stepsecurity.io/self-hosted/harden-runner_1.3.0_linux_${variant}.tar.gz`);
+        }
+        else {
+            if (variant === "arm64") {
+                console.log(ARM64_RUNNER_MESSAGE);
+                process.exit(0);
+            }
+            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz", undefined, auth);
+        }
+        verifyChecksum(downloadPath, isTLS, variant);
+        const extractPath = yield tool_cache.extractTar(downloadPath);
+        let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
+        external_child_process_.execFileSync(cmd, args);
+        external_child_process_.execSync("chmod +x /home/agent/agent");
+        external_fs_.writeFileSync("/home/agent/agent.json", configStr);
+        cmd = "sudo";
+        args = [
+            "cp",
+            external_path_.join(__dirname, "agent.service"),
+            "/etc/systemd/system/agent.service",
+        ];
+        external_child_process_.execFileSync(cmd, args);
+        external_child_process_.execSync("sudo systemctl daemon-reload");
+        external_child_process_.execSync("sudo service agent start", { timeout: 15000 });
+    });
+}
+
 ;// CONCATENATED MODULE: ./src/setup.ts
 var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -71639,7 +71738,6 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-
 
 
 
@@ -71815,32 +71913,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
-        // Note: to avoid github rate limiting
-        let token = lib_core.getInput("token");
-        let auth = `token ${token}`;
-        let downloadPath;
-        if (yield isTLSEnabled(github.context.repo.owner)) {
-            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.3_linux_amd64.tar.gz");
-            verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
-        }
-        else {
-            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz", undefined, auth);
-            verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
-        }
-        const extractPath = yield tool_cache.extractTar(downloadPath);
-        let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
-        external_child_process_.execFileSync(cmd, args);
-        external_child_process_.execSync("chmod +x /home/agent/agent");
-        external_fs_.writeFileSync("/home/agent/agent.json", confgStr);
-        cmd = "sudo";
-        args = [
-            "cp",
-            external_path_.join(__dirname, "agent.service"),
-            "/etc/systemd/system/agent.service",
-        ];
-        external_child_process_.execFileSync(cmd, args);
-        external_child_process_.execSync("sudo systemctl daemon-reload");
-        external_child_process_.execSync("sudo service agent start", { timeout: 15000 });
+        let isTLS = yield isTLSEnabled(github.context.repo.owner);
+        yield installAgent(isTLS, confgStr);
         // Check that the file exists locally
         var statusFile = "/home/agent/agent.status";
         var logFile = "/home/agent/agent.log";

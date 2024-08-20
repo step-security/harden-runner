@@ -2979,6 +2979,7 @@ const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runne
 const SELF_HOSTED_NO_AGENT_MESSAGE = "This job is running on a self-hosted runner, but the runner does not have Harden-Runner installed. This job will not be monitored.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner";
+const ARM64_RUNNER_MESSAGE = "Sorry, arm64 runners for public repos are not supported yet.";
 
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = require("node:fs");
@@ -3040,6 +3041,9 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
     if (String(process.env.STATE_monitorStatusCode) ===
         STATUS_HARDEN_RUNNER_UNAVAILABLE) {
         console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+        return;
+    }
+    if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
         return;
     }
     if (lib_core.getBooleanInput("disable-telemetry") &&

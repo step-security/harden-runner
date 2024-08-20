@@ -27,6 +27,10 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
     return;
   }
 
+  if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
+    return;
+  }
+
   if (
     String(process.env.STATE_monitorStatusCode) ===
     common.STATUS_HARDEN_RUNNER_UNAVAILABLE

@@ -23,6 +23,10 @@ import { STEPSECURITY_WEB_URL } from "./configs";
     return;
   }
 
+  if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
+    return;
+  }
+
   if (
     core.getBooleanInput("disable-telemetry") &&
     core.getInput("egress-policy") === "block"
