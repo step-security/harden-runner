@@ -71804,7 +71804,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             downloadPath = external_path_.join(downloadPath, "agent");
         }
         else {
-            downloadPath = yield tool_cache.downloadTool(`https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/self-hosted/${env}/agent`);
+            downloadPath = yield tool_cache.downloadTool(`https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/self-hosted/${env}/agent-arm`);
             //verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
         }
         let cmd = "cp", args = [downloadPath, "/home/agent/agent"];
