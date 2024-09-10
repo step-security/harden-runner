@@ -16,7 +16,7 @@
 ## Table of Contents
 
 - [Introduction](#introduction)
-- [3,500+ open source projects use Harden-Runner](#3500-open-source-projects-use-harden-runner)
+- [4,000+ open source projects use Harden-Runner](#4000-open-source-projects-use-harden-runner)
   - [Trusted By](#trusted-by)
   - [Case Studies](#case-studies)
 - [Why use Harden-Runner](#why-use-harden-runner)
