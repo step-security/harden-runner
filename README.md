@@ -58,7 +58,7 @@ Learn how Harden-Runner works through the video below, which shows how it detect
 
 <a href="https://youtu.be/Yz72qAOrN9s" target="_blank"><img src="images/case-study-thumbnail1.png" alt="Harden-Runner detected supply chain attack in a Google open-source project" title="This case study video shows how StepSecurity Harden-Runner detected a CI/CD supply chain attack in real-time in Google’s open-source project Flank"></a>
 
-## 3,500+ open source projects use Harden-Runner
+## 4,000+ open source projects use Harden-Runner
 
 Harden-Runner is trusted by leading open source projects and enterprises to secure their CI/CD pipelines.
 
@@ -100,7 +100,7 @@ Harden-Runner monitors process, file, and network activity to:
 
    ```yaml
    steps:
-     - uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+     - uses: step-security/harden-runner@446798f8213ac2e75931c1b0769676d927801858 # v2.10.0
        with:
          egress-policy: audit
    ```
