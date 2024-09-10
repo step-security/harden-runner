@@ -71388,31 +71388,8 @@ const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner doe
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
 const SELF_HOSTED_NO_AGENT_MESSAGE = "This job is running on a self-hosted runner, but the runner does not have Harden-Runner installed. This job will not be monitored.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
-const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner";
-
-// EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
-var tool_cache = __nccwpck_require__(7784);
-// EXTERNAL MODULE: external "crypto"
-var external_crypto_ = __nccwpck_require__(6417);
-;// CONCATENATED MODULE: ./src/checksum.ts
-
-
-
-function verifyChecksum(downloadPath, is_tls) {
-    const fileBuffer = external_fs_.readFileSync(downloadPath);
-    const checksum = external_crypto_.createHash("sha256")
-        .update(fileBuffer)
-        .digest("hex"); // checksum of downloaded file
-    let expectedChecksum = "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a"; // checksum for v0.13.7
-    if (is_tls) {
-        expectedChecksum =
-            "fa9defcf9e125a62cb29747574d6a07aee4f04153e7bce4a3c7ce29681469e92"; // checksum for tls_agent
-    }
-    if (checksum !== expectedChecksum) {
-        lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
-    }
-    lib_core.debug("Checksum verification passed.");
-}
+const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner.";
+const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner community tier.";
 
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = require("node:fs");
@@ -71629,6 +71606,98 @@ function isGithubHosted() {
     return runnerEnvironment === "github-hosted";
 }
 
+// EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
+var tool_cache = __nccwpck_require__(7784);
+// EXTERNAL MODULE: external "crypto"
+var external_crypto_ = __nccwpck_require__(6417);
+;// CONCATENATED MODULE: ./src/checksum.ts
+
+
+
+const CHECKSUMS = {
+    tls: {
+        amd64: "0bd500769646f0a90c0dfe9ac59699d5165bed549a9870c031b861146af337b2",
+        arm64: "c2448ac205fd90f46abba31c13cf34c3b997824881502f736315fb08ac0a5a5c",
+    },
+    non_tls: {
+        amd64: "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a", // v0.13.7
+    },
+};
+function verifyChecksum(downloadPath, isTLS, variant) {
+    const fileBuffer = external_fs_.readFileSync(downloadPath);
+    const checksum = external_crypto_.createHash("sha256")
+        .update(fileBuffer)
+        .digest("hex"); // checksum of downloaded file
+    let expectedChecksum = "";
+    if (isTLS) {
+        expectedChecksum = CHECKSUMS["tls"][variant];
+    }
+    else {
+        expectedChecksum = CHECKSUMS["non_tls"][variant];
+    }
+    if (checksum !== expectedChecksum) {
+        lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
+    }
+    lib_core.debug("Checksum verification passed.");
+}
+
+;// CONCATENATED MODULE: ./src/install-agent.ts
+var install_agent_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+
+
+
+
+function installAgent(isTLS, configStr) {
+    return install_agent_awaiter(this, void 0, void 0, function* () {
+        // Note: to avoid github rate limiting
+        const token = lib_core.getInput("token", { required: true });
+        const auth = `token ${token}`;
+        const variant = process.arch === "x64" ? "amd64" : "arm64";
+        let downloadPath;
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `isTLS=${isTLS}${external_os_.EOL}`, {
+            encoding: "utf8",
+        });
+        if (isTLS) {
+            downloadPath = yield tool_cache.downloadTool(`https://packages.stepsecurity.io/github-hosted/harden-runner_1.3.2_linux_${variant}.tar.gz`);
+        }
+        else {
+            if (variant === "arm64") {
+                console.log(ARM64_RUNNER_MESSAGE);
+                return false;
+            }
+            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz", undefined, auth);
+        }
+        verifyChecksum(downloadPath, isTLS, variant);
+        const extractPath = yield tool_cache.extractTar(downloadPath);
+        let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
+        external_child_process_.execFileSync(cmd, args);
+        external_child_process_.execSync("chmod +x /home/agent/agent");
+        external_fs_.writeFileSync("/home/agent/agent.json", configStr);
+        cmd = "sudo";
+        args = [
+            "cp",
+            external_path_.join(__dirname, "agent.service"),
+            "/etc/systemd/system/agent.service",
+        ];
+        external_child_process_.execFileSync(cmd, args);
+        external_child_process_.execSync("sudo systemctl daemon-reload");
+        external_child_process_.execSync("sudo service agent start", { timeout: 15000 });
+        return true;
+    });
+}
+
 ;// CONCATENATED MODULE: ./src/setup.ts
 var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -71639,7 +71708,6 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-
 
 
 
@@ -71815,54 +71883,32 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
         external_child_process_.execSync("sudo chown -R $USER /home/agent");
-        // Note: to avoid github rate limiting
-        let token = lib_core.getInput("token");
-        let auth = `token ${token}`;
-        let downloadPath;
-        if (yield isTLSEnabled(github.context.repo.owner)) {
-            downloadPath = yield tool_cache.downloadTool("https://packages.stepsecurity.io/github-hosted/harden-runner_1.2.3_linux_amd64.tar.gz");
-            verifyChecksum(downloadPath, true); // NOTE: verifying tls_agent's checksum, before extracting
-        }
-        else {
-            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz", undefined, auth);
-            verifyChecksum(downloadPath, false); // NOTE: verifying agent's checksum, before extracting
-        }
-        const extractPath = yield tool_cache.extractTar(downloadPath);
-        let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
-        external_child_process_.execFileSync(cmd, args);
-        external_child_process_.execSync("chmod +x /home/agent/agent");
-        external_fs_.writeFileSync("/home/agent/agent.json", confgStr);
-        cmd = "sudo";
-        args = [
-            "cp",
-            external_path_.join(__dirname, "agent.service"),
-            "/etc/systemd/system/agent.service",
-        ];
-        external_child_process_.execFileSync(cmd, args);
-        external_child_process_.execSync("sudo systemctl daemon-reload");
-        external_child_process_.execSync("sudo service agent start", { timeout: 15000 });
-        // Check that the file exists locally
-        var statusFile = "/home/agent/agent.status";
-        var logFile = "/home/agent/agent.log";
-        var counter = 0;
-        while (true) {
-            if (!external_fs_.existsSync(statusFile)) {
-                counter++;
-                if (counter > 30) {
-                    console.log("timed out");
-                    if (external_fs_.existsSync(logFile)) {
-                        var content = external_fs_.readFileSync(logFile, "utf-8");
-                        console.log(content);
+        let isTLS = yield isTLSEnabled(github.context.repo.owner);
+        const agentInstalled = yield installAgent(isTLS, confgStr);
+        if (agentInstalled) {
+            // Check that the file exists locally
+            var statusFile = "/home/agent/agent.status";
+            var logFile = "/home/agent/agent.log";
+            var counter = 0;
+            while (true) {
+                if (!external_fs_.existsSync(statusFile)) {
+                    counter++;
+                    if (counter > 30) {
+                        console.log("timed out");
+                        if (external_fs_.existsSync(logFile)) {
+                            var content = external_fs_.readFileSync(logFile, "utf-8");
+                            console.log(content);
+                        }
+                        break;
                     }
+                    yield setup_sleep(300);
+                } // The file *does* exist
+                else {
+                    // Read the file
+                    var content = external_fs_.readFileSync(statusFile, "utf-8");
+                    console.log(content);
                     break;
                 }
-                yield setup_sleep(300);
-            } // The file *does* exist
-            else {
-                // Read the file
-                var content = external_fs_.readFileSync(statusFile, "utf-8");
-                console.log(content);
-                break;
             }
         }
     }
