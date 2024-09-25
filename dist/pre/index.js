@@ -71616,8 +71616,8 @@ var external_crypto_ = __nccwpck_require__(6417);
 
 const CHECKSUMS = {
     tls: {
-        amd64: "0b6291c109fa6a99ee086518534ed15b1185a514a6ad3548be4605b420f40737",
-        arm64: "f07b528b801b9d387d45509feb926ab806e1d6e7b7c13f69a55b75755a2edd91",
+        amd64: "6d4aefc8f4fbe6030e6b4db8f20593a3160c40d79509a8607e11c00ce71abf14",
+        arm64: "90b97bfbbad53f6b77a9684bcdb310aee9549b5b81a4f9e1700d4c33524e9dfe",
     },
     non_tls: {
         amd64: "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a", // v0.13.7
@@ -71670,7 +71670,7 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://packages.stepsecurity.io/github-hosted/harden-runner_1.3.4_linux_${variant}.tar.gz`);
+            downloadPath = yield tool_cache.downloadTool(`https://packages.stepsecurity.io/github-hosted/harden-runner_1.3.5_linux_${variant}.tar.gz`);
         }
         else {
             if (variant === "arm64") {
