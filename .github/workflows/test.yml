@@ -37,7 +37,7 @@ jobs:
         run: npm ci
       - name: Run coverage
         run: npm test -- --coverage
-      - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
+      - uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
       - name: Publish Test Results
         uses: step-security/publish-unit-test-result-action@v2
         if: always()
