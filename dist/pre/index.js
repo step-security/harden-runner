@@ -20024,11 +20024,12 @@ exports.setSpanContext = setSpanContext;
 "use strict";
 
 
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
 var abortController = __nccwpck_require__(2557);
 var crypto = __nccwpck_require__(6417);
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 /**
  * Creates an abortable promise.
  * @param buildPromise - A function that takes the resolve and reject functions as parameters.
@@ -20069,7 +20070,6 @@ function createAbortablePromise(buildPromise, options) {
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 const StandardAbortMessage = "The delay was aborted.";
 /**
  * A wrapper for setTimeout that resolves a promise after timeInMs milliseconds.
@@ -20087,27 +20087,6 @@ function delay(timeInMs, options) {
         abortSignal,
         abortErrorMsg: abortErrorMsg !== null && abortErrorMsg !== void 0 ? abortErrorMsg : StandardAbortMessage,
     });
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-/**
- * promise.race() wrapper that aborts rest of promises as soon as the first promise settles.
- */
-async function cancelablePromiseRace(abortablePromiseBuilders, options) {
-    var _a, _b;
-    const aborter = new abortController.AbortController();
-    function abortHandler() {
-        aborter.abort();
-    }
-    (_a = options === null || options === void 0 ? void 0 : options.abortSignal) === null || _a === void 0 ? void 0 : _a.addEventListener("abort", abortHandler);
-    try {
-        return await Promise.race(abortablePromiseBuilders.map((p) => p({ abortSignal: aborter.signal })));
-    }
-    finally {
-        aborter.abort();
-        (_b = options === null || options === void 0 ? void 0 : options.abortSignal) === null || _b === void 0 ? void 0 : _b.removeEventListener("abort", abortHandler);
-    }
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -20146,7 +20125,6 @@ function isObject(input) {
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 /**
  * Typeguard for an error object shape (has name and message)
  * @param e - Something caught by a catch clause.
@@ -20187,7 +20165,6 @@ function getErrorMessage(e) {
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 /**
  * Generates a SHA-256 HMAC signature.
  * @param key - The HMAC key represented as a base64 string, used to generate the cryptographic HMAC hash.
@@ -20313,19 +20290,15 @@ const isWebWorker = typeof self === "object" &&
         ((_b = self.constructor) === null || _b === void 0 ? void 0 : _b.name) === "ServiceWorkerGlobalScope" ||
         ((_c = self.constructor) === null || _c === void 0 ? void 0 : _c.name) === "SharedWorkerGlobalScope");
 /**
+ * A constant that indicates whether the environment the code is running is Node.JS.
+ */
+const isNode = typeof process !== "undefined" && Boolean(process.version) && Boolean((_d = process.versions) === null || _d === void 0 ? void 0 : _d.node);
+/**
  * A constant that indicates whether the environment the code is running is Deno.
  */
 const isDeno = typeof Deno !== "undefined" &&
     typeof Deno.version !== "undefined" &&
     typeof Deno.version.deno !== "undefined";
-/**
- * A constant that indicates whether the environment the code is running is Node.JS.
- */
-const isNode = typeof process !== "undefined" &&
-    Boolean(process.version) &&
-    Boolean((_d = process.versions) === null || _d === void 0 ? void 0 : _d.node) &&
-    // Deno thought it was a good idea to spoof process.versions.node, see https://deno.land/std@0.177.0/node/process.ts?s=versions
-    !isDeno;
 /**
  * A constant that indicates whether the environment the code is running is Bun.sh.
  */
@@ -20345,7 +20318,14 @@ const isReactNative = typeof navigator !== "undefined" && (navigator === null ||
  * @returns a string of the encoded string
  */
 function uint8ArrayToString(bytes, format) {
-    return Buffer.from(bytes).toString(format);
+    switch (format) {
+        case "utf-8":
+            return uint8ArrayToUtf8String(bytes);
+        case "base64":
+            return uint8ArrayToBase64(bytes);
+        case "base64url":
+            return uint8ArrayToBase64Url(bytes);
+    }
 }
 /**
  * The helper that transforms string to specific character encoded bytes array.
@@ -20354,10 +20334,58 @@ function uint8ArrayToString(bytes, format) {
  * @returns a uint8array
  */
 function stringToUint8Array(value, format) {
-    return Buffer.from(value, format);
+    switch (format) {
+        case "utf-8":
+            return utf8StringToUint8Array(value);
+        case "base64":
+            return base64ToUint8Array(value);
+        case "base64url":
+            return base64UrlToUint8Array(value);
+    }
+}
+/**
+ * Decodes a Uint8Array into a Base64 string.
+ * @internal
+ */
+function uint8ArrayToBase64(bytes) {
+    return Buffer.from(bytes).toString("base64");
+}
+/**
+ * Decodes a Uint8Array into a Base64Url string.
+ * @internal
+ */
+function uint8ArrayToBase64Url(bytes) {
+    return Buffer.from(bytes).toString("base64url");
+}
+/**
+ * Decodes a Uint8Array into a javascript string.
+ * @internal
+ */
+function uint8ArrayToUtf8String(bytes) {
+    return Buffer.from(bytes).toString("utf-8");
+}
+/**
+ * Encodes a JavaScript string into a Uint8Array.
+ * @internal
+ */
+function utf8StringToUint8Array(value) {
+    return Buffer.from(value);
+}
+/**
+ * Encodes a Base64 string into a Uint8Array.
+ * @internal
+ */
+function base64ToUint8Array(value) {
+    return Buffer.from(value, "base64");
+}
+/**
+ * Encodes a Base64Url string into a Uint8Array.
+ * @internal
+ */
+function base64UrlToUint8Array(value) {
+    return Buffer.from(value, "base64url");
 }
 
-exports.cancelablePromiseRace = cancelablePromiseRace;
 exports.computeSha256Hash = computeSha256Hash;
 exports.computeSha256Hmac = computeSha256Hmac;
 exports.createAbortablePromise = createAbortablePromise;
@@ -71177,6 +71205,18 @@ module.exports = require("zlib");
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__nccwpck_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__nccwpck_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
 /******/ 		// define getter functions for harmony exports
@@ -71232,6 +71272,7 @@ var external_fs_ = __nccwpck_require__(5747);
 var lib = __nccwpck_require__(6255);
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(5622);
+var external_path_default = /*#__PURE__*/__nccwpck_require__.n(external_path_);
 // EXTERNAL MODULE: ./node_modules/uuid/dist/index.js
 var dist = __nccwpck_require__(5840);
 ;// CONCATENATED MODULE: ./node_modules/uuid/wrapper.mjs
@@ -71520,6 +71561,7 @@ var cacheUtils = __nccwpck_require__(1518);
 ;// CONCATENATED MODULE: ./src/arc-runner.ts
 
 
+
 function isArcRunner() {
     const runnerUserAgent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
     let isARC = false;
@@ -71546,8 +71588,9 @@ function sendAllowedEndpoints(endpoints) {
     const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
     for (const endpoint of allowedEndpoints) {
         if (endpoint) {
-            const encodedEndpoint = Buffer.from(endpoint).toString("base64");
-            external_child_process_.execSync(`echo "${endpoint}" > "${getRunnerTempDir()}/step_policy_endpoint_${encodedEndpoint}"`);
+            let encodedEndpoint = Buffer.from(endpoint).toString("base64");
+            let fileName = external_path_default().join(getRunnerTempDir(), `step_policy_endpoint_${encodedEndpoint}`);
+            echo(fileName);
         }
     }
     if (allowedEndpoints.length > 0) {
@@ -71555,14 +71598,12 @@ function sendAllowedEndpoints(endpoints) {
     }
 }
 function applyPolicy(count) {
-    const fileName = `step_policy_apply_${count}`;
-    external_child_process_.execSync(`echo "${fileName}" > "${getRunnerTempDir()}/${fileName}"`);
+    let applyPolicyStr = `step_policy_apply_${count}`;
+    let fileName = external_path_default().join(getRunnerTempDir(), applyPolicyStr);
+    echo(fileName);
 }
-function removeStepPolicyFiles() {
-    cp.execSync(`rm ${getRunnerTempDir()}/step_policy_*`);
-}
-function arcCleanUp() {
-    cp.execSync(`echo "cleanup" > "${getRunnerTempDir()}/step_policy_cleanup"`);
+function echo(content) {
+    external_child_process_.execFileSync("echo", [content]);
 }
 
 ;// CONCATENATED MODULE: ./src/tls-inspect.ts
@@ -71836,7 +71877,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             if (confg.egress_policy === "block") {
                 try {
                     if (process.env.USER) {
-                        external_child_process_.execSync(`sudo chown -R ${process.env.USER} /home/agent`);
+                        chownForFolder(process.env.USER, "/home/agent");
                     }
                     const confgStr = JSON.stringify(confg);
                     external_fs_.writeFileSync("/home/agent/block_event.json", confgStr);
@@ -71882,7 +71923,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         }
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
-        external_child_process_.execSync("sudo chown -R $USER /home/agent");
+        chownForFolder(process.env.USER, "/home/agent");
         let isTLS = yield isTLSEnabled(github.context.repo.owner);
         const agentInstalled = yield installAgent(isTLS, confgStr);
         if (agentInstalled) {
@@ -71922,6 +71963,11 @@ function setup_sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
+}
+function chownForFolder(newOwner, target) {
+    let cmd = "sudo";
+    let args = ["chown", "-R", newOwner, target];
+    external_child_process_.execFileSync(cmd, args);
 }
 
 })();

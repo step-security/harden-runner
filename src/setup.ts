@@ -165,8 +165,9 @@ interface MonitorResponse {
       if (confg.egress_policy === "block") {
         try {
           if (process.env.USER) {
-            cp.execSync(`sudo chown -R ${process.env.USER} /home/agent`);
+            chownForFolder(process.env.USER, "/home/agent");
           }
+
           const confgStr = JSON.stringify(confg);
           fs.writeFileSync("/home/agent/block_event.json", confgStr);
           await sleep(5000);
@@ -225,7 +226,7 @@ interface MonitorResponse {
 
     const confgStr = JSON.stringify(confg);
     cp.execSync("sudo mkdir -p /home/agent");
-    cp.execSync("sudo chown -R $USER /home/agent");
+    chownForFolder(process.env.USER, "/home/agent");
 
     let isTLS = await isTLSEnabled(context.repo.owner);
 
@@ -268,4 +269,10 @@ export function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+function chownForFolder(newOwner: string, target: string) {
+  let cmd = "sudo";
+  let args = ["chown", "-R", newOwner, target];
+  cp.execFileSync(cmd, args);
 }

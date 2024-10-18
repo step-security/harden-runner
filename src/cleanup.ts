@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as cp from "child_process";
 import * as common from "./common";
 import isDocker from "is-docker";
-import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
+import { isArcRunner } from "./arc-runner";
 
 (async () => {
   console.log("[harden-runner] post-step");
@@ -18,8 +18,6 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
 
   if (isArcRunner()) {
     console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
-    arcCleanUp();
-    removeStepPolicyFiles();
     return;
   }
 

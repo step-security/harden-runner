@@ -3013,7 +3013,10 @@ function isDocker() {
 	return isDockerCached;
 }
 
+// EXTERNAL MODULE: external "path"
+var external_path_ = __nccwpck_require__(277);
 ;// CONCATENATED MODULE: ./src/arc-runner.ts
+
 
 
 function isArcRunner() {
@@ -3042,8 +3045,9 @@ function sendAllowedEndpoints(endpoints) {
     const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
     for (const endpoint of allowedEndpoints) {
         if (endpoint) {
-            const encodedEndpoint = Buffer.from(endpoint).toString("base64");
-            cp.execSync(`echo "${endpoint}" > "${getRunnerTempDir()}/step_policy_endpoint_${encodedEndpoint}"`);
+            let encodedEndpoint = Buffer.from(endpoint).toString("base64");
+            let fileName = path.join(getRunnerTempDir(), `step_policy_endpoint_${encodedEndpoint}`);
+            echo(fileName);
         }
     }
     if (allowedEndpoints.length > 0) {
@@ -3051,14 +3055,12 @@ function sendAllowedEndpoints(endpoints) {
     }
 }
 function applyPolicy(count) {
-    const fileName = `step_policy_apply_${count}`;
-    cp.execSync(`echo "${fileName}" > "${getRunnerTempDir()}/${fileName}"`);
+    let applyPolicyStr = `step_policy_apply_${count}`;
+    let fileName = path.join(getRunnerTempDir(), applyPolicyStr);
+    echo(fileName);
 }
-function removeStepPolicyFiles() {
-    external_child_process_namespaceObject.execSync(`rm ${getRunnerTempDir()}/step_policy_*`);
-}
-function arcCleanUp() {
-    external_child_process_namespaceObject.execSync(`echo "cleanup" > "${getRunnerTempDir()}/step_policy_cleanup"`);
+function echo(content) {
+    cp.execFileSync("echo", [content]);
 }
 
 ;// CONCATENATED MODULE: ./src/cleanup.ts
@@ -3088,8 +3090,6 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
     }
     if (isArcRunner()) {
         console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
-        arcCleanUp();
-        removeStepPolicyFiles();
         return;
     }
     if (process.env.STATE_selfHosted === "true") {
