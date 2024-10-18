@@ -3,7 +3,7 @@ import * as cp from "child_process";
 import * as common from "./common";
 import isDocker from "is-docker";
 import { isArcRunner } from "./arc-runner";
-
+import { isGithubHosted } from "./tls-inspect";
 (async () => {
   console.log("[harden-runner] post-step");
 
@@ -11,7 +11,7 @@ import { isArcRunner } from "./arc-runner";
     console.log(common.UBUNTU_MESSAGE);
     return;
   }
-  if (isDocker()) {
+  if (isGithubHosted() && isDocker()) {
     console.log(common.CONTAINER_MESSAGE);
     return;
   }
