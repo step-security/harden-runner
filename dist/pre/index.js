@@ -71748,7 +71748,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log(UBUNTU_MESSAGE);
             return;
         }
-        if (isDocker()) {
+        if (isGithubHosted() && isDocker()) {
             console.log(CONTAINER_MESSAGE);
             return;
         }

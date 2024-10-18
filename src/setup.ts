@@ -39,7 +39,7 @@ interface MonitorResponse {
       console.log(common.UBUNTU_MESSAGE);
       return;
     }
-    if (isDocker()) {
+    if (isGithubHosted() && isDocker()) {
       console.log(common.CONTAINER_MESSAGE);
       return;
     }
