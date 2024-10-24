@@ -3013,10 +3013,7 @@ function isDocker() {
 	return isDockerCached;
 }
 
-// EXTERNAL MODULE: external "path"
-var external_path_ = __nccwpck_require__(622);
 ;// CONCATENATED MODULE: ./src/arc-runner.ts
-
 
 
 function isArcRunner() {
@@ -3034,20 +3031,13 @@ function isSecondaryPod() {
     const workDir = "/__w";
     return external_fs_.existsSync(workDir);
 }
-function getRunnerTempDir() {
-    const isTest = process.env["isTest"];
-    if (isTest === "1") {
-        return "/tmp";
-    }
-    return process.env["RUNNER_TEMP"] || "/tmp";
-}
 function sendAllowedEndpoints(endpoints) {
     const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
     for (const endpoint of allowedEndpoints) {
         if (endpoint) {
             let encodedEndpoint = Buffer.from(endpoint).toString("base64");
-            let fileName = path.join(getRunnerTempDir(), `step_policy_endpoint_${encodedEndpoint}`);
-            echo(fileName);
+            let endpointPolicyStr = `step_policy_endpoint_${encodedEndpoint}`;
+            echo(endpointPolicyStr);
         }
     }
     if (allowedEndpoints.length > 0) {
@@ -3056,8 +3046,7 @@ function sendAllowedEndpoints(endpoints) {
 }
 function applyPolicy(count) {
     let applyPolicyStr = `step_policy_apply_${count}`;
-    let fileName = path.join(getRunnerTempDir(), applyPolicyStr);
-    echo(fileName);
+    echo(applyPolicyStr);
 }
 function echo(content) {
     cp.execFileSync("echo", [content]);

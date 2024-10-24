@@ -7,14 +7,3 @@ it("should correctly recognize arc based runner", async () => {
   let isArc: boolean = await isArcRunner();
   expect(isArc).toBe(true);
 });
-
-it("should write endpoint files", () => {
-  process.env["isTest"] = "1";
-
-  let allowed_endpoints = [
-    "github.com:443",
-    "*.google.com:443",
-    "youtube.com",
-  ].join(" ");
-  sendAllowedEndpoints(allowed_endpoints);
-});
