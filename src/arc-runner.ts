@@ -21,28 +21,14 @@ function isSecondaryPod(): boolean {
   return fs.existsSync(workDir);
 }
 
-function getRunnerTempDir(): string {
-  const isTest = process.env["isTest"];
-
-  if (isTest === "1") {
-    return "/tmp";
-  }
-  return process.env["RUNNER_TEMP"] || "/tmp";
-}
-
 export function sendAllowedEndpoints(endpoints: string): void {
   const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
 
   for (const endpoint of allowedEndpoints) {
     if (endpoint) {
       let encodedEndpoint = Buffer.from(endpoint).toString("base64");
-
-      let fileName = path.join(
-        getRunnerTempDir(),
-        `step_policy_endpoint_${encodedEndpoint}`
-      );
-
-      echo(fileName);
+      let endpointPolicyStr = `step_policy_endpoint_${encodedEndpoint}`;
+      echo(endpointPolicyStr);
     }
   }
 
@@ -53,9 +39,7 @@ export function sendAllowedEndpoints(endpoints: string): void {
 
 function applyPolicy(count: number): void {
   let applyPolicyStr = `step_policy_apply_${count}`;
-  let fileName = path.join(getRunnerTempDir(), applyPolicyStr);
-
-  echo(fileName);
+  echo(applyPolicyStr);
 }
 
 function echo(content: string) {
