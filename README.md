@@ -41,7 +41,7 @@ Learn how Harden-Runner works through the video below, which shows how it detect
 
 ## Why Choose Harden-Runner?
 
-- **Prevent Exfiltration:** Monitor and block unauthorized outbound network traffic.
+- **Prevent Exfiltration:** Prevent the exfiltration of CI/CD secrets and source code.
 - **Detect Tampering:** Identify source code modifications during builds.
 - **Anomaly Detection:** Spot unusual dependencies and workflow behaviors.
 - **Simplify Permissions:** Determine the minimum required `GITHUB_TOKEN` permissions.
@@ -88,7 +88,7 @@ Explore the full feature set in the [Features Documentation](docs/features.md).
 
 ## Trusted By and Case Studies
 
-Harden-Runner is trusted by over 4000 leading open-source projects and enterprises, including Microsoft, Google, Kubernetes, and more.
+Harden-Runner is trusted by over 5000 leading open-source projects and enterprises, including Microsoft, Google, Kubernetes, and more.
 
 ### Trusted by
 
