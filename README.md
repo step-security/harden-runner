@@ -18,14 +18,13 @@
 Harden-Runner secures CI/CD workflows by controlling network access and monitoring activities on GitHub-hosted and self-hosted runners. It blocks unauthorized network traffic and detects unusual activity to protect against potential threats. The name "Harden-Runner" comes from its purpose: strengthening the security of the runners used in GitHub Actions workflows.
 
 ## Quick Links
-
-- [Why Use Harden-Runner](docs/why-use-harden-runner.md)
-- [Getting Started Guide](docs/getting-started.md)
+- [Getting Started Guide](#getting-started)
+- [Why Use Harden-Runner](#why-choose-harden-runner)
 - [Features and Capabilities](docs/features.md)
-- [Case Studies and Trusted Projects](docs/trusted-and-cases.md)
+- [Case Studies and Trusted Projects](#trusted-by-and-case-studies)
 - [How It Works](docs/how-it-works.md)
 - [Known Limitations](docs/limitations.md)
-- [Join the Discussions](docs/discussions.md)
+- [Join the Discussions](#discussions)
 
 ---
 
@@ -40,27 +39,15 @@ Learn how Harden-Runner works through the video below, which shows how it detect
 Harden-Runner is trusted by leading projects across industries. For example, it has also been used to secure the **Azure Karpenter Provider**, helping Microsoft improve the security of its open-source ecosystem.[Read the full case study →](https://www.stepsecurity.io/case-studies/azure-karpenter-provider)
 
 ---
-
-## Why Choose Harden-Runner?
-
-- **Prevent Exfiltration:** Prevent the exfiltration of CI/CD secrets and source code.
-- **Detect Tampering:** Identify source code modifications during builds.
-- **Anomaly Detection:** Spot unusual dependencies and workflow behaviors.
-- **Simplify Permissions:** Determine the minimum required `GITHUB_TOKEN` permissions.
-
-[Learn More](docs/why-use-harden-runner.md)
-
----
-
 ## Getting Started
 
 This guide walks you through the steps to set up and use Harden-Runner in your CI/CD workflows.
 
 ### **Prerequisites**
 Before you begin, ensure you have the following:
-- GitHub account.
-- GitHub-hosted runner environment.
-- StepSecurity account.
+- GitHub account
+- GitHub-hosted runner environment
+- StepSecurity account
 
 
 ### **Step 1: Add Harden-Runner to Your Workflow**
@@ -82,10 +69,15 @@ To integrate Harden-Runner, follow these steps:
 Run your workflow. Once completed:
 - Review the **workflow logs** and the **job markdown summary**.
 - Look for a link to **security insights and recommendations**.
+  <p align="left">
+      <img src="images/workflow-logs.png" alt="Link in workflow log" >
+    </p>
 - Click on the provided link (e.g., [example link](https://example.com)) to access the **Process Monitor View**, which displays:
    - **Network events**: Outbound network calls correlated with each step.
    - **File events**: File writes tracked during the job.
-
+     <p align="left">
+      <img src="images/network-events.png" alt="Link in network events" >
+    </p>
 
 ### **Step 3: Apply the Recommended Policy**
 
@@ -94,6 +86,9 @@ On the **Recommended Policy** tab in the insights dashboard:
 - You can:
    - Add this policy directly to your workflow file, or
    - Use the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store) to apply the policy without modifying your workflow file.
+    <p align="left">
+      <img src="images/recommendation.png" alt="Link in network events" >
+    </p>
 
 
 
@@ -102,6 +97,15 @@ On the **Recommended Policy** tab in the insights dashboard:
 Once the policy is applied:
 - Outbound calls not on the allowed list will be blocked.
 - This ensures that only trusted endpoints are accessible, preventing potential security risks.
+
+
+---
+## Why Choose Harden-Runner?
+
+- **Prevent Exfiltration:** Prevent the exfiltration of CI/CD secrets and source code.
+- **Detect Tampering:** Identify source code modifications during builds.
+- **Anomaly Detection:** Spot unusual dependencies and workflow behaviors.
+- **Simplify Permissions:** Determine the minimum required `GITHUB_TOKEN` permissions.
 
 
 ---
