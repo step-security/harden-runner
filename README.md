@@ -42,7 +42,6 @@ Harden-Runner is trusted by leading projects across industries. For example, it 
 ## Getting Started
 
 This guide walks you through the steps to set up and use Harden-Runner in your CI/CD workflows.
-
 ### **Prerequisites**
 Before you begin, ensure you have the following:
 - GitHub account
@@ -63,6 +62,8 @@ To integrate Harden-Runner, follow these steps:
          egress-policy: audit
 
 **Tip**: Automate this step by pasting your workflow into the [StepSecurity online tool](https://app.stepsecurity.io/secureworkflow)
+<details>
+<summary>Click to view the full Getting Started Guide</summary>
 
 ### **Step 2: Access Security Insights**
 
@@ -97,7 +98,7 @@ On the **Recommended Policy** tab in the insights dashboard:
 Once the policy is applied:
 - Outbound calls not on the allowed list will be blocked.
 - This ensures that only trusted endpoints are accessible, preventing potential security risks.
-
+</details>
 
 ---
 ## Why Choose Harden-Runner?
