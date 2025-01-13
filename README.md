@@ -54,7 +54,55 @@ Harden-Runner is trusted by leading projects across industries. For example, it 
 
 ## Getting Started
 
-Ready to secure your CI/CD workflows? Follow our [Getting Started Guide](docs/getting-started.md) to learn how to harden GitHub-hosted runners with step-by-step instructions.
+This guide walks you through the steps to set up and use Harden-Runner in your CI/CD workflows.
+
+### **Prerequisites**
+Before you begin, ensure you have the following:
+- GitHub account.
+- GitHub-hosted runner environment.
+- StepSecurity account.
+
+
+### **Step 1: Add Harden-Runner to Your Workflow**
+
+To integrate Harden-Runner, follow these steps:
+
+- Open your GitHub Actions workflow file (e.g., `.github/workflows/<workflow-name>.yml`).
+- Add the following code as the first step in each job:
+   ```yaml
+   steps:
+     - uses: step-security/harden-runner@446798f8213ac2e75931c1b0769676d927801858 # v2.10.0
+       with:
+         egress-policy: audit
+
+**Tip**: Automate this step by pasting your workflow into the [StepSecurity online tool](https://app.stepsecurity.io/secureworkflow)
+
+### **Step 2: Access Security Insights**
+
+Run your workflow. Once completed:
+- Review the **workflow logs** and the **job markdown summary**.
+- Look for a link to **security insights and recommendations**.
+- Click on the provided link (e.g., [example link](https://example.com)) to access the **Process Monitor View**, which displays:
+   - **Network events**: Outbound network calls correlated with each step.
+   - **File events**: File writes tracked during the job.
+
+
+### **Step 3: Apply the Recommended Policy**
+
+On the **Recommended Policy** tab in the insights dashboard:
+- Review the suggested **block policy**, which is generated based on outbound calls from current and past runs.
+- You can:
+   - Add this policy directly to your workflow file, or
+   - Use the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store) to apply the policy without modifying your workflow file.
+
+
+
+### **Step 4: Block Unauthorized Outbound Calls**
+
+Once the policy is applied:
+- Outbound calls not on the allowed list will be blocked.
+- This ensures that only trusted endpoints are accessible, preventing potential security risks.
+
 
 ---
 
