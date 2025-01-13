@@ -74,10 +74,10 @@ Includes all features in the **Community** tier, plus:
 
 - **Support for Private Repositories:** Extend Harden-Runner's security capabilities to your private GitHub repositories.
 - **Support for Self-Hosted Runners:** Apply security controls and monitoring to self-hosted GitHub Actions runners.
+- **View Outbound GitHub API calls at the Job Level:** Monitor HTTPS requests to GitHub APIs
 - **Determine Minimum GITHUB_TOKEN Permissions:** Monitor outbound HTTPS requests to GitHub APIs to recommend the least-privilege permissions needed for your workflows, enhancing security by reducing unnecessary access.
 - **View the Name and Path of Every File Written During the Build Process:** Gain visibility into every file written to the build environment, including the ability to correlate file writes with processes, ensuring complete transparency.
 - **View Process Names and Arguments:** Monitor every process executed during the build process, along with its arguments, and navigate the process tree to detect suspicious activities.
-- **View Outbound HTTPS Traffic at the Job Level:** Monitor HTTPS requests made during your workflows in real time without using a proxy. Identify anomalous requests, including cross-organization API calls, with alerts and detailed logs.
 
 
 For a detailed comparison and more information, please visit our [Pricing Page](https://www.stepsecurity.io/pricing).
@@ -100,10 +100,12 @@ Harden-Runner is trusted by over 5000 leading open-source projects and enterpris
 ### Case Studies
 
 - [Harden-Runner Detects CI/CD Supply Chain Attack in Google’s Open-Source Project Flank](https://www.stepsecurity.io/case-studies/flank)
+- [StepSecurity Detects CI/CD Supply Chain Attack in Microsoft’s Open-Source Project Azure Karpenter Provider in Real-Time](https://www.stepsecurity.io/case-studies/azure-karpenter-provider)
+- [How Coveo Strengthened GitHub Actions Security with StepSecurity](https://www.stepsecurity.io/case-studies/coveo)
+- [Hashgraph Achieves Comprehensive CI/CD Security Without Compromising Development Speed](https://www.stepsecurity.io/case-studies/hashgraph)
 - [Kapiche secures their GitHub Actions software supply chain with Harden-Runner](https://www.stepsecurity.io/case-studies/kapiche)
 - [Arcjet Enhances CI/CD Security with Harden-Runner](https://www.stepsecurity.io/case-studies/arcjet)
-- [How Coveo Strengthened GitHub Actions Security with StepSecurity](https://www.stepsecurity.io/case-studies/coveo)
-- [StepSecurity Detects CI/CD Supply Chain Attack in Microsoft’s Open-Source Project Azure Karpenter Provider in Real-Time](https://www.stepsecurity.io/case-studies/azure-karpenter-provider)
+
 ---
 
 ## How It Works
