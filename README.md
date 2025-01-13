@@ -31,11 +31,13 @@ Harden-Runner secures CI/CD workflows by controlling network access and monitori
 
 ## Introduction
 
-Learn how Harden-Runner works through the video below, which shows how it detected a supply chain attack on a Google open-source project.
+Learn how Harden-Runner works through the video below, which shows how it detected a supply chain attack on a **Google** open-source project.
 
 <a href="https://youtu.be/Yz72qAOrN9s" target="_blank">
   <img src="images/case-study-thumbnail1.png" alt="Harden-Runner detected supply chain attack in a Google open-source project" title="This case study video shows how StepSecurity Harden-Runner detected a CI/CD supply chain attack in real-time in Google’s open-source project Flank">
 </a>
+
+Harden-Runner is trusted by leading projects across industries. For example, it has also been used to secure the **Azure Karpenter Provider**, helping Microsoft improve the security of its open-source ecosystem.[Read the full case study →](https://www.stepsecurity.io/case-studies/azure-karpenter-provider)
 
 ---
 
