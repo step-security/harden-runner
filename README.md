@@ -107,11 +107,11 @@ Includes all features in the **Community** tier, plus:
 - **Determine Minimum GITHUB_TOKEN Permissions:** Monitor outbound HTTPS requests to GitHub APIs to recommend the least-privilege permissions needed for your workflows, enhancing security by reducing unnecessary access.
 - **View the Name and Path of Every File Written During the Build Process:** Gain visibility into every file written to the build environment, including the ability to correlate file writes with processes, ensuring complete transparency.
 - **View Process Names and Arguments:** Monitor every process executed during the build process, along with its arguments, and navigate the process tree to detect suspicious activities.
-
+- **Github Checks:** Display Harden Runner insights in the GitHub Checks UI, giving quick feedback on unusual network activity in pull requests.
 
 For a detailed comparison and more information, please visit our [Pricing Page](https://www.stepsecurity.io/pricing).
 
-Explore the full feature set in the [Features Documentation](docs/features.md).
+Explore the full feature set in the [Features Documentation](https://docs.stepsecurity.io/harden-runner/how-tos/enable-runtime-security/).
 
 ---
 
