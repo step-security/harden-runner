@@ -19,8 +19,8 @@ Harden-Runner secures CI/CD workflows by controlling network access and monitori
 
 ## Quick Links
 - [Getting Started Guide](#getting-started)
-- [Why Use Harden-Runner](#why-choose-harden-runner)
-- [Features and Capabilities](docs/features.md)
+- [Why Choose Harden-Runner](#why-choose-harden-runner)
+- [Features and Capabilities](#features)
 - [Case Studies and Trusted Projects](#trusted-by-and-case-studies)
 - [How It Works](docs/how-it-works.md)
 - [Known Limitations](docs/limitations.md)
