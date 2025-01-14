@@ -141,7 +141,7 @@ Harden-Runner is trusted by over 5000 leading open-source projects and enterpris
 
 ## How It Works
 
-Want to know the technical details? Dive into the architecture of Harden-Runner and its integrations for GitHub-hosted and self-hosted runners in our [How It Works Documentation](docs/how-it-works.md).
+Want to know the technical details? Dive into the architecture of Harden-Runner and its integrations for GitHub-hosted and self-hosted runners in our [How Harden-Runner Works Documentation](docs/how-it-works.md).
 
 ---
 
