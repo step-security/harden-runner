@@ -42,12 +42,6 @@ Harden-Runner is trusted by leading projects across industries. For example, it 
 ## Getting Started
 
 This guide walks you through the steps to set up and use Harden-Runner in your CI/CD workflows.
-### **Prerequisites**
-Before you begin, ensure you have the following:
-- GitHub account
-- GitHub-hosted runner environment
-- StepSecurity account
-
 
 ### **Step 1: Add Harden-Runner to Your Workflow**
 
@@ -57,7 +51,7 @@ To integrate Harden-Runner, follow these steps:
 - Add the following code as the first step in each job:
    ```yaml
    steps:
-     - uses: step-security/harden-runner@446798f8213ac2e75931c1b0769676d927801858 # v2.10.0
+     - uses: step-security/harden-runner@446798f8213ac2e75931c1b0769676d927801858 # v2.10.3
        with:
          egress-policy: audit
 
@@ -71,33 +65,15 @@ Run your workflow. Once completed:
 - Review the **workflow logs** and the **job markdown summary**.
 - Look for a link to **security insights and recommendations**.
   <p align="left">
-      <img src="images/workflow-logs.png" alt="Link in workflow log" >
+      <img src="images/buildlog1.png" alt="Link in workflow log" >
     </p>
-- Click on the provided link (e.g., [example link](https://example.com)) to access the **Process Monitor View**, which displays:
+- Click on the provided link (e.g., [example link](https://appv2.stepsecurity.io/github/step-security/github-actions-goat/actions/runs/7704454287?jobid=20996777560&tab=network-events)) to access the **Process Monitor View**, which displays:
    - **Network events**: Outbound network calls correlated with each step.
    - **File events**: File writes tracked during the job.
      <p align="left">
       <img src="images/network-events.png" alt="Link in network events" >
     </p>
 
-### **Step 3: Apply the Recommended Policy**
-
-On the **Recommended Policy** tab in the insights dashboard:
-- Review the suggested **block policy**, which is generated based on outbound calls from current and past runs.
-- You can:
-   - Add this policy directly to your workflow file, or
-   - Use the [Policy Store](https://docs.stepsecurity.io/harden-runner/how-tos/block-egress-traffic#2-add-the-policy-using-the-policy-store) to apply the policy without modifying your workflow file.
-    <p align="left">
-      <img src="images/recommendation.png" alt="Link in network events" >
-    </p>
-
-
-
-### **Step 4: Block Unauthorized Outbound Calls**
-
-Once the policy is applied:
-- Outbound calls not on the allowed list will be blocked.
-- This ensures that only trusted endpoints are accessible, preventing potential security risks.
 </details>
 
 ---
