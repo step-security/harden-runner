@@ -87,7 +87,7 @@ import { isGithubHosted } from "./tls-inspect";
         encoding: "utf8",
         maxBuffer: 1024 * 1024 * 10 // 10MB buffer
       });
-      console.log("Service log:");
+      console.log("agent.service log:");
       console.log(journalLog);
     } catch (error) {
       console.log("Warning: Could not fetch service logs:", error.message);
