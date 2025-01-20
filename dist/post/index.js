@@ -3172,11 +3172,17 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
     }
     var disable_sudo = process.env.STATE_disableSudo;
     if (disable_sudo !== "true") {
-        var journalLog = external_child_process_namespaceObject.execSync("sudo journalctl -u agent.service", {
-            encoding: "utf8",
-        });
-        console.log("Service log:");
-        console.log(journalLog);
+        try {
+            var journalLog = external_child_process_namespaceObject.execSync("sudo journalctl -u agent.service --lines=1000", {
+                encoding: "utf8",
+                maxBuffer: 1024 * 1024 * 10 // 10MB buffer
+            });
+            console.log("agent.service log:");
+            console.log(journalLog);
+        }
+        catch (error) {
+            console.log("Warning: Could not fetch service logs:", error.message);
+        }
     }
     try {
         yield addSummary();
