@@ -111,7 +111,7 @@ Includes all features in the **Community** tier, plus:
 
 For a detailed comparison and more information, please visit our [Pricing Page](https://www.stepsecurity.io/pricing).
 
-Explore the full feature set in the [Features Documentation](https://docs.stepsecurity.io/harden-runner/how-tos/enable-runtime-security/).
+Explore the full feature set in the [Features Documentation](https://docs.stepsecurity.io/harden-runner).
 
 ---
 
