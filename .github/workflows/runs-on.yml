@@ -20,7 +20,7 @@ jobs:
             
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
             
       - name: Run outbound calls from host
         run: |
@@ -53,7 +53,7 @@ jobs:
             security.ubuntu.com:80
          
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run outbound calls from within Docker container
         continue-on-error: true
@@ -100,7 +100,7 @@ jobs:
             security.ubuntu.com:80
             
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build Docker image and test outbound calls during build
         continue-on-error: true
@@ -149,7 +149,7 @@ jobs:
             
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run long-running Docker container with outbound calls
         continue-on-error: true
