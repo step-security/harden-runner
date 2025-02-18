@@ -71535,19 +71535,13 @@ function isSecondaryPod() {
     const workDir = "/__w";
     return external_fs_.existsSync(workDir);
 }
-function getRunnerTempDir() {
-    const isTest = process.env["isTest"];
-    if (isTest === "1") {
-        return "/tmp";
-    }
-    return process.env["RUNNER_TEMP"] || "/tmp";
-}
 function sendAllowedEndpoints(endpoints) {
     const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
     for (const endpoint of allowedEndpoints) {
         if (endpoint) {
-            const encodedEndpoint = Buffer.from(endpoint).toString("base64");
-            external_child_process_.execSync(`echo "${endpoint}" > "${getRunnerTempDir()}/step_policy_endpoint_${encodedEndpoint}"`);
+            let encodedEndpoint = Buffer.from(endpoint).toString("base64");
+            let endpointPolicyStr = `step_policy_endpoint_${encodedEndpoint}`;
+            echo(endpointPolicyStr);
         }
     }
     if (allowedEndpoints.length > 0) {
@@ -71555,14 +71549,11 @@ function sendAllowedEndpoints(endpoints) {
     }
 }
 function applyPolicy(count) {
-    const fileName = `step_policy_apply_${count}`;
-    external_child_process_.execSync(`echo "${fileName}" > "${getRunnerTempDir()}/${fileName}"`);
+    let applyPolicyStr = `step_policy_apply_${count}`;
+    echo(applyPolicyStr);
 }
-function removeStepPolicyFiles() {
-    cp.execSync(`rm ${getRunnerTempDir()}/step_policy_*`);
-}
-function arcCleanUp() {
-    cp.execSync(`echo "cleanup" > "${getRunnerTempDir()}/step_policy_cleanup"`);
+function echo(content) {
+    external_child_process_.execFileSync("echo", [content]);
 }
 
 ;// CONCATENATED MODULE: ./src/tls-inspect.ts
@@ -71616,8 +71607,8 @@ var external_crypto_ = __nccwpck_require__(6417);
 
 const CHECKSUMS = {
     tls: {
-        amd64: "0bd500769646f0a90c0dfe9ac59699d5165bed549a9870c031b861146af337b2",
-        arm64: "c2448ac205fd90f46abba31c13cf34c3b997824881502f736315fb08ac0a5a5c",
+        amd64: "38e7ed97ced6fe0c1cf0fb5ee3b3d521dfe28d5ddf1cdca72d130c8d1b4a314e",
+        arm64: "f67c80cc578c996d4f882c14fcdb63df57927d907cd22f1ec65f9fa940c08cf3",
     },
     non_tls: {
         amd64: "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a", // v0.13.7
@@ -71670,7 +71661,7 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://packages.stepsecurity.io/github-hosted/harden-runner_1.3.2_linux_${variant}.tar.gz`);
+            downloadPath = yield tool_cache.downloadTool(`https://packages.stepsecurity.io/github-hosted/harden-runner_1.4.2_linux_${variant}.tar.gz`);
         }
         else {
             if (variant === "arm64") {
@@ -71735,7 +71726,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log(UBUNTU_MESSAGE);
             return;
         }
-        if (isDocker()) {
+        if (isGithubHosted() && isDocker()) {
             console.log(CONTAINER_MESSAGE);
             return;
         }
@@ -71836,7 +71827,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             if (confg.egress_policy === "block") {
                 try {
                     if (process.env.USER) {
-                        external_child_process_.execSync(`sudo chown -R ${process.env.USER} /home/agent`);
+                        chownForFolder(process.env.USER, "/home/agent");
                     }
                     const confgStr = JSON.stringify(confg);
                     external_fs_.writeFileSync("/home/agent/block_event.json", confgStr);
@@ -71882,7 +71873,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         }
         const confgStr = JSON.stringify(confg);
         external_child_process_.execSync("sudo mkdir -p /home/agent");
-        external_child_process_.execSync("sudo chown -R $USER /home/agent");
+        chownForFolder(process.env.USER, "/home/agent");
         let isTLS = yield isTLSEnabled(github.context.repo.owner);
         const agentInstalled = yield installAgent(isTLS, confgStr);
         if (agentInstalled) {
@@ -71922,6 +71913,11 @@ function setup_sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
+}
+function chownForFolder(newOwner, target) {
+    let cmd = "sudo";
+    let args = ["chown", "-R", newOwner, target];
+    external_child_process_.execFileSync(cmd, args);
 }
 
 })();

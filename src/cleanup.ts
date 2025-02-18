@@ -2,8 +2,8 @@ import * as fs from "fs";
 import * as cp from "child_process";
 import * as common from "./common";
 import isDocker from "is-docker";
-import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
-
+import { isArcRunner } from "./arc-runner";
+import { isGithubHosted } from "./tls-inspect";
 (async () => {
   console.log("[harden-runner] post-step");
 
@@ -11,15 +11,13 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
     console.log(common.UBUNTU_MESSAGE);
     return;
   }
-  if (isDocker()) {
+  if (isGithubHosted() && isDocker()) {
     console.log(common.CONTAINER_MESSAGE);
     return;
   }
 
   if (isArcRunner()) {
     console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
-    arcCleanUp();
-    removeStepPolicyFiles();
     return;
   }
 
@@ -84,11 +82,16 @@ import { arcCleanUp, isArcRunner, removeStepPolicyFiles } from "./arc-runner";
 
   var disable_sudo = process.env.STATE_disableSudo;
   if (disable_sudo !== "true") {
-    var journalLog = cp.execSync("sudo journalctl -u agent.service", {
-      encoding: "utf8",
-    });
-    console.log("Service log:");
-    console.log(journalLog);
+    try {
+      var journalLog = cp.execSync("sudo journalctl -u agent.service --lines=1000", {
+        encoding: "utf8",
+        maxBuffer: 1024 * 1024 * 10 // 10MB buffer
+      });
+      console.log("agent.service log:");
+      console.log(journalLog);
+    } catch (error) {
+      console.log("Warning: Could not fetch service logs:", error.message);
+    }
   }
 
   try {

@@ -2838,7 +2838,7 @@ var lib_core = __nccwpck_require__(186);
 var external_fs_ = __nccwpck_require__(747);
 ;// CONCATENATED MODULE: ./src/configs.ts
 const STEPSECURITY_ENV = "agent"; // agent or int
-const STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
+const configs_STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
 const configs_STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
 
 ;// CONCATENATED MODULE: ./src/common.ts
@@ -3014,6 +3014,49 @@ function isDocker() {
 	return isDockerCached;
 }
 
+// EXTERNAL MODULE: ./node_modules/@actions/http-client/lib/index.js
+var lib = __nccwpck_require__(255);
+;// CONCATENATED MODULE: ./src/tls-inspect.ts
+var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+function isTLSEnabled(owner) {
+    return tls_inspect_awaiter(this, void 0, void 0, function* () {
+        let tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
+        let httpClient = new HttpClient();
+        httpClient.requestOptions = { socketTimeout: 3 * 1000 };
+        core.info(`[!] Checking TLS_STATUS: ${owner}`);
+        let isEnabled = false;
+        try {
+            let resp = yield httpClient.get(tlsStatusEndpoint);
+            if (resp.message.statusCode === 200) {
+                isEnabled = true;
+                core.info(`[!] TLS_ENABLED: ${owner}`);
+            }
+            else {
+                core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
+            }
+        }
+        catch (e) {
+            core.info(`[!] Unable to check TLS_STATUS`);
+        }
+        return isEnabled;
+    });
+}
+function isGithubHosted() {
+    const runnerEnvironment = process.env.RUNNER_ENVIRONMENT || "";
+    return runnerEnvironment === "github-hosted";
+}
+
 ;// CONCATENATED MODULE: ./src/index.ts
 var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -3028,13 +3071,14 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
 
 
 
+
 (() => src_awaiter(void 0, void 0, void 0, function* () {
     console.log("[harden-runner] main-step");
     if (process.platform !== "linux") {
         console.log(UBUNTU_MESSAGE);
         return;
     }
-    if (isDocker()) {
+    if (isGithubHosted() && isDocker()) {
         console.log(CONTAINER_MESSAGE);
         return;
     }
