@@ -2,7 +2,7 @@ import * as common from "./common";
 import * as core from "@actions/core";
 import isDocker from "is-docker";
 import { STEPSECURITY_WEB_URL } from "./configs";
-
+import { isGithubHosted } from "./tls-inspect";
 (async () => {
   console.log("[harden-runner] main-step");
 
@@ -10,7 +10,7 @@ import { STEPSECURITY_WEB_URL } from "./configs";
     console.log(common.UBUNTU_MESSAGE);
     return;
   }
-  if (isDocker()) {
+  if (isGithubHosted() && isDocker()) {
     console.log(common.CONTAINER_MESSAGE);
     return;
   }
@@ -20,6 +20,10 @@ import { STEPSECURITY_WEB_URL } from "./configs";
     common.STATUS_HARDEN_RUNNER_UNAVAILABLE
   ) {
     console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+    return;
+  }
+
+  if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
     return;
   }
 

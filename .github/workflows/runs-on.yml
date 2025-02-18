@@ -1,0 +1,176 @@
+name: RunsOn Tests
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  test-host-outbound:
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=2cpu-linux-x64
+      - image=ubuntu22-stepsecurity-x64
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@rc
+        with:
+          egress-policy: audit
+          allowed-endpoints: >
+            github.com:443
+            goreleaser.com:443
+            
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+            
+      - name: Run outbound calls from host
+        run: |
+          start_time=$(date +%s)
+          end_time=$((start_time + 90))  # 5 minutes = 300 seconds
+          
+          while [ $(date +%s) -lt $end_time ]; do
+            curl -I https://www.google.com
+            curl -I https://goreleaser.com
+            sleep 10  # wait 10 seconds between calls
+          done
+  
+  test-docker-outbound:
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=2cpu-linux-x64
+      - image=ubuntu22-stepsecurity-x64
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@rc
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            archive.ubuntu.com:80
+            github.com:443
+            goreleaser.com:443
+            production.cloudflare.docker.com:443
+            docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com:443
+            *.docker.io:443
+            security.ubuntu.com:80
+         
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run outbound calls from within Docker container
+        continue-on-error: true
+        run: |
+          # Start the container
+          docker run --rm -d --name test-container ubuntu:latest sleep 90
+          
+          # Install curl in the container
+          docker exec test-container apt-get update
+          docker exec test-container apt-get install -y curl
+          
+          # Print /etc/resolv.conf from the container
+          docker exec test-container cat /etc/resolv.conf
+          
+          # Make outbound calls
+          for i in {1..9}; do
+            docker exec test-container curl -I https://www.google.com
+            docker exec test-container curl -I https://goreleaser.com
+            sleep 10  # wait 10 seconds between calls
+          done
+          
+          # Stop the container
+          docker stop test-container
+
+      
+  test-docker-build-outbound:
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=2cpu-linux-x64
+      - image=ubuntu22-stepsecurity-x64
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@rc
+        with:
+          egress-policy: audit
+          allowed-endpoints: >
+            archive.ubuntu.com:80
+            auth.docker.io:443
+            github.com:443
+            goreleaser.com:443
+            production.cloudflare.docker.com:443
+            docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com:443
+            registry-1.docker.io:443
+            security.ubuntu.com:80
+            
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build Docker image and test outbound calls during build
+        continue-on-error: true
+        run: |
+          # Create a Dockerfile that installs curl and makes outbound calls
+          cat <<EOF > Dockerfile
+          FROM ubuntu:latest
+          RUN apt-get update && apt-get install -y curl
+          RUN for i in {1..9}; do curl -I https://www.google.com && curl -I https://goreleaser.com; sleep 10; done
+          EOF
+          
+          # Build the Docker image
+          docker build -t test-image .
+          
+          # Print /etc/resolv.conf from the build container (temporary container used during build)
+          container_id=$(docker create test-image)
+          docker start $container_id
+          docker exec $container_id cat /etc/resolv.conf
+          docker stop $container_id
+          docker rm $container_id
+
+      - name: Print Docker logs with journalctl
+        run: |
+            sudo journalctl -u docker.service --no-pager 
+        shell: bash
+      
+  test-long-running-docker:
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=2cpu-linux-x64
+      - image=ubuntu22-stepsecurity-x64
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@rc
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            archive.ubuntu.com:80
+            auth.docker.io:443
+            github.com:443
+            goreleaser.com:443
+            production.cloudflare.docker.com:443
+            registry-1.docker.io:443
+            docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com:443
+            security.ubuntu.com:80
+            
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run long-running Docker container with outbound calls
+        continue-on-error: true
+        run: |
+          # Start the long-running container
+          docker run --rm -d --name long-running-container ubuntu:latest bash -c "
+            apt-get update && apt-get install -y curl && 
+            while true; do 
+              curl -I https://www.google.com; 
+              curl -I https://goreleaser.com; 
+              sleep 10; 
+            done
+          "
+          
+          # Print /etc/resolv.conf from the container
+          docker exec long-running-container cat /etc/resolv.conf
+          
+          # Let the container run for 5 minutes
+          sleep 90
+          
+          # Stop the container
+          docker stop long-running-container
+     
+      

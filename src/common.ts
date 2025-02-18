@@ -180,4 +180,7 @@ export const HARDEN_RUNNER_UNAVAILABLE_MESSAGE =
   "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 
 export const ARC_RUNNER_MESSAGE =
-  "Workflow is currently being executed in ARC based runner";
+  "Workflow is currently being executed in ARC based runner.";
+
+export const ARM64_RUNNER_MESSAGE =
+  "ARM runners are not supported in the Harden-Runner community tier.";

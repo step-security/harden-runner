@@ -1,6 +1,6 @@
 import * as cp from "child_process";
 import * as fs from "fs";
-import { sleep } from "./setup";
+import path from "path";
 
 export function isArcRunner(): boolean {
   const runnerUserAgent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
@@ -21,25 +21,14 @@ function isSecondaryPod(): boolean {
   return fs.existsSync(workDir);
 }
 
-function getRunnerTempDir(): string {
-  const isTest = process.env["isTest"];
-
-  if (isTest === "1") {
-    return "/tmp";
-  }
-
-  return process.env["RUNNER_TEMP"] || "/tmp";
-}
-
 export function sendAllowedEndpoints(endpoints: string): void {
   const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
 
   for (const endpoint of allowedEndpoints) {
     if (endpoint) {
-      const encodedEndpoint = Buffer.from(endpoint).toString("base64");
-      cp.execSync(
-        `echo "${endpoint}" > "${getRunnerTempDir()}/step_policy_endpoint_${encodedEndpoint}"`
-      );
+      let encodedEndpoint = Buffer.from(endpoint).toString("base64");
+      let endpointPolicyStr = `step_policy_endpoint_${encodedEndpoint}`;
+      echo(endpointPolicyStr);
     }
   }
 
@@ -49,14 +38,10 @@ export function sendAllowedEndpoints(endpoints: string): void {
 }
 
 function applyPolicy(count: number): void {
-  const fileName = `step_policy_apply_${count}`;
-  cp.execSync(`echo "${fileName}" > "${getRunnerTempDir()}/${fileName}"`);
+  let applyPolicyStr = `step_policy_apply_${count}`;
+  echo(applyPolicyStr);
 }
 
-export function removeStepPolicyFiles() {
-  cp.execSync(`rm ${getRunnerTempDir()}/step_policy_*`);
-}
-
-export function arcCleanUp() {
-  cp.execSync(`echo "cleanup" > "${getRunnerTempDir()}/step_policy_cleanup"`);
+function echo(content: string) {
+  cp.execFileSync("echo", [content]);
 }
