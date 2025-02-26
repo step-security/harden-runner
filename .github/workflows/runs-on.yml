@@ -8,7 +8,7 @@ jobs:
     runs-on:
       - runs-on=${{ github.run_id }}
       - runner=2cpu-linux-x64
-      - image=ubuntu22-stepsecurity-x64
+      - image=ubuntu24-stepsecurity-x64
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@rc
@@ -37,7 +37,7 @@ jobs:
     runs-on:
       - runs-on=${{ github.run_id }}
       - runner=2cpu-linux-x64
-      - image=ubuntu22-stepsecurity-x64
+      - image=ubuntu24-stepsecurity-x64
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@rc
@@ -83,7 +83,7 @@ jobs:
     runs-on:
       - runs-on=${{ github.run_id }}
       - runner=2cpu-linux-x64
-      - image=ubuntu22-stepsecurity-x64
+      - image=ubuntu24-stepsecurity-x64
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@rc
@@ -131,7 +131,7 @@ jobs:
     runs-on:
       - runs-on=${{ github.run_id }}
       - runner=2cpu-linux-x64
-      - image=ubuntu22-stepsecurity-x64
+      - image=ubuntu24-stepsecurity-x64
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@rc
