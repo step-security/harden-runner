@@ -1,7 +1,7 @@
 <p align="center">
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="images/banner.png" width="400">
-  <img alt="Dark Banner" src="images/banner-dark.png" width="400">
+  <source media="(prefers-color-scheme: light)" srcset="images/harden-runner-new.png" width="400">
+  <img alt="Dark Banner" src="images/harden-runner-new.png" width="400">
 </picture>
 </p>
 
