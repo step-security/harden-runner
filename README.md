@@ -26,6 +26,7 @@ StepSecurity Harden-Runner addresses this gap by providing security monitoring t
 - [Why Choose Harden-Runner](#why-choose-harden-runner)
 - [Features and Capabilities](#features)
 - [Case Studies and Trusted Projects](#trusted-by-and-case-studies)
+- [Environment Compatibility Matrix](#environment-compatibility-matrix)
 - [How It Works](docs/how-it-works.md)
 - [Known Limitations](docs/limitations.md)
 - [Join the Discussions](#discussions)
@@ -145,6 +146,17 @@ Harden-Runner is trusted by over 5000 leading open-source projects and enterpris
 - [Arcjet Enhances CI/CD Security with Harden-Runner](https://www.stepsecurity.io/case-studies/arcjet)
 
 ---
+
+## Environment Compatibility Matrix
+
+| Environment Type | Compatibility | Audit Mode Deployment | Workflow Changes for Audit Mode | Examples |
+|------------------|---------------|--------------------------|-------------------|----------|
+| GitHub-hosted runners | ✅ Full support | Add Harden-Runner Action to workflow | Yes | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/github-hosted.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/123456) |
+| Self-hosted VM runners | ✅ Full support | Include agent in runner image | No | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/self-hosted-vm.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/789012) |
+| Self-hosted bare-metal runners | ✅ Full support | Install agent as a service | No | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/self-hosted-metal.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/345678) |
+| Actions Runner Controller (ARC) | ✅ Full support | Deploy as DaemonSet | No | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/arc.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/901234) |
+| RunsOn Runners | ✅ Full support | Pre-integrated | No | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/runson.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/567890) |
+| StepSecurity Managed Runners | 🔜 Coming soon | Will be pre-integrated | No | [Join Waitlist](https://stepsecurity.io/waitlist) |
 
 ## How It Works
 
