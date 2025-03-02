@@ -149,7 +149,7 @@ Harden-Runner is trusted by over 5000 leading open-source projects and enterpris
 
 ## Environment Compatibility Matrix
 
-Harden-Runner is designed to work seamlessly across a variety of runner environments, providing consistent security insights and protections regardless of where your workflows execute.
+Harden-Runner is designed to work seamlessly across a variety of runner environments, providing consistent security insights and protections regardless of where your workflows execute. For self-hosted runners, audit mode is deployed directly to the runner infrastructure without requiring any changes to your existing workflows.
 
 | Environment Type | Compatibility | Audit Mode Deployment | Workflow Changes for Audit Mode | Examples |
 |------------------|---------------|--------------------------|-------------------|----------|
