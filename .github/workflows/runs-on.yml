@@ -3,6 +3,9 @@ name: RunsOn Tests
 on: 
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   test-host-outbound:
     runs-on:
