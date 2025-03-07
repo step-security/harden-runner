@@ -158,7 +158,7 @@ Harden-Runner is designed to work seamlessly across a variety of runner environm
 | Self-hosted bare-metal runners | ✅ Full support | Install agent as a service | No | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/self-hosted-metal.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/345678) |
 | Actions Runner Controller (ARC) | ✅ Full support | Deploy as DaemonSet | No | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/arc.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/901234) |
 | RunsOn Runners | ✅ Full support | Pre-integrated | No | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/runson.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/567890) |
-| StepSecurity Managed Runners | 🔜 Coming soon | Will be pre-integrated | No | [Join Waitlist](https://stepsecurity.io/waitlist) |
+| StepSecurity Managed Runners | 🔜 Coming soon | Will be pre-integrated | No | [Join Waitlist](https://www.stepsecurity.io/join-waitlist) |
 
 ## How It Works
 
