@@ -30,6 +30,7 @@ StepSecurity Harden-Runner addresses this gap by providing security monitoring t
 - [How It Works](docs/how-it-works.md)
 - [Known Limitations](docs/limitations.md)
 - [Join the Discussions](#discussions)
+- [Official Documentation](https://docs.stepsecurity.io/harden-runner)
 
 ---
 
@@ -44,7 +45,7 @@ Learn how Harden-Runner works through the video below, which shows how it detect
 ---
 ## Getting Started
 
-This guide walks you through the steps to set up and use Harden-Runner in your CI/CD workflows.
+This guide walks you through the steps to set up and use Harden-Runner in your CI/CD workflows. For more details, refer to the [official documentation](https://docs.stepsecurity.io/harden-runner).
 
 ### **Step 1: Add Harden-Runner to Your Workflow**
 
@@ -149,7 +150,7 @@ Harden-Runner is trusted by over 5000 leading open-source projects and enterpris
 
 ## Environment Compatibility Matrix
 
-Harden-Runner is designed to work seamlessly across a variety of runner environments, providing consistent security insights and protections regardless of where your workflows execute. For self-hosted runners, audit mode is deployed directly to the runner infrastructure without requiring any changes to your existing workflows.
+Harden-Runner is designed to work seamlessly across a variety of runner environments, providing consistent security insights and protections regardless of where your workflows execute. For self-hosted runners, audit mode is deployed directly to the runner infrastructure without requiring any changes to your existing workflows. For more details, refer to the [official documentation](https://docs.stepsecurity.io/harden-runner).
 
 | Environment Type | Compatibility | Audit Mode Deployment | Workflow Changes for Audit Mode |
 |------------------|---------------|--------------------------|-------------------|
