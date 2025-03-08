@@ -58,7 +58,7 @@ To integrate Harden-Runner, follow these steps:
        with:
          egress-policy: audit
 
-**Tip**: Automate this step by pasting your workflow into the [StepSecurity online tool](https://app.stepsecurity.io/secureworkflow)
+**Tip**: Automate this step by pasting your workflow into the [StepSecurity online tool](https://app.stepsecurity.io/secure-workflow)
 <details>
 <summary>Click to view the full Getting Started Guide</summary>
 
@@ -151,14 +151,13 @@ Harden-Runner is trusted by over 5000 leading open-source projects and enterpris
 
 Harden-Runner is designed to work seamlessly across a variety of runner environments, providing consistent security insights and protections regardless of where your workflows execute. For self-hosted runners, audit mode is deployed directly to the runner infrastructure without requiring any changes to your existing workflows.
 
-| Environment Type | Compatibility | Audit Mode Deployment | Workflow Changes for Audit Mode | Examples |
-|------------------|---------------|--------------------------|-------------------|----------|
-| GitHub-hosted runners | ✅ Full support | Add Harden-Runner Action to workflow | Yes | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/github-hosted.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/123456) |
-| Self-hosted VM runners | ✅ Full support | Include agent in runner image | No | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/self-hosted-vm.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/789012) |
-| Self-hosted bare-metal runners | ✅ Full support | Install agent as a service | No | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/self-hosted-metal.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/345678) |
-| Actions Runner Controller (ARC) | ✅ Full support | Deploy as DaemonSet | No | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/arc.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/901234) |
-| RunsOn Runners | ✅ Full support | Pre-integrated | No | [Example Workflow](https://github.com/step-security/harden-runner/blob/main/examples/runson.yml) • [Insights](https://app.stepsecurity.io/github/example/repo/actions/runs/567890) |
-| StepSecurity Managed Runners | 🔜 Coming soon | Will be pre-integrated | No | [Join Waitlist](https://www.stepsecurity.io/join-waitlist) |
+| Environment Type | Compatibility | Audit Mode Deployment | Workflow Changes for Audit Mode |
+|------------------|---------------|--------------------------|-------------------|
+| GitHub-hosted runners | ✅ Full support | Add Harden-Runner Action to workflow | Yes |
+| Self-hosted VM runners | ✅ Full support | Include agent in runner image | No |
+| Self-hosted bare-metal runners | ✅ Full support | Install agent as a service | No |
+| Actions Runner Controller (ARC) | ✅ Full support | Deploy as DaemonSet | No |
+| RunsOn Runners | ✅ Full support | Pre-integrated | No |
 
 ## How It Works
 
