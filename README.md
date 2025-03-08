@@ -26,9 +26,11 @@ StepSecurity Harden-Runner addresses this gap by providing security monitoring t
 - [Why Choose Harden-Runner](#why-choose-harden-runner)
 - [Features and Capabilities](#features)
 - [Case Studies and Trusted Projects](#trusted-by-and-case-studies)
+- [Environment Compatibility Matrix](#environment-compatibility-matrix)
 - [How It Works](docs/how-it-works.md)
 - [Known Limitations](docs/limitations.md)
 - [Join the Discussions](#discussions)
+- [Official Documentation](https://docs.stepsecurity.io/harden-runner)
 
 ---
 
@@ -43,7 +45,7 @@ Learn how Harden-Runner works through the video below, which shows how it detect
 ---
 ## Getting Started
 
-This guide walks you through the steps to set up and use Harden-Runner in your CI/CD workflows.
+This guide walks you through the steps to set up and use Harden-Runner in your CI/CD workflows. For more details, refer to the [official documentation](https://docs.stepsecurity.io/harden-runner).
 
 ### **Step 1: Add Harden-Runner to Your Workflow**
 
@@ -57,7 +59,7 @@ To integrate Harden-Runner, follow these steps:
        with:
          egress-policy: audit
 
-**Tip**: Automate this step by pasting your workflow into the [StepSecurity online tool](https://app.stepsecurity.io/secureworkflow)
+**Tip**: Automate this step by pasting your workflow into the [StepSecurity online tool](https://app.stepsecurity.io/secure-workflow)
 <details>
 <summary>Click to view the full Getting Started Guide</summary>
 
@@ -145,6 +147,18 @@ Harden-Runner is trusted by over 5000 leading open-source projects and enterpris
 - [Arcjet Enhances CI/CD Security with Harden-Runner](https://www.stepsecurity.io/case-studies/arcjet)
 
 ---
+
+## Environment Compatibility Matrix
+
+Harden-Runner is designed to work seamlessly across a variety of runner environments, providing consistent security insights and protections regardless of where your workflows execute. For self-hosted runners, audit mode is deployed directly to the runner infrastructure without requiring any changes to your existing workflows. For more details, refer to the [official documentation](https://docs.stepsecurity.io/harden-runner).
+
+| Environment Type | Compatibility | Audit Mode Deployment | Workflow Changes for Audit Mode |
+|------------------|---------------|--------------------------|-------------------|
+| GitHub-hosted runners | ✅ Full support | Add Harden-Runner Action to workflow | Yes |
+| Self-hosted VM runners | ✅ Full support | Include agent in runner image | No |
+| Self-hosted bare-metal runners | ✅ Full support | Install agent as a service | No |
+| Actions Runner Controller (ARC) | ✅ Full support | Deploy as DaemonSet | No |
+| RunsOn Runners | ✅ Full support | Pre-integrated | No |
 
 ## How It Works
 

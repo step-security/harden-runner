@@ -9,6 +9,6 @@
 
 * Since ARC Harden Runner uses eBPF, only Linux jobs are supported. Windows and MacOS jobs are not supported.
 
-### Self-Hosted VM Runners (e.g. on EC2)
+### Self-Hosted VM (e.g. on EC2) and Bare-metal Runners 
 
-* Only Ubuntu VM is supported. Windows and MacOS jobs are not supported.
+* Only Linux jobs are supported. Windows and MacOS jobs are not supported.
