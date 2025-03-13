@@ -20,8 +20,9 @@ Corporate laptops and production servers typically have robust security monitori
 Traditional security monitoring and EDR solutions are ineffective for CI/CD runners due to their ephemeral nature. These tools also lack the necessary context to correlate events with specific workflow runs in a CI/CD environment.
 
 StepSecurity Harden-Runner addresses this gap by providing security monitoring tailored for CI/CD runners. This approach brings CI/CD runners under the same level of security scrutiny as other critical systems, addressing a significant gap in the software supply chain.
-
-Discover how others are securing their CI/CD pipelines with Harden-Runner: [Who's using Harden-Runner?](https://docs.stepsecurity.io/whos-using-harden-runner)
+## See It in Action
+Harden-Runner secures over **a million CI/CD workflow runs every week**, protecting thousands of pipelines, including those from popular open-source projects by **Microsoft, Google, and CISA**. See how top projects are using Harden-Runner and explore the insights:  
+➡️ [Who's using Harden-Runner?](https://docs.stepsecurity.io/whos-using-harden-runner)
 
 ## Quick Links
 - [Getting Started Guide](#getting-started)
