@@ -20,7 +20,15 @@ Corporate laptops and production servers typically have robust security monitori
 Traditional security monitoring and EDR solutions are ineffective for CI/CD runners due to their ephemeral nature. These tools also lack the necessary context to correlate events with specific workflow runs in a CI/CD environment.
 
 StepSecurity Harden-Runner addresses this gap by providing security monitoring tailored for CI/CD runners. This approach brings CI/CD runners under the same level of security scrutiny as other critical systems, addressing a significant gap in the software supply chain.
-## See It in Action
+### Harden-Runner: Security Incidents Detected
+
+- [Harden-Runner Detected the tj-actions/changed-files compromise](https://www.stepsecurity.io/blog/harden-runner-detection-tj-actions-changed-files-action-is-compromised) ([CVE-2025-30066](https://github.com/advisories/GHSA-mrrh-fwg8-r2c3))
+- [Harden-Runner Detected a CI/CD Supply Chain Attack in Google’s Open-Source Project Flank](https://www.stepsecurity.io/case-studies/flank)
+- [Harden-Runner Detected a CI/CD Supply Chain Attack in Microsoft’s Open-Source Project Azure Karpenter Provider in Real-Time](https://www.stepsecurity.io/case-studies/azure-karpenter-provider)
+- [Harden-Runner Detected Anomalous Traffic to api.ipify.org Across Multiple Customers](https://www.stepsecurity.io/blog/harden-runner-detects-anomalous-traffic-to-api-ipify-org-across-multiple-customers)  
+- [Harden-Runner Flagged an Anomalous Outbound Call, Leading to a Docker Documentation Update](https://www.stepsecurity.io/blog/harden-runner-flags-anomalous-outbound-call-leading-to-docker-documentation-update)  
+
+### See It in Action
 Harden-Runner secures over **a million CI/CD workflow runs every week**, protecting thousands of pipelines, including those from popular open-source projects by **Microsoft, Google, and CISA**. See how top projects are using Harden-Runner and explore the insights:  
 ➡️ [Who's using Harden-Runner?](https://docs.stepsecurity.io/whos-using-harden-runner)
 
@@ -39,10 +47,10 @@ Harden-Runner secures over **a million CI/CD workflow runs every week**, protect
 
 ## Introduction
 
-Learn how Harden-Runner works through the video below, which shows how it detected a supply chain attack on a **Google** open-source project.
+Learn how Harden-Runner works through the video below, which shows how it detected the tj-actions/changed-files compromise.  [View the interactive demo here](https://app.storylane.io/share/679y2zgzljov).
 
-<a href="https://youtu.be/Yz72qAOrN9s" target="_blank">
-  <img src="images/case-study-thumbnail1.png" alt="Harden-Runner detected supply chain attack in a Google open-source project" title="This case study video shows how StepSecurity Harden-Runner detected a CI/CD supply chain attack in real-time in Google’s open-source project Flank">
+<a href="https://www.youtube.com/watch?v=oTAJ7Hy7nPU" target="_blank">
+  <img src="images/case-study.png" alt="Harden-Runner detected the tj-actions/changed-files Breach" title="This case study video shows how StepSecurity Harden-Runner detected the tj-actions/changed-files Breach">
 </a>
 
 ---
@@ -134,13 +142,6 @@ Harden-Runner is trusted by over 5000 leading open-source projects and enterpris
 | [![CISA](https://avatars.githubusercontent.com/u/18539691?s=60&v=4)](https://app.stepsecurity.io/github/cisagov/skeleton-generic/actions/runs/9947319332?jobid=27479776091&tab=network-events) | [![Microsoft](https://avatars.githubusercontent.com/u/6154722?s=60&v=4)](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/7587031851) | [![Google](https://avatars.githubusercontent.com/u/2810941?s=60&v=4)](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/7576989995) | [![DataDog](https://avatars.githubusercontent.com/u/365230?s=60&v=4)](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/7446169664) | [![Intel](https://avatars.githubusercontent.com/u/17888862?s=60&v=4)](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/7590975903) | [![Kubernetes](https://avatars.githubusercontent.com/u/36015203?s=60&v=4)](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/7591172950) | [![Node.js](https://avatars.githubusercontent.com/u/9950313?s=60&v=4)](https://app.stepsecurity.io/github/nodejs/node/actions/runs/7591405720) | [![AWS](https://avatars.githubusercontent.com/u/2232217?s=60&v=4)](https://app.stepsecurity.io/github/aws/aperf/actions/runs/7631366761) |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | **CISA**<br>[Explore](https://app.stepsecurity.io/github/cisagov/skeleton-generic/actions/runs/9947319332?jobid=27479776091&tab=network-events)                                                | **Microsoft**<br>[Explore](https://app.stepsecurity.io/github/microsoft/ebpf-for-windows/actions/runs/7587031851)                                               | **Google**<br>[Explore](https://app.stepsecurity.io/github/GoogleCloudPlatform/functions-framework-ruby/actions/runs/7576989995)                                               | **DataDog**<br>[Explore](https://app.stepsecurity.io/github/DataDog/stratus-red-team/actions/runs/7446169664)                                              | **Intel**<br>[Explore](https://app.stepsecurity.io/github/intel/cve-bin-tool/actions/runs/7590975903)                                                | **Kubernetes**<br>[Explore](https://app.stepsecurity.io/github/kubernetes-sigs/cluster-api-provider-azure/actions/runs/7591172950)                                                | **Node.js**<br>[Explore](https://app.stepsecurity.io/github/nodejs/node/actions/runs/7591405720)                                               | **AWS**<br>[Explore](https://app.stepsecurity.io/github/aws/aperf/actions/runs/7631366761)                                               |
-
-### Harden-Runner: Incident Detections
-
-- [Harden-Runner Detects CI/CD Supply Chain Attack in Google’s Open-Source Project Flank](https://www.stepsecurity.io/case-studies/flank)
-- [Harden-Runner Detects CI/CD Supply Chain Attack in Microsoft’s Open-Source Project Azure Karpenter Provider in Real-Time](https://www.stepsecurity.io/case-studies/azure-karpenter-provider)
-- [Harden-Runner Detects Anomalous Traffic to api.ipify.org Across Multiple Customers](https://www.stepsecurity.io/blog/harden-runner-detects-anomalous-traffic-to-api-ipify-org-across-multiple-customers)  
-- [Harden-Runner Flags Anomalous Outbound Call, Leading to Docker Documentation Update](https://www.stepsecurity.io/blog/harden-runner-flags-anomalous-outbound-call-leading-to-docker-documentation-update)  
 
 ### Enterprise Case Studies
 
