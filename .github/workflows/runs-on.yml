@@ -14,7 +14,7 @@ jobs:
       - image=ubuntu24-stepsecurity-x64
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@rc
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # rc
         with:
           egress-policy: audit
           allowed-endpoints: >
@@ -23,7 +23,7 @@ jobs:
             
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
             
       - name: Run outbound calls from host
         run: |
@@ -43,7 +43,7 @@ jobs:
       - image=ubuntu24-stepsecurity-x64
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@rc
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # rc
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -56,7 +56,7 @@ jobs:
             security.ubuntu.com:80
          
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
 
       - name: Run outbound calls from within Docker container
         continue-on-error: true
@@ -89,7 +89,7 @@ jobs:
       - image=ubuntu24-stepsecurity-x64
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@rc
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # rc
         with:
           egress-policy: audit
           allowed-endpoints: >
@@ -103,7 +103,7 @@ jobs:
             security.ubuntu.com:80
             
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
 
       - name: Build Docker image and test outbound calls during build
         continue-on-error: true
@@ -137,7 +137,7 @@ jobs:
       - image=ubuntu24-stepsecurity-x64
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@rc
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # rc
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -152,7 +152,7 @@ jobs:
             
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
 
       - name: Run long-running Docker container with outbound calls
         continue-on-error: true
