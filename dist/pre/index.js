@@ -88197,16 +88197,16 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                             version: cacheUtils.getCacheVersion([cacheFilePath], compressionMethod, false),
                         };
                         const response = yield twirpClient.GetCacheEntryDownloadURL(request);
-                        if (!response.ok) {
-                            lib_core.debug(`Cache not found for version ${request.version} of keys: ${cacheKey}`);
-                            return undefined;
-                        }
                         const url = new URL(response.signedDownloadUrl);
                         lib_core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
                         confg.allowed_endpoints += ` ${url.hostname}:443`;
                     }
                     catch (e) {
-                        lib_core.error(`v2 failed: ${e}`);
+                        lib_core.info(`Unable to fetch cacheURL ${e}`);
+                        if (confg.egress_policy === "block") {
+                            lib_core.info("Switching egress-policy to audit mode");
+                            confg.egress_policy = "audit";
+                        }
                     }
                     break;
                 case "v1":

@@ -145,13 +145,6 @@ interface MonitorResponse {
               request
             );
 
-            if (!response.ok) {
-              core.debug(
-                `Cache not found for version ${request.version} of keys: ${cacheKey}`
-              );
-              return undefined;
-            }
-
             const url = new URL(response.signedDownloadUrl);
             core.info(
               `Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`
@@ -159,7 +152,11 @@ interface MonitorResponse {
 
             confg.allowed_endpoints += ` ${url.hostname}:443`;
           } catch (e) {
-            core.error(`v2 failed: ${e}`);
+            core.info(`Unable to fetch cacheURL ${e}`);
+            if (confg.egress_policy === "block") {
+              core.info("Switching egress-policy to audit mode");
+              confg.egress_policy = "audit";
+            }
           }
           break;
 
