@@ -19,6 +19,10 @@ import { Configuration, PolicyResponse } from "./interfaces";
 import { fetchPolicy, mergeConfigs } from "./policy-utils";
 import * as cache from "@actions/cache";
 import { getCacheEntry } from "@actions/cache/lib/internal/cacheHttpClient";
+import * as cacheTwirpClient from "@actions/cache/lib/internal/shared/cacheTwirpClient";
+import { GetCacheEntryDownloadURLRequest } from "@actions/cache/lib/generated/results/api/v1/cache";
+import { getCacheServiceVersion } from "@actions/cache/lib/internal/config";
+
 import * as utils from "@actions/cache/lib/internal/cacheUtils";
 import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
 import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
@@ -114,28 +118,78 @@ interface MonitorResponse {
       } catch (exception) {
         console.log(exception);
       }
-      try {
-        const compressionMethod: CompressionMethod =
-          await utils.getCompressionMethod();
-        const cacheFilePath = path.join(__dirname, "cache.txt");
-        core.info(`cacheFilePath ${cacheFilePath}`);
-        const cacheEntry: ArtifactCacheEntry = await getCacheEntry(
-          [cacheKey],
-          [cacheFilePath],
-          {
-            compressionMethod: compressionMethod,
+
+      const cacheServiceVersion: string = getCacheServiceVersion();
+
+      switch (cacheServiceVersion) {
+        case "v2":
+          core.info(`cache version: v2`);
+          try {
+            const cacheFilePath = path.join(__dirname, "cache.txt");
+            core.info(`cacheFilePath ${cacheFilePath}`);
+
+            const twirpClient = cacheTwirpClient.internalCacheTwirpClient();
+            const compressionMethod = await utils.getCompressionMethod();
+
+            const request: GetCacheEntryDownloadURLRequest = {
+              key: cacheKey,
+              restoreKeys: [],
+              version: utils.getCacheVersion(
+                [cacheFilePath],
+                compressionMethod,
+                false
+              ),
+            };
+
+            const response = await twirpClient.GetCacheEntryDownloadURL(
+              request
+            );
+
+            const url = new URL(response.signedDownloadUrl);
+            core.info(
+              `Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`
+            );
+
+            confg.allowed_endpoints += ` ${url.hostname}:443`;
+          } catch (e) {
+            core.info(`Unable to fetch cacheURL ${e}`);
+            if (confg.egress_policy === "block") {
+              core.info("Switching egress-policy to audit mode");
+              confg.egress_policy = "audit";
+            }
           }
-        );
-        const url = new URL(cacheEntry.archiveLocation);
-        core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
-        confg.allowed_endpoints += ` ${url.hostname}:443`;
-      } catch (exception) {
-        // some exception has occurred.
-        core.info(`Unable to fetch cacheURL`);
-        if (confg.egress_policy === "block") {
-          core.info("Switching egress-policy to audit mode");
-          confg.egress_policy = "audit";
-        }
+          break;
+
+        case "v1":
+          core.info(`cache version: v1`);
+
+          try {
+            const compressionMethod: CompressionMethod =
+              await utils.getCompressionMethod();
+            const cacheFilePath = path.join(__dirname, "cache.txt");
+            core.info(`cacheFilePath ${cacheFilePath}`);
+
+            const cacheEntry: ArtifactCacheEntry = await getCacheEntry(
+              [cacheKey],
+              [cacheFilePath],
+              {
+                compressionMethod: compressionMethod,
+              }
+            );
+            const url = new URL(cacheEntry.archiveLocation);
+            core.info(
+              `Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`
+            );
+
+            confg.allowed_endpoints += ` ${url.hostname}:443`;
+          } catch (exception) {
+            // some exception has occurred.
+            core.info(`Unable to fetch cacheURL ${exception}`);
+            if (confg.egress_policy === "block") {
+              core.info("Switching egress-policy to audit mode");
+              confg.egress_policy = "audit";
+            }
+          }
       }
     }
 
