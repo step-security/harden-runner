@@ -208,7 +208,7 @@ interface MonitorResponse {
 
     const runnerName = process.env.RUNNER_NAME || "";
     core.info(`RUNNER_NAME: ${runnerName}`);
-    if (!isGithubHosted()) {
+    /*if (!isGithubHosted()) {
       fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
         encoding: "utf8",
       });
@@ -230,7 +230,7 @@ interface MonitorResponse {
         }
       }
       return;
-    }
+    }*/
 
     let _http = new httpm.HttpClient();
     let statusCode;
