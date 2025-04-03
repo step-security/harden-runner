@@ -64,7 +64,7 @@ interface MonitorResponse {
       disable_sudo: core.getBooleanInput("disable-sudo"),
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
       private: context?.payload?.repository?.private || false,
-      is_github_hosted: isGithubHosted(),
+      is_github_hosted: true,
       is_debug: core.isDebug(),
       one_time_key: "",
     };
