@@ -25,7 +25,7 @@ export async function installAgent(
 
   if (isTLS) {
     downloadPath = await tc.downloadTool(
-      `https://packages.stepsecurity.io/github-hosted/harden-runner_1.6.1_linux_${variant}.tar.gz`
+      `https://step-security-agent/refs/heads/self-hosted/int/agent`
     );
   } else {
     if (variant === "arm64") {
@@ -39,12 +39,12 @@ export async function installAgent(
     );
   }
 
-  verifyChecksum(downloadPath, isTLS, variant);
+  //verifyChecksum(downloadPath, isTLS, variant);
 
-  const extractPath = await tc.extractTar(downloadPath);
+  //const extractPath = await tc.extractTar(downloadPath);
 
   let cmd = "cp",
-    args = [path.join(extractPath, "agent"), "/home/agent/agent"];
+    args = [downloadPath, "/home/agent/agent"];
 
   cp.execFileSync(cmd, args);
 

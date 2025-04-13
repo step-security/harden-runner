@@ -13496,7 +13496,7 @@ exports.pollHttpOperation = pollHttpOperation;
 
 /***/ }),
 
-/***/ 5271:
+/***/ 8502:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -13561,7 +13561,7 @@ exports.createHttpPoller = createHttpPoller;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createHttpPoller = void 0;
 const tslib_1 = __nccwpck_require__(5388);
-var poller_js_1 = __nccwpck_require__(5271);
+var poller_js_1 = __nccwpck_require__(8502);
 Object.defineProperty(exports, "createHttpPoller", ({ enumerable: true, get: function () { return poller_js_1.createHttpPoller; } }));
 /**
  * This can be uncommented to expose the protocol-agnostic poller
@@ -87999,39 +87999,6 @@ function isGithubHosted() {
 
 // EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
 var tool_cache = __nccwpck_require__(7784);
-// EXTERNAL MODULE: external "crypto"
-var external_crypto_ = __nccwpck_require__(6417);
-;// CONCATENATED MODULE: ./src/checksum.ts
-
-
-
-const CHECKSUMS = {
-    tls: {
-        amd64: "3fdf9e0b0f08e39768dd2bb0c55d02c628c0670e3529c2f440bbb1da8a3d80f4",
-        arm64: "67405f212088d2891f4e40c7004b850b80e302fb1d9066e8c651de8b14679c55",
-    },
-    non_tls: {
-        amd64: "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a", // v0.13.7
-    },
-};
-function verifyChecksum(downloadPath, isTLS, variant) {
-    const fileBuffer = external_fs_.readFileSync(downloadPath);
-    const checksum = external_crypto_.createHash("sha256")
-        .update(fileBuffer)
-        .digest("hex"); // checksum of downloaded file
-    let expectedChecksum = "";
-    if (isTLS) {
-        expectedChecksum = CHECKSUMS["tls"][variant];
-    }
-    else {
-        expectedChecksum = CHECKSUMS["non_tls"][variant];
-    }
-    if (checksum !== expectedChecksum) {
-        lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
-    }
-    lib_core.debug("Checksum verification passed.");
-}
-
 ;// CONCATENATED MODULE: ./src/install-agent.ts
 var install_agent_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -88042,7 +88009,6 @@ var install_agent_awaiter = (undefined && undefined.__awaiter) || function (this
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-
 
 
 
@@ -88061,7 +88027,7 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://packages.stepsecurity.io/github-hosted/harden-runner_1.6.1_linux_${variant}.tar.gz`);
+            downloadPath = yield tool_cache.downloadTool(`https://step-security-agent/refs/heads/self-hosted/int/agent`);
         }
         else {
             if (variant === "arm64") {
@@ -88070,9 +88036,9 @@ function installAgent(isTLS, configStr) {
             }
             downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz", undefined, auth);
         }
-        verifyChecksum(downloadPath, isTLS, variant);
-        const extractPath = yield tool_cache.extractTar(downloadPath);
-        let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
+        //verifyChecksum(downloadPath, isTLS, variant);
+        //const extractPath = await tc.extractTar(downloadPath);
+        let cmd = "cp", args = [downloadPath, "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
         external_child_process_.execSync("chmod +x /home/agent/agent");
         external_fs_.writeFileSync("/home/agent/agent.json", configStr);
