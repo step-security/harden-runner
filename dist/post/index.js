@@ -27947,21 +27947,8 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         console.log(content);
     }
     var disable_sudo = process.env.STATE_disableSudo;
-    if (disable_sudo !== "true") {
-        try {
-            var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service --lines=1000", {
-                encoding: "utf8",
-                maxBuffer: 1024 * 1024 * 10 // 10MB buffer
-            });
-            console.log("agent.service log:");
-            console.log(journalLog);
-        }
-        catch (error) {
-            console.log("Warning: Could not fetch service logs:", error.message);
-        }
-    }
     var disable_sudo_and_containers = process.env.disableSudoAndContainers;
-    if (disable_sudo_and_containers !== "true") {
+    if (disable_sudo !== "true" && disable_sudo_and_containers !== "true") {
         try {
             var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service --lines=1000", {
                 encoding: "utf8",
