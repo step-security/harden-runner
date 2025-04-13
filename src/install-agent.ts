@@ -25,7 +25,7 @@ export async function installAgent(
 
   if (isTLS) {
     downloadPath = await tc.downloadTool(
-      `https://step-security-agent/refs/heads/self-hosted/int/agent`
+      `https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/self-hosted/int/agent`
     );
   } else {
     if (variant === "arm64") {

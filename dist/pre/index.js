@@ -88027,7 +88027,7 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://step-security-agent/refs/heads/self-hosted/int/agent`);
+            downloadPath = yield tool_cache.downloadTool(`https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/self-hosted/int/agent`);
         }
         else {
             if (variant === "arm64") {
