@@ -87890,6 +87890,9 @@ function mergeConfigs(localConfig, remoteConfig) {
     if (remoteConfig.disable_sudo !== undefined) {
         localConfig.disable_sudo = remoteConfig.disable_sudo;
     }
+    if (remoteConfig.disable_sudo_and_containers !== undefined) {
+        localConfig.disable_sudo_and_containers = remoteConfig.disable_sudo_and_containers;
+    }
     if (remoteConfig.disable_file_monitoring !== undefined) {
         localConfig.disable_file_monitoring = remoteConfig.disable_file_monitoring;
     }
@@ -88142,6 +88145,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             egress_policy: lib_core.getInput("egress-policy"),
             disable_telemetry: lib_core.getBooleanInput("disable-telemetry"),
             disable_sudo: lib_core.getBooleanInput("disable-sudo"),
+            disable_sudo_and_containers: lib_core.getBooleanInput("disable-sudo-and-containers"),
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
             private: ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.private) || false,
             is_github_hosted: isGithubHosted(),
@@ -88162,6 +88166,9 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             }
         }
         external_fs_.appendFileSync(process.env.GITHUB_STATE, `disableSudo=${confg.disable_sudo}${external_os_.EOL}`, {
+            encoding: "utf8",
+        });
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `disableSudoAndContainers=${confg.disable_sudo_and_containers}${external_os_.EOL}`, {
             encoding: "utf8",
         });
         lib_core.info(`[!] Current Configuration: \n${JSON.stringify(confg)}\n`);
