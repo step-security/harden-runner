@@ -56,6 +56,10 @@ export function mergeConfigs(
     localConfig.disable_sudo = remoteConfig.disable_sudo;
   }
 
+  if (remoteConfig.disable_sudo_and_containers !== undefined) {
+    localConfig.disable_sudo_and_containers = remoteConfig.disable_sudo_and_containers;
+  }
+
   if (remoteConfig.disable_file_monitoring !== undefined) {
     localConfig.disable_file_monitoring = remoteConfig.disable_file_monitoring;
   }
