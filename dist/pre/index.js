@@ -88015,7 +88015,6 @@ var install_agent_awaiter = (undefined && undefined.__awaiter) || function (this
 
 
 
-
 function installAgent(isTLS, configStr) {
     return install_agent_awaiter(this, void 0, void 0, function* () {
         // Note: to avoid github rate limiting
@@ -88026,16 +88025,7 @@ function installAgent(isTLS, configStr) {
         external_fs_.appendFileSync(process.env.GITHUB_STATE, `isTLS=${isTLS}${external_os_.EOL}`, {
             encoding: "utf8",
         });
-        if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/self-hosted/int/agent`);
-        }
-        else {
-            if (variant === "arm64") {
-                console.log(ARM64_RUNNER_MESSAGE);
-                return false;
-            }
-            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz", undefined, auth);
-        }
+        downloadPath = yield tool_cache.downloadTool(`https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/int/agent`);
         //verifyChecksum(downloadPath, isTLS, variant);
         //const extractPath = await tc.extractTar(downloadPath);
         let cmd = "cp", args = [downloadPath, "/home/agent/agent"];

@@ -23,21 +23,11 @@ export async function installAgent(
     encoding: "utf8",
   });
 
-  if (isTLS) {
-    downloadPath = await tc.downloadTool(
-      `https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/self-hosted/int/agent`
-    );
-  } else {
-    if (variant === "arm64") {
-      console.log(ARM64_RUNNER_MESSAGE);
-      return false;
-    }
-    downloadPath = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz",
-      undefined,
-      auth
-    );
-  }
+  
+  downloadPath = await tc.downloadTool(
+    `https://step-security-agent.s3.us-west-2.amazonaws.com/refs/heads/int/agent`
+  );
+
 
   //verifyChecksum(downloadPath, isTLS, variant);
 
