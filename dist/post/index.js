@@ -27948,6 +27948,8 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
     }
     var disable_sudo = process.env.STATE_disableSudo;
     var disable_sudo_and_containers = process.env.disableSudoAndContainers;
+    console.log('disable_sudo:', disable_sudo);
+    console.log('disable_sudo_and_containers:', disable_sudo_and_containers);
     if (disable_sudo !== "true" && disable_sudo_and_containers !== "true") {
         try {
             var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service --lines=1000", {

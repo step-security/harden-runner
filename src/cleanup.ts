@@ -83,6 +83,9 @@ import { isGithubHosted } from "./tls-inspect";
   var disable_sudo = process.env.STATE_disableSudo;
   var disable_sudo_and_containers = process.env.disableSudoAndContainers;
   
+  console.log('disable_sudo:', disable_sudo);
+  console.log('disable_sudo_and_containers:', disable_sudo_and_containers);
+  
   if (disable_sudo !== "true" && disable_sudo_and_containers !== "true") {
     try {
       var journalLog = cp.execSync("sudo journalctl -u agent.service --lines=1000", {
