@@ -81,7 +81,7 @@ import { isGithubHosted } from "./tls-inspect";
   }
 
   var disable_sudo = process.env.STATE_disableSudo;
-  var disable_sudo_and_containers = process.env.disableSudoAndContainers;
+  var disable_sudo_and_containers = process.env.STATE_disableSudoAndContainers;
   
   console.log('disable_sudo:', disable_sudo);
   console.log('disable_sudo_and_containers:', disable_sudo_and_containers);
