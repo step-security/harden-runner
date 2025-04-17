@@ -18,7 +18,7 @@ jobs:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - name: Canary test
-      uses: docker://ghcr.io/step-security/integration-test/int:latest
+      uses: docker://ghcr.io/step-security/integration-test/int:latest@sha256:e21fc4db56cb2953202c27ce8056cfb550322fde4f1dd4711c96e7ab2ff7f170
       env:
         PAT: ${{ secrets.PAT }}
         canary: true
@@ -33,7 +33,7 @@ jobs:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - name: Canary test
-      uses: docker://ghcr.io/step-security/integration-test/int:latest
+      uses: docker://ghcr.io/step-security/integration-test/int:latest@sha256:e21fc4db56cb2953202c27ce8056cfb550322fde4f1dd4711c96e7ab2ff7f170
       env:
         PAT: ${{ secrets.PAT }}
         canary-tls: true
