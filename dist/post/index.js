@@ -27947,7 +27947,8 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         console.log(content);
     }
     var disable_sudo = process.env.STATE_disableSudo;
-    if (disable_sudo !== "true") {
+    var disable_sudo_and_containers = process.env.STATE_disableSudoAndContainers;
+    if (disable_sudo !== "true" && disable_sudo_and_containers !== "true") {
         try {
             var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service --lines=1000", {
                 encoding: "utf8",

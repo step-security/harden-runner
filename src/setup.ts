@@ -62,6 +62,7 @@ interface MonitorResponse {
       egress_policy: core.getInput("egress-policy"),
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
       disable_sudo: core.getBooleanInput("disable-sudo"),
+      disable_sudo_and_containers: core.getBooleanInput("disable-sudo-and-containers"),
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
       private: context?.payload?.repository?.private || false,
       is_github_hosted: isGithubHosted(),
@@ -88,6 +89,13 @@ interface MonitorResponse {
     fs.appendFileSync(
       process.env.GITHUB_STATE,
       `disableSudo=${confg.disable_sudo}${EOL}`,
+      {
+        encoding: "utf8",
+      }
+    );
+    fs.appendFileSync(
+      process.env.GITHUB_STATE,
+      `disableSudoAndContainers=${confg.disable_sudo_and_containers}${EOL}`,
       {
         encoding: "utf8",
       }
