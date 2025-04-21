@@ -17,7 +17,7 @@ inputs:
     required: false
     default: "false"
   disable-sudo:
-    description: "Disable sudo access for the runner account. Note: This parameter is deprecated. Please use disable-sudo-and-containers for enhanced security."
+    description: "Disable sudo access for the runner account. Note: This parameter will be deprecated in the future. Please use disable-sudo-and-containers instead."
     required: false
     default: "false"
   disable-sudo-and-containers:
