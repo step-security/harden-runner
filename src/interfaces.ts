@@ -8,6 +8,7 @@ export interface Configuration {
   egress_policy: string;
   disable_telemetry: boolean;
   disable_sudo: boolean;
+  disable_sudo_and_containers: boolean;
   disable_file_monitoring: boolean;
   is_github_hosted: boolean;
   private: string;
@@ -20,6 +21,7 @@ export interface PolicyResponse {
   policyName?: string;
   allowed_endpoints?: string[];
   disable_sudo?: boolean;
+  disable_sudo_and_containers?: boolean;
   disable_file_monitoring?: boolean;
   disable_telemetry?: boolean;
   egress_policy?: string;

@@ -87890,6 +87890,9 @@ function mergeConfigs(localConfig, remoteConfig) {
     if (remoteConfig.disable_sudo !== undefined) {
         localConfig.disable_sudo = remoteConfig.disable_sudo;
     }
+    if (remoteConfig.disable_sudo_and_containers !== undefined) {
+        localConfig.disable_sudo_and_containers = remoteConfig.disable_sudo_and_containers;
+    }
     if (remoteConfig.disable_file_monitoring !== undefined) {
         localConfig.disable_file_monitoring = remoteConfig.disable_file_monitoring;
     }
@@ -88004,11 +88007,11 @@ var external_crypto_ = __nccwpck_require__(6417);
 
 const CHECKSUMS = {
     tls: {
-        amd64: "38e7ed97ced6fe0c1cf0fb5ee3b3d521dfe28d5ddf1cdca72d130c8d1b4a314e",
-        arm64: "f67c80cc578c996d4f882c14fcdb63df57927d907cd22f1ec65f9fa940c08cf3",
+        amd64: "e7c0c5f96efbf96806d27dcbf65f71f72ecd34cdd596c556bb2ded0f2037c260",
+        arm64: "813a4cd40f6740bd9623a40884a78f14960c6bd3794391693a165f2ca71c90e3",
     },
     non_tls: {
-        amd64: "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a", // v0.13.7
+        amd64: "f0a8bb49ce5480744f8c836af2abd5f311e918efef5b36b4cce7521d7b9dffe6", // v0.14.0
     },
 };
 function verifyChecksum(downloadPath, isTLS, variant) {
@@ -88058,14 +88061,14 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://packages.stepsecurity.io/github-hosted/harden-runner_1.4.2_linux_${variant}.tar.gz`);
+            downloadPath = yield tool_cache.downloadTool(`https://packages.stepsecurity.io/github-hosted/harden-runner_1.6.3_linux_${variant}.tar.gz`);
         }
         else {
             if (variant === "arm64") {
                 console.log(ARM64_RUNNER_MESSAGE);
                 return false;
             }
-            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.13.7/agent_0.13.7_linux_amd64.tar.gz", undefined, auth);
+            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.14.0/agent_0.14.0_linux_amd64.tar.gz", undefined, auth);
         }
         verifyChecksum(downloadPath, isTLS, variant);
         const extractPath = yield tool_cache.extractTar(downloadPath);
@@ -88142,6 +88145,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             egress_policy: lib_core.getInput("egress-policy"),
             disable_telemetry: lib_core.getBooleanInput("disable-telemetry"),
             disable_sudo: lib_core.getBooleanInput("disable-sudo"),
+            disable_sudo_and_containers: lib_core.getBooleanInput("disable-sudo-and-containers"),
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
             private: ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.private) || false,
             is_github_hosted: isGithubHosted(),
@@ -88162,6 +88166,9 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             }
         }
         external_fs_.appendFileSync(process.env.GITHUB_STATE, `disableSudo=${confg.disable_sudo}${external_os_.EOL}`, {
+            encoding: "utf8",
+        });
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `disableSudoAndContainers=${confg.disable_sudo_and_containers}${external_os_.EOL}`, {
             encoding: "utf8",
         });
         lib_core.info(`[!] Current Configuration: \n${JSON.stringify(confg)}\n`);
