@@ -135,7 +135,7 @@ Explore the full feature set in the [Features Documentation](https://docs.stepse
 
 ## Trusted By and Case Studies
 
-Harden-Runner is trusted by over 5000 leading open-source projects and enterprises, including Microsoft, Google, Kubernetes, and more.
+Harden-Runner is trusted by over 6000 leading open-source projects and enterprises, including Microsoft, Google, Kubernetes, and more.
 
 ### Trusted by
 
@@ -148,6 +148,7 @@ Harden-Runner is trusted by over 5000 leading open-source projects and enterpris
 
 - [How Coveo Strengthened GitHub Actions Security with StepSecurity](https://www.stepsecurity.io/case-studies/coveo)
 - [Hashgraph Achieves Comprehensive CI/CD Security Without Compromising Development Speed](https://www.stepsecurity.io/case-studies/hashgraph)
+- [Chainguard Secures GitHub Actions with StepSecurity](https://www.stepsecurity.io/case-studies/chainguard)
 - [Kapiche secures their GitHub Actions software supply chain with Harden-Runner](https://www.stepsecurity.io/case-studies/kapiche)
 - [Arcjet Enhances CI/CD Security with Harden-Runner](https://www.stepsecurity.io/case-studies/arcjet)
 
