@@ -88011,7 +88011,7 @@ const CHECKSUMS = {
         arm64: "f39dba7e3275081e2c6bc22baa7fc2bf28cc967bfc333df56792a5c70c74ae5d",
     },
     non_tls: {
-        amd64: "f0a8bb49ce5480744f8c836af2abd5f311e918efef5b36b4cce7521d7b9dffe6", // v0.14.0
+        amd64: "15f639d0e58cf687e28a26fb48fc1e17fab81baceaa7d2d50ca8c465d98d13cd", // v0.14.1
     },
 };
 function verifyChecksum(downloadPath, isTLS, variant) {
@@ -88068,7 +88068,7 @@ function installAgent(isTLS, configStr) {
                 console.log(ARM64_RUNNER_MESSAGE);
                 return false;
             }
-            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.14.0/agent_0.14.0_linux_amd64.tar.gz", undefined, auth);
+            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.14.1/agent_0.14.1_linux_amd64.tar.gz", undefined, auth);
         }
         verifyChecksum(downloadPath, isTLS, variant);
         const extractPath = yield tool_cache.extractTar(downloadPath);
