@@ -13,7 +13,7 @@ export function isArcRunner(): boolean {
     isARC = runnerUserAgent.includes("actions-runner-controller/");
   }
 
-  return isARC || isSecondaryPod();
+  return isARC;
 }
 
 function isSecondaryPod(): boolean {

@@ -27801,11 +27801,11 @@ function isArcRunner() {
     else {
         isARC = runnerUserAgent.includes("actions-runner-controller/");
     }
-    return isARC || isSecondaryPod();
+    return isARC;
 }
 function isSecondaryPod() {
     const workDir = "/__w";
-    return external_fs_.existsSync(workDir);
+    return fs.existsSync(workDir);
 }
 function sendAllowedEndpoints(endpoints) {
     const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
