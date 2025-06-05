@@ -87779,7 +87779,7 @@ function addSummary() {
 const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
-const SELF_HOSTED_NO_AGENT_MESSAGE = "This job is running on a self-hosted runner, but the runner does not have Harden-Runner installed. This job will not be monitored.";
+const SELF_HOSTED_RUNNER_MESSAGE = "This job is running on a self-hosted runner.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner.";
 const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner community tier.";
@@ -87920,7 +87920,7 @@ var cacheUtils = __nccwpck_require__(1518);
 ;// CONCATENATED MODULE: ./src/arc-runner.ts
 
 
-function isArcRunner() {
+function isARCRunner() {
     const runnerUserAgent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
     let isARC = false;
     if (!runnerUserAgent) {
@@ -87933,20 +87933,27 @@ function isArcRunner() {
 }
 function isSecondaryPod() {
     const workDir = "/__w";
-    return external_fs_.existsSync(workDir);
+    let hasKubeEnv = process.env["KUBERNETES_PORT"] !== undefined;
+    return external_fs_.existsSync(workDir) && hasKubeEnv;
 }
 function sendAllowedEndpoints(endpoints) {
+    const startTime = Date.now();
     const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
-    for (const endpoint of allowedEndpoints) {
-        if (endpoint) {
+    let sent = 0;
+    for (let endpoint of allowedEndpoints) {
+        endpoint = endpoint.trim();
+        if (endpoint.length > 0) {
             let encodedEndpoint = Buffer.from(endpoint).toString("base64");
             let endpointPolicyStr = `step_policy_endpoint_${encodedEndpoint}`;
             echo(endpointPolicyStr);
+            sent++;
         }
     }
-    if (allowedEndpoints.length > 0) {
-        applyPolicy(allowedEndpoints.length);
+    if (sent > 0) {
+        applyPolicy(sent);
     }
+    const duration = Date.now() - startTime;
+    console.log(`[harden-runner] sendAllowedEndpoints completed in ${duration}ms (sent ${sent} endpoints)`);
 }
 function applyPolicy(count) {
     let applyPolicyStr = `step_policy_apply_${count}`;
@@ -88242,7 +88249,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         if (!confg.disable_telemetry || confg.egress_policy === "audit") {
             printInfo(web_url);
         }
-        if (isArcRunner()) {
+        if (isARCRunner()) {
             console.log(`[!] ${ARC_RUNNER_MESSAGE}`);
             if (confg.egress_policy === "block") {
                 sendAllowedEndpoints(confg.allowed_endpoints);
@@ -88256,22 +88263,10 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             external_fs_.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${external_os_.EOL}`, {
                 encoding: "utf8",
             });
-            if (!external_fs_.existsSync("/home/agent/agent")) {
-                lib_core.info(SELF_HOSTED_NO_AGENT_MESSAGE);
-                return;
-            }
+            lib_core.info(SELF_HOSTED_RUNNER_MESSAGE);
             if (confg.egress_policy === "block") {
-                try {
-                    if (process.env.USER) {
-                        chownForFolder(process.env.USER, "/home/agent");
-                    }
-                    const confgStr = JSON.stringify(confg);
-                    external_fs_.writeFileSync("/home/agent/block_event.json", confgStr);
-                    yield setup_sleep(5000);
-                }
-                catch (error) {
-                    lib_core.info(`[!] Unable to write block_event.json: ${error}`);
-                }
+                sendAllowedEndpoints(confg.allowed_endpoints);
+                yield setup_sleep(5000);
             }
             return;
         }
