@@ -173,8 +173,8 @@ export const CONTAINER_MESSAGE =
 export const UBUNTU_MESSAGE =
   "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
 
-export const SELF_HOSTED_NO_AGENT_MESSAGE =
-  "This job is running on a self-hosted runner, but the runner does not have Harden-Runner installed. This job will not be monitored.";
+export const SELF_HOSTED_RUNNER_MESSAGE =
+  "This job is running on a self-hosted runner.";
 
 export const HARDEN_RUNNER_UNAVAILABLE_MESSAGE =
   "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";

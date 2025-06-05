@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as cp from "child_process";
 import * as common from "./common";
 import isDocker from "is-docker";
-import { isArcRunner } from "./arc-runner";
+import { isARCRunner } from "./arc-runner";
 import { isGithubHosted } from "./tls-inspect";
 (async () => {
   console.log("[harden-runner] post-step");
@@ -16,7 +16,7 @@ import { isGithubHosted } from "./tls-inspect";
     return;
   }
 
-  if (isArcRunner()) {
+  if (isARCRunner()) {
     console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
     return;
   }
@@ -82,13 +82,16 @@ import { isGithubHosted } from "./tls-inspect";
 
   var disable_sudo = process.env.STATE_disableSudo;
   var disable_sudo_and_containers = process.env.STATE_disableSudoAndContainers;
-  
+
   if (disable_sudo !== "true" && disable_sudo_and_containers !== "true") {
     try {
-      var journalLog = cp.execSync("sudo journalctl -u agent.service --lines=1000", {
-        encoding: "utf8",
-        maxBuffer: 1024 * 1024 * 10 // 10MB buffer
-      });
+      var journalLog = cp.execSync(
+        "sudo journalctl -u agent.service --lines=1000",
+        {
+          encoding: "utf8",
+          maxBuffer: 1024 * 1024 * 10, // 10MB buffer
+        }
+      );
       console.log("agent.service log:");
       console.log(journalLog);
     } catch (error) {
