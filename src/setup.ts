@@ -24,7 +24,7 @@ import { GetCacheEntryDownloadURLRequest } from "@actions/cache/lib/generated/re
 import { getCacheServiceVersion } from "@actions/cache/lib/internal/config";
 
 import * as utils from "@actions/cache/lib/internal/cacheUtils";
-import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
+import { isARCRunner, sendAllowedEndpoints } from "./arc-runner";
 import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
 import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
 import { installAgent } from "./install-agent";
@@ -62,7 +62,9 @@ interface MonitorResponse {
       egress_policy: core.getInput("egress-policy"),
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
       disable_sudo: core.getBooleanInput("disable-sudo"),
-      disable_sudo_and_containers: core.getBooleanInput("disable-sudo-and-containers"),
+      disable_sudo_and_containers: core.getBooleanInput(
+        "disable-sudo-and-containers"
+      ),
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
       private: context?.payload?.repository?.private || false,
       is_github_hosted: isGithubHosted(),
@@ -205,7 +207,7 @@ interface MonitorResponse {
       common.printInfo(web_url);
     }
 
-    if (isArcRunner()) {
+    if (isARCRunner()) {
       console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
       if (confg.egress_policy === "block") {
         sendAllowedEndpoints(confg.allowed_endpoints);
@@ -220,22 +222,12 @@ interface MonitorResponse {
       fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
         encoding: "utf8",
       });
-      if (!fs.existsSync("/home/agent/agent")) {
-        core.info(common.SELF_HOSTED_NO_AGENT_MESSAGE);
-        return;
-      }
-      if (confg.egress_policy === "block") {
-        try {
-          if (process.env.USER) {
-            chownForFolder(process.env.USER, "/home/agent");
-          }
 
-          const confgStr = JSON.stringify(confg);
-          fs.writeFileSync("/home/agent/block_event.json", confgStr);
-          await sleep(5000);
-        } catch (error) {
-          core.info(`[!] Unable to write block_event.json: ${error}`);
-        }
+      core.info(common.SELF_HOSTED_RUNNER_MESSAGE);
+
+      if (confg.egress_policy === "block") {
+        sendAllowedEndpoints(confg.allowed_endpoints);
+        await sleep(5000);
       }
       return;
     }
