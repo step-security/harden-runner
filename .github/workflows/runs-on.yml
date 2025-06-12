@@ -14,7 +14,7 @@ jobs:
       - image=ubuntu24-stepsecurity-x64
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@rc
+        uses: step-security/harden-runner@4c8582f45544ce2dafb2cfae82cfbebf0f41bde2 # rc
         with:
           egress-policy: audit
           allowed-endpoints: >
@@ -43,7 +43,7 @@ jobs:
       - image=ubuntu24-stepsecurity-x64
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@rc
+        uses: step-security/harden-runner@4c8582f45544ce2dafb2cfae82cfbebf0f41bde2 # rc
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -89,7 +89,7 @@ jobs:
       - image=ubuntu24-stepsecurity-x64
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@rc
+        uses: step-security/harden-runner@4c8582f45544ce2dafb2cfae82cfbebf0f41bde2 # rc
         with:
           egress-policy: audit
           allowed-endpoints: >
@@ -137,7 +137,7 @@ jobs:
       - image=ubuntu24-stepsecurity-x64
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@rc
+        uses: step-security/harden-runner@4c8582f45544ce2dafb2cfae82cfbebf0f41bde2 # rc
         with:
           egress-policy: block
           allowed-endpoints: >
