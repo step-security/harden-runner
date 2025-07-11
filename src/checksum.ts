@@ -4,8 +4,8 @@ import * as fs from "fs";
 
 const CHECKSUMS = {
   tls: {
-    amd64: "3f2dc32f300071289650d1f9cbd3c04527ff8cc13e213eeccb70d4d6d2a0c8d5", // v1.6.15
-    arm64: "96967e419b358b664658fa218b712fdb439ffb8eef3bb7b170f122d1e96b4779",
+    amd64: "9b1b4f2837ae59b2e31fc247a493fdb099099c2c58050fa8c30003511b241bb6", // v1.6.17
+    arm64: "503a15f12b6f8109503e4e9c1e4130734ed8776831881c67dc7291b437e48098",
   },
   non_tls: {
     amd64: "336093af8ebe969567b66fd035af3bd4f7e1c723ce680d6b4b5b2a1f79bc329e", // v0.14.2
