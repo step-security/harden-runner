@@ -271,6 +271,13 @@ interface MonitorResponse {
         encoding: "utf8",
       }
     );
+    fs.appendFileSync(
+      process.env.GITHUB_STATE,
+      `correlation_id=${correlation_id}${EOL}`,
+      {
+        encoding: "utf8",
+      }
+    );
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
     if (String(statusCode) === common.STATUS_HARDEN_RUNNER_UNAVAILABLE) {
