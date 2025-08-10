@@ -20,4 +20,4 @@ jobs:
             int.api.stepsecurity.io:443
 
       - name: Code Review
-        uses: step-security/ai-codewise@int
+        uses: step-security/ai-codewise@ab9fe138367d6094b2df7f8469ddc2c5a79c9cf4 # int
