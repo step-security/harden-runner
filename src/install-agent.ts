@@ -25,7 +25,7 @@ export async function installAgent(
 
   if (isTLS) {
     downloadPath = await tc.downloadTool(
-      `https://packages.stepsecurity.io/github-hosted/harden-runner_1.6.22_linux_${variant}.tar.gz`
+      `https://packages.stepsecurity.io/github-hosted/harden-runner_1.6.23_linux_${variant}.tar.gz`
     );
   } else {
     if (variant === "arm64") {
