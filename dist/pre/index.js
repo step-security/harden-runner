@@ -87842,7 +87842,12 @@ function fetchPolicy(owner, policyName, idToken) {
             yield sleep(1000);
         }
         if (response === undefined && err !== undefined) {
-            throw new Error(`[Policy Fetch] ${err}`);
+            // Preserve the original error's statusCode if it exists
+            const error = new Error(`[Policy Fetch] ${err}`);
+            if (err.statusCode !== undefined) {
+                error.statusCode = err.statusCode;
+            }
+            throw error;
         }
         else {
             return response.result;
