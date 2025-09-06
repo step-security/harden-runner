@@ -89,8 +89,13 @@ interface MonitorResponse {
         if (err.message && err.message.includes('Unable to get ACTIONS_ID_TOKEN_REQUEST')) {
           core.setFailed('Policy store requires id-token write permission as it uses OIDC to fetch the policy from StepSecurity API. Please add "id-token: write" to your job permissions.');
         } else {
-          // Log other errors but don't fail the job
-          core.error(`Failed to fetch policy: ${err}`);
+          // Handle different HTTP status codes
+          if (err.statusCode >= 400 && err.statusCode < 500) {
+            core.error('Policy not found');
+          } else {
+            core.error(`Unexpected error occurred: ${err}. Falling back to egress policy audit`);
+            confg.egress_policy = 'audit';
+          }
         }
       }
     }
