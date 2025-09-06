@@ -88137,7 +88137,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                 lib_core.info(`[!] ${err}`);
                 // Only fail the job if ID token is not available
                 if (err.message && err.message.includes('Unable to get ACTIONS_ID_TOKEN_REQUEST')) {
-                    lib_core.setFailed(err);
+                    lib_core.setFailed('Policy store requires id-token write permission as it uses OIDC to fetch the policy from StepSecurity API. Please add "id-token: write" to your job permissions.');
                 }
                 else {
                     // Log other errors but don't fail the job
