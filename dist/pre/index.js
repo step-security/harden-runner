@@ -88034,7 +88034,7 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://packages.stepsecurity.io/github-hosted/harden-runner_1.6.23_linux_${variant}.tar.gz`);
+            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.6.23/harden-runner_1.6.23_linux_${variant}.tar.gz`, undefined, auth);
         }
         else {
             if (variant === "arm64") {
