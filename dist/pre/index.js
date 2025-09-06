@@ -88135,7 +88135,14 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             }
             catch (err) {
                 lib_core.info(`[!] ${err}`);
-                lib_core.setFailed(err);
+                // Only fail the job if ID token is not available
+                if (err.message && err.message.includes('Unable to get ACTIONS_ID_TOKEN_REQUEST')) {
+                    lib_core.setFailed(err);
+                }
+                else {
+                    // Log other errors but don't fail the job
+                    lib_core.error(`Failed to fetch policy: ${err}`);
+                }
             }
         }
         external_fs_.appendFileSync(process.env.GITHUB_STATE, `disableSudo=${confg.disable_sudo}${external_os_.EOL}`, {

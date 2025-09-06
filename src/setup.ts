@@ -85,7 +85,13 @@ interface MonitorResponse {
         confg = mergeConfigs(confg, result);
       } catch (err) {
         core.info(`[!] ${err}`);
-        core.setFailed(err);
+        // Only fail the job if ID token is not available
+        if (err.message && err.message.includes('Unable to get ACTIONS_ID_TOKEN_REQUEST')) {
+          core.setFailed(err);
+        } else {
+          // Log other errors but don't fail the job
+          core.error(`Failed to fetch policy: ${err}`);
+        }
       }
     }
     fs.appendFileSync(
@@ -233,7 +239,7 @@ interface MonitorResponse {
     }
 
     let _http = new httpm.HttpClient();
-    let statusCode;
+    let statusCode: number | undefined;
     _http.requestOptions = { socketTimeout: 3 * 1000 };
     let addSummary = "false";
     try {
@@ -326,7 +332,7 @@ interface MonitorResponse {
   process.exit(0);
 })();
 
-export function sleep(ms) {
+export function sleep(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
