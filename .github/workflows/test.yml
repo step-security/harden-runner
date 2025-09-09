@@ -44,3 +44,32 @@ jobs:
         with:
           files: |
             reports/*.xml
+
+  build-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+          allowed-endpoints: >
+            github.com:443
+            registry.npmjs.org:443
+
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Install Dependencies
+        run: npm ci
+      - name: Run build
+        run: npm run build
+      - name: Check for changes in dist
+        run: |
+          if [[ `git status --porcelain dist` ]]; then
+            echo "Changes detected in dist directory after build:"
+            git status --porcelain dist
+            git diff dist
+            exit 1
+          else
+            echo "No changes in dist directory - build is clean"
+          fi

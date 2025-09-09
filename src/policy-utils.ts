@@ -39,7 +39,12 @@ export async function fetchPolicy(
   }
 
   if (response === undefined && err !== undefined) {
-    throw new Error(`[Policy Fetch] ${err}`);
+    // Preserve the original error's statusCode if it exists
+    const error = new Error(`[Policy Fetch] ${err}`);
+    if (err.statusCode !== undefined) {
+      (error as any).statusCode = err.statusCode;
+    }
+    throw error;
   } else {
     return response.result;
   }
@@ -70,7 +75,7 @@ export function mergeConfigs(
   return localConfig;
 }
 
-function sleep(ms) {
+function sleep(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
