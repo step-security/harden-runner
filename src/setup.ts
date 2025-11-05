@@ -243,6 +243,20 @@ interface MonitorResponse {
       return;
     }
 
+    if (isGithubHosted() && process.env.STEP_SECURITY_HARDEN_RUNNER === "true") {
+      fs.appendFileSync(process.env.GITHUB_STATE, `customVMImage=true${EOL}`, {
+        encoding: "utf8",
+      });
+
+      core.info("This job is running on a custom VM image with Harden Runner installed.");
+
+      if (confg.egress_policy === "block") {
+        sendAllowedEndpoints(confg.allowed_endpoints);
+        await sleep(5000);
+      }
+      return;
+    }
+
     let _http = new httpm.HttpClient();
     let statusCode: number | undefined;
     _http.requestOptions = { socketTimeout: 3 * 1000 };

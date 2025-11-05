@@ -85248,7 +85248,7 @@ function addSummary() {
     });
 }
 const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
-const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
+const CONTAINER_MESSAGE = "This job is running in a container. Such jobs can be monitored by installing Harden Runner in a custom VM image for GitHub-hosted runners.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
 const SELF_HOSTED_RUNNER_MESSAGE = "This job is running on a self-hosted runner.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
@@ -85495,8 +85495,8 @@ var external_crypto_ = __nccwpck_require__(6982);
 
 const CHECKSUMS = {
     tls: {
-        amd64: "2430b850e0e4d67a2f3b626f02d2827226ee16406da6af0c47ae7b18e18bd2b8",
-        arm64: "a3c89271e697ab39557ba8011cac7a2df690b5d27b4584d5d5abdf8845a6ce6c",
+        amd64: "603d6a0dabb60a7c8f651d7f5b53258fa64162424a77da9884d9032b3e71d6b1",
+        arm64: "fdc7504a3210dc67fc8393969b0f3c98df593c7884c83ed6d1c0ec84070801aa",
     },
     non_tls: {
         amd64: "336093af8ebe969567b66fd035af3bd4f7e1c723ce680d6b4b5b2a1f79bc329e", // v0.14.2
@@ -85549,7 +85549,7 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.6.23/harden-runner_1.6.23_linux_${variant}.tar.gz`, undefined, auth);
+            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.7.6/harden-runner_1.7.6_linux_${variant}.tar.gz`, undefined, auth);
         }
         else {
             if (variant === "arm64") {
@@ -85758,6 +85758,17 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                 encoding: "utf8",
             });
             lib_core.info(SELF_HOSTED_RUNNER_MESSAGE);
+            if (confg.egress_policy === "block") {
+                sendAllowedEndpoints(confg.allowed_endpoints);
+                yield setup_sleep(5000);
+            }
+            return;
+        }
+        if (isGithubHosted() && process.env.STEP_SECURITY_HARDEN_RUNNER === "true") {
+            external_fs_.appendFileSync(process.env.GITHUB_STATE, `customVMImage=true${external_os_.EOL}`, {
+                encoding: "utf8",
+            });
+            lib_core.info("This job is running on a custom VM image with Harden Runner installed.");
             if (confg.egress_policy === "block") {
                 sendAllowedEndpoints(confg.allowed_endpoints);
                 yield setup_sleep(5000);
