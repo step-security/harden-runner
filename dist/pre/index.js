@@ -85248,7 +85248,7 @@ function addSummary() {
     });
 }
 const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
-const CONTAINER_MESSAGE = "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
+const CONTAINER_MESSAGE = "This job is running in a container. Such jobs can be monitored by installing Harden Runner in a custom VM image for GitHub-hosted runners.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
 const SELF_HOSTED_RUNNER_MESSAGE = "This job is running on a self-hosted runner.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
@@ -85758,6 +85758,17 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                 encoding: "utf8",
             });
             lib_core.info(SELF_HOSTED_RUNNER_MESSAGE);
+            if (confg.egress_policy === "block") {
+                sendAllowedEndpoints(confg.allowed_endpoints);
+                yield setup_sleep(5000);
+            }
+            return;
+        }
+        if (isGithubHosted() && process.env.STEP_SECURITY_HARDEN_RUNNER === "true") {
+            external_fs_.appendFileSync(process.env.GITHUB_STATE, `customVMImage=true${external_os_.EOL}`, {
+                encoding: "utf8",
+            });
+            lib_core.info("This job is running on a custom VM image with Harden Runner installed.");
             if (confg.egress_policy === "block") {
                 sendAllowedEndpoints(confg.allowed_endpoints);
                 yield setup_sleep(5000);

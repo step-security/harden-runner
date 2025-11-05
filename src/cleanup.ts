@@ -25,6 +25,10 @@ import { isGithubHosted } from "./tls-inspect";
     return;
   }
 
+  if (process.env.STATE_customVMImage === "true") {
+    return;
+  }
+
   if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
     return;
   }

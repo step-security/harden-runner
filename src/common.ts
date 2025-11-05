@@ -126,7 +126,7 @@ export async function addSummary() {
 export const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 
 export const CONTAINER_MESSAGE =
-  "This job is running in a container. Harden Runner does not run in a container as it needs sudo access to run. This job will not be monitored.";
+  "This job is running in a container. Such jobs can be monitored by installing Harden Runner in a custom VM image for GitHub-hosted runners.";
 
 export const UBUNTU_MESSAGE =
   "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
