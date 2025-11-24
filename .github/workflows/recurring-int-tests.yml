@@ -5,6 +5,7 @@ on:
     - cron: '0 */2 * * *' # every other hour
 
 permissions:
+  id-token: write
   contents: read
 
 jobs:
@@ -37,3 +38,12 @@ jobs:
       env:
         PAT: ${{ secrets.PAT }}
         canary-tls: true
+        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        AWS_SESSION_TOKEN: ${{ env.AWS_SESSION_TOKEN }}
+        AWS_REGION: ${{ env.AWS_REGION }}
+        BUCKET: "s3-step-integration-tests-001"
+        API_KEY: ${{ secrets.TENANT_API_KEY_PS }}
+        WEBHOOK_URL: "https://webhook.site/0cfaf008-1a8b-46c0-a4e9-4dec5f9c3718"
+        WEBHOOK_API_KEY: ${{ secrets.WEBHOOK_API_KEY }}
+        WEBHOOK_TOKEN_ID: "0cfaf008-1a8b-46c0-a4e9-4dec5f9c3718"
