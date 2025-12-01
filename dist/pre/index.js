@@ -85495,8 +85495,8 @@ var external_crypto_ = __nccwpck_require__(6982);
 
 const CHECKSUMS = {
     tls: {
-        amd64: "ed6a04f39d18f030a80b949228ac9117e63e410eac3142cdc4a7d84109a75385",
-        arm64: "dc1a759ea585b795a01a41f6a7624ee7a5243eb1b7ce0858f458de9f84a51b69",
+        amd64: "2a5be06ab620340f6957ddd180450caab414671c8b7da1996d8e2755c1cd49fa",
+        arm64: "e9d0ccf3e4e62ba15ff208ef6e0afa0ad5e323c3dfc50527342f436a85e65a55",
     },
     non_tls: {
         amd64: "336093af8ebe969567b66fd035af3bd4f7e1c723ce680d6b4b5b2a1f79bc329e", // v0.14.2
@@ -85549,7 +85549,7 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.7.8/harden-runner_1.7.8_linux_${variant}.tar.gz`, undefined, auth);
+            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.7.9/harden-runner_1.7.9_linux_${variant}.tar.gz`, undefined, auth);
         }
         else {
             if (variant === "arm64") {
