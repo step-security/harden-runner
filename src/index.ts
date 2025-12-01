@@ -6,6 +6,11 @@ import { isGithubHosted } from "./tls-inspect";
 (async () => {
   console.log("[harden-runner] main-step");
 
+  if (core.getBooleanInput("skip-harden-runner")) {
+    console.log("Skipping harden-runner as skip-harden-runner is set to true");
+    return;
+  }
+
   if (process.platform !== "linux") {
     console.log(common.UBUNTU_MESSAGE);
     return;

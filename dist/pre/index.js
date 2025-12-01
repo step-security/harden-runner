@@ -85612,6 +85612,10 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
     var _a, _b;
     try {
         console.log("[harden-runner] pre-step");
+        if (lib_core.getBooleanInput("skip-harden-runner")) {
+            console.log("Skipping harden-runner as skip-harden-runner is set to true");
+            return;
+        }
         if (process.platform !== "linux") {
             console.log(UBUNTU_MESSAGE);
             return;

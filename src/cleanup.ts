@@ -1,11 +1,17 @@
 import * as fs from "fs";
 import * as cp from "child_process";
+import * as core from "@actions/core";
 import * as common from "./common";
 import isDocker from "is-docker";
 import { isARCRunner } from "./arc-runner";
 import { isGithubHosted } from "./tls-inspect";
 (async () => {
   console.log("[harden-runner] post-step");
+
+  if (core.getBooleanInput("skip-harden-runner")) {
+    console.log("Skipping harden-runner as skip-harden-runner is set to true");
+    return;
+  }
 
   if (process.platform !== "linux") {
     console.log(common.UBUNTU_MESSAGE);

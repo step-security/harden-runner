@@ -27850,8 +27850,13 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
 
 
 
+
 (() => cleanup_awaiter(void 0, void 0, void 0, function* () {
     console.log("[harden-runner] post-step");
+    if (lib_core.getBooleanInput("skip-harden-runner")) {
+        console.log("Skipping harden-runner as skip-harden-runner is set to true");
+        return;
+    }
     if (process.platform !== "linux") {
         console.log(UBUNTU_MESSAGE);
         return;
