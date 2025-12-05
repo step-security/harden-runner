@@ -85609,12 +85609,17 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
 
 
 (() => setup_awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c, _d;
     try {
         console.log("[harden-runner] pre-step");
-        if (lib_core.getBooleanInput("skip-harden-runner")) {
-            console.log("Skipping harden-runner as skip-harden-runner is set to true");
-            return;
+        const skipOnProperty = lib_core.getInput("skip-on-custom-property");
+        if (skipOnProperty) {
+            const [propertyName, expectedValue] = skipOnProperty.split("=");
+            const customProperties = ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.custom_properties) || {};
+            if (customProperties[propertyName] === expectedValue) {
+                console.log(`Skipping harden-runner: custom property '${propertyName}' equals '${expectedValue}'`);
+                return;
+            }
         }
         if (process.platform !== "linux") {
             console.log(UBUNTU_MESSAGE);
@@ -85639,7 +85644,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             disable_sudo: lib_core.getBooleanInput("disable-sudo"),
             disable_sudo_and_containers: lib_core.getBooleanInput("disable-sudo-and-containers"),
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
-            private: ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.private) || false,
+            private: ((_d = (_c = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _c === void 0 ? void 0 : _c.repository) === null || _d === void 0 ? void 0 : _d.private) || false,
             is_github_hosted: isGithubHosted(),
             is_debug: lib_core.isDebug(),
             one_time_key: "",

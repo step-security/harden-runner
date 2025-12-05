@@ -32,10 +32,10 @@ inputs:
     description: "Policy name to be used from the policy store"
     required: false
     default: ""
-  skip-harden-runner:
-    description: "Set to 'true' to skip harden-runner. Use with expressions to conditionally skip based on custom properties or other conditions."
+  skip-on-custom-property:
+    description: "Skip if custom property matches value (format: property_name=value)"
     required: false
-    default: "false"
+    default: ""
 
 branding:
   icon: "check-square"

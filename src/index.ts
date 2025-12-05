@@ -3,12 +3,18 @@ import * as core from "@actions/core";
 import isDocker from "is-docker";
 import { STEPSECURITY_WEB_URL } from "./configs";
 import { isGithubHosted } from "./tls-inspect";
+import { context } from "@actions/github";
 (async () => {
   console.log("[harden-runner] main-step");
 
-  if (core.getBooleanInput("skip-harden-runner")) {
-    console.log("Skipping harden-runner as skip-harden-runner is set to true");
-    return;
+  const skipOnProperty = core.getInput("skip-on-custom-property");
+  if (skipOnProperty) {
+    const [propertyName, expectedValue] = skipOnProperty.split("=");
+    const customProperties = context?.payload?.repository?.custom_properties || {};
+    if (customProperties[propertyName] === expectedValue) {
+      console.log(`Skipping harden-runner: custom property '${propertyName}' equals '${expectedValue}'`);
+      return;
+    }
   }
 
   if (process.platform !== "linux") {
