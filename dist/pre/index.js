@@ -85612,14 +85612,10 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
     var _a, _b, _c, _d;
     try {
         console.log("[harden-runner] pre-step");
-        const skipOnProperty = lib_core.getInput("skip-on-custom-property");
-        if (skipOnProperty) {
-            const [propertyName, expectedValue] = skipOnProperty.split("=");
-            const customProperties = ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.custom_properties) || {};
-            if (customProperties[propertyName] === expectedValue) {
-                console.log(`Skipping harden-runner: custom property '${propertyName}' equals '${expectedValue}'`);
-                return;
-            }
+        const customProperties = ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.custom_properties) || {};
+        if (customProperties["skip-harden-runner"] === "true") {
+            console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
+            return;
         }
         if (process.platform !== "linux") {
             console.log(UBUNTU_MESSAGE);

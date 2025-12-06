@@ -7,14 +7,10 @@ import { context } from "@actions/github";
 (async () => {
   console.log("[harden-runner] main-step");
 
-  const skipOnProperty = core.getInput("skip-on-custom-property");
-  if (skipOnProperty) {
-    const [propertyName, expectedValue] = skipOnProperty.split("=");
-    const customProperties = context?.payload?.repository?.custom_properties || {};
-    if (customProperties[propertyName] === expectedValue) {
-      console.log(`Skipping harden-runner: custom property '${propertyName}' equals '${expectedValue}'`);
-      return;
-    }
+  const customProperties = context?.payload?.repository?.custom_properties || {};
+  if (customProperties["skip-harden-runner"] === "true") {
+    console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
+    return;
   }
 
   if (process.platform !== "linux") {

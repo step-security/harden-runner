@@ -32,11 +32,6 @@ inputs:
     description: "Policy name to be used from the policy store"
     required: false
     default: ""
-  skip-on-custom-property:
-    description: "Skip if custom property matches value (format: property_name=value)"
-    required: false
-    default: ""
-
 branding:
   icon: "check-square"
   color: "green"
