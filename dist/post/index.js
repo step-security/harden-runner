@@ -32166,6 +32166,10 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
         return;
     }
+    if (isGithubHosted() && external_fs_.existsSync("/home/agent/post_event.json")) {
+        console.log("Post step already executed, skipping");
+        return;
+    }
     external_fs_.writeFileSync("/home/agent/post_event.json", JSON.stringify({ event: "post" }));
     const doneFile = "/home/agent/done.json";
     let counter = 0;

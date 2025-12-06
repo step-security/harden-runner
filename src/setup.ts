@@ -263,6 +263,11 @@ interface MonitorResponse {
       return;
     }
 
+    if (isGithubHosted() && fs.existsSync("/home/agent/agent.status")) {
+      console.log("Agent already installed, skipping installation");
+      return;
+    }
+
     let _http = new httpm.HttpClient();
     let statusCode: number | undefined;
     _http.requestOptions = { socketTimeout: 3 * 1000 };

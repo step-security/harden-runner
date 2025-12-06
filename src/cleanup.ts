@@ -48,6 +48,11 @@ import { context } from "@actions/github";
     return;
   }
 
+  if (isGithubHosted() && fs.existsSync("/home/agent/post_event.json")) {
+    console.log("Post step already executed, skipping");
+    return;
+  }
+
   fs.writeFileSync(
     "/home/agent/post_event.json",
     JSON.stringify({ event: "post" })
