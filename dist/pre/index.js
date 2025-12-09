@@ -85609,9 +85609,14 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
 
 
 (() => setup_awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c, _d;
     try {
         console.log("[harden-runner] pre-step");
+        const customProperties = ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.custom_properties) || {};
+        if (customProperties["skip-harden-runner"] === "true") {
+            console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
+            return;
+        }
         if (process.platform !== "linux") {
             console.log(UBUNTU_MESSAGE);
             return;
@@ -85635,7 +85640,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             disable_sudo: lib_core.getBooleanInput("disable-sudo"),
             disable_sudo_and_containers: lib_core.getBooleanInput("disable-sudo-and-containers"),
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
-            private: ((_b = (_a = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _a === void 0 ? void 0 : _a.repository) === null || _b === void 0 ? void 0 : _b.private) || false,
+            private: ((_d = (_c = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _c === void 0 ? void 0 : _c.repository) === null || _d === void 0 ? void 0 : _d.private) || false,
             is_github_hosted: isGithubHosted(),
             is_debug: lib_core.isDebug(),
             one_time_key: "",
@@ -85773,6 +85778,10 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                 sendAllowedEndpoints(confg.allowed_endpoints);
                 yield setup_sleep(5000);
             }
+            return;
+        }
+        if (isGithubHosted() && external_fs_.existsSync("/home/agent/agent.status")) {
+            console.log("Agent already installed, skipping installation");
             return;
         }
         let _http = new lib.HttpClient();

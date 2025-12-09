@@ -39,6 +39,12 @@ interface MonitorResponse {
   try {
     console.log("[harden-runner] pre-step");
 
+    const customProperties = context?.payload?.repository?.custom_properties || {};
+    if (customProperties["skip-harden-runner"] === "true") {
+      console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
+      return;
+    }
+
     if (process.platform !== "linux") {
       console.log(common.UBUNTU_MESSAGE);
       return;
@@ -254,6 +260,11 @@ interface MonitorResponse {
         sendAllowedEndpoints(confg.allowed_endpoints);
         await sleep(5000);
       }
+      return;
+    }
+
+    if (isGithubHosted() && fs.existsSync("/home/agent/agent.status")) {
+      console.log("Agent already installed, skipping installation");
       return;
     }
 
