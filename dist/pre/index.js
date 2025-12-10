@@ -85482,7 +85482,8 @@ function isTLSEnabled(owner) {
 }
 function isGithubHosted() {
     const runnerEnvironment = process.env.RUNNER_ENVIRONMENT || "";
-    return runnerEnvironment === "github-hosted";
+    const hasUbicloudToken = !!process.env.UBICLOUD_RUNTIME_TOKEN;
+    return runnerEnvironment === "github-hosted" || hasUbicloudToken;
 }
 
 // EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
