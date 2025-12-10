@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import * as common from "./common";
 import isDocker from "is-docker";
 import { context } from "@actions/github";
-import { EOL } from "os";
+import { EOL, hostname } from "os";
 import {
   ArtifactCacheEntry,
   cacheKey,
@@ -54,7 +54,9 @@ interface MonitorResponse {
       return;
     }
 
-    var correlation_id = uuidv4();
+    var correlation_id = process.env.UBICLOUD_RUNTIME_TOKEN
+      ? hostname()
+      : uuidv4();
     var api_url = STEPSECURITY_API_URL;
     var web_url = STEPSECURITY_WEB_URL;
 

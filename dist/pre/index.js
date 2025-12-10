@@ -85626,7 +85626,9 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log(CONTAINER_MESSAGE);
             return;
         }
-        var correlation_id = v4();
+        var correlation_id = process.env.UBICLOUD_RUNTIME_TOKEN
+            ? (0,external_os_.hostname)()
+            : v4();
         var api_url = configs_STEPSECURITY_API_URL;
         var web_url = STEPSECURITY_WEB_URL;
         let confg = {
