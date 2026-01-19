@@ -85503,7 +85503,7 @@ const CHECKSUMS = {
         amd64: "336093af8ebe969567b66fd035af3bd4f7e1c723ce680d6b4b5b2a1f79bc329e", // v0.14.2
     },
     windows: {
-        amd64: "", // v0.0.1
+        amd64: "sha256:4ce2409d5802e947b563e29dbd8e803525dc78b21996b0ecedb51ceb046911a3", // v1.0.0-int
     },
 };
 function verifyChecksum(downloadPath, isTLS, variant, platform) {
@@ -85593,7 +85593,6 @@ function installWindowsAgent(configStr) {
             console.log(ARM64_RUNNER_MESSAGE);
             return false;
         }
-        // set up agent directory at C:\agent
         const agentDir = "C:\\agent";
         lib_core.info(`Creating agent directory: ${agentDir}`);
         if (!external_fs_.existsSync(agentDir)) {
@@ -85603,62 +85602,17 @@ function installWindowsAgent(configStr) {
             encoding: "utf8",
         });
         const agentExePath = external_path_.join(agentDir, "agent.exe");
-        // uncomment to download agent from github
-        // const downloadPath = await tc.downloadTool(
-        //   `https://github.com/step-security/agent-releases/releases/download/v0.0.1/agent_0.0.1_windows_amd64.tar.gz`,
-        //   undefined,
-        //   auth
-        // );
-        // verifyChecksum(downloadPath, false, variant, process.platform);
-        // const extractPath = await tc.extractTar(downloadPath);
-        // let cmd = "cp",
-        //   args = [path.join(extractPath, "agent.exe"), agentExePath];
-        // cp.execFileSync(cmd, args);
-        // Download Windows agent from S3 - TODO: remove this later once github releases are available
-        // Get S3 URL from environment variable or GitHub Actions input
-        const s3Url = process.env.AGENT_S3_URL || lib_core.getInput("agent-s3-url");
-        if (!s3Url) {
-            lib_core.setFailed("S3 URL not configured. Please set AGENT_S3_URL environment variable or provide 'agent-s3-url' input.");
-            return false;
-        }
-        const tarGzPath = external_path_.join(agentDir, "agent_windows_amd64.tar.gz");
-        lib_core.info(`Downloading Windows agent from S3...`);
-        try {
-            // Download tar.gz from S3 using curl
-            lib_core.info(`Downloading from: ${s3Url}`);
-            external_child_process_.execSync(`curl -L -o "${tarGzPath}" "${s3Url}"`, { stdio: "inherit" });
-            if (!external_fs_.existsSync(tarGzPath)) {
-                lib_core.setFailed("Failed to download agent.tar.gz from S3");
-                return false;
-            }
-            lib_core.info(`Downloaded tar.gz to: ${tarGzPath}`);
-            // Extract tar.gz
-            lib_core.info("Extracting tar.gz...");
-            external_child_process_.execSync(`tar -xzf "${tarGzPath}" -C "${agentDir}"`, { stdio: "inherit" });
-            // Verify agent.exe exists after extraction
-            if (external_fs_.existsSync(agentExePath)) {
-                lib_core.info(`Agent extracted to: ${agentExePath}`);
-                // Clean up tar.gz
-                external_fs_.unlinkSync(tarGzPath);
-            }
-            else {
-                lib_core.setFailed("agent.exe not found after extraction");
-                return false;
-            }
-        }
-        catch (error) {
-            lib_core.setFailed(`Failed to download Windows agent: ${error.message}`);
-            return false;
-        }
-        // Write config.json
+        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-releases/releases/download/v1.0.0-int/harden-runner-agent-windows_int_windows_amd64.tar.gz `, undefined, auth);
+        verifyChecksum(downloadPath, false, variant, process.platform);
+        const extractPath = yield tool_cache.extractTar(downloadPath);
+        const extractedAgentPath = external_path_.join(extractPath, "agent.exe");
+        external_fs_.copyFileSync(extractedAgentPath, agentExePath);
+        lib_core.info(`Copied agent from ${extractedAgentPath} to ${agentExePath}`);
         const configPath = external_path_.join(agentDir, "config.json");
         external_fs_.writeFileSync(configPath, configStr);
         lib_core.info(`Created config file: ${configPath}`);
         lib_core.info("Starting Windows Agent...");
         try {
-            // start the agent process in the background
-            lib_core.info(`Executing: ${agentExePath}`);
-            // set up log file for agent output
             const logPath = external_path_.join(agentDir, "agent.log");
             const logStream = external_fs_.openSync(logPath, 'a');
             lib_core.info(`Agent logs will be written to: ${logPath}`);
@@ -85670,12 +85624,10 @@ function installWindowsAgent(configStr) {
                 windowsHide: false,
                 shell: false
             });
-            // save the PID to a file for later termination
             const pidFile = external_path_.join(agentDir, "agent.pid");
             external_fs_.writeFileSync(pidFile, agentProcess.pid.toString());
             lib_core.info(`Agent process started with PID: ${agentProcess.pid}`);
             lib_core.info(`PID saved to: ${pidFile}`);
-            // unref the process so it can continue running independently
             agentProcess.unref();
             lib_core.info("Windows Agent process started successfully");
             return true;
