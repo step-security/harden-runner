@@ -32197,26 +32197,26 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         const log = "/home/agent/agent.log";
         if (external_fs_.existsSync(log)) {
             console.log("log:");
-            var content = external_fs_.readFileSync(log, "utf-8");
+            const content = external_fs_.readFileSync(log, "utf-8");
             console.log(content);
         }
         const daemonLog = "/home/agent/daemon.log";
         if (external_fs_.existsSync(daemonLog)) {
             console.log("daemonLog:");
-            var content = external_fs_.readFileSync(daemonLog, "utf-8");
+            const content = external_fs_.readFileSync(daemonLog, "utf-8");
             console.log(content);
         }
-        var status = "/home/agent/agent.status";
+        const status = "/home/agent/agent.status";
         if (external_fs_.existsSync(status)) {
             console.log("status:");
-            var content = external_fs_.readFileSync(status, "utf-8");
+            const content = external_fs_.readFileSync(status, "utf-8");
             console.log(content);
         }
-        var disable_sudo = process.env.STATE_disableSudo;
-        var disable_sudo_and_containers = process.env.STATE_disableSudoAndContainers;
+        const disable_sudo = process.env.STATE_disableSudo;
+        const disable_sudo_and_containers = process.env.STATE_disableSudoAndContainers;
         if (disable_sudo !== "true" && disable_sudo_and_containers !== "true") {
             try {
-                var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service --lines=1000", {
+                const journalLog = external_child_process_.execSync("sudo journalctl -u agent.service --lines=1000", {
                     encoding: "utf8",
                     maxBuffer: 1024 * 1024 * 10, // 10MB buffer
                 });
@@ -32233,7 +32233,7 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         const agentDir = process.env.STATE_agentDir || "C:\\agent";
         const postEventFile = external_path_.join(agentDir, "post_event.json");
         if (isGithubHosted() && external_fs_.existsSync(postEventFile)) {
-            console.log("windows post step already executed, skipping");
+            console.log("Windows post step already executed, skipping");
             return;
         }
         const p = external_child_process_.spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", "query user; exit $LASTEXITCODE"], { stdio: ["ignore", "pipe", "pipe"], shell: false, windowsHide: true });
@@ -32301,7 +32301,7 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         const log = external_path_.join(agentDir, "agent.log");
         if (external_fs_.existsSync(log)) {
             console.log("agent log:");
-            var content = external_fs_.readFileSync(log, "utf-8");
+            const content = external_fs_.readFileSync(log, "utf-8");
             console.log(content);
         }
     }

@@ -30,15 +30,17 @@ export function verifyChecksum(
   let expectedChecksum: string = "";
 
   switch (platform) {
-  case "linux":
-    expectedChecksum = isTLS
-      ? CHECKSUMS["tls"][variant]
-      : CHECKSUMS["non_tls"][variant];
-    break;
-  case "win32":
-    expectedChecksum = CHECKSUMS["windows"][variant];
-    break;
-}
+    case "linux":
+      expectedChecksum = isTLS
+        ? CHECKSUMS["tls"][variant]
+        : CHECKSUMS["non_tls"][variant];
+      break;
+    case "win32":
+      expectedChecksum = CHECKSUMS["windows"][variant];
+      break;
+    default:
+      throw new Error(`Unsupported platform: ${platform}`);
+  }
 
   if (checksum !== expectedChecksum) {
     core.setFailed(

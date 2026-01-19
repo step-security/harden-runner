@@ -116,8 +116,7 @@ export async function installWindowsAgent(
     const logStream = fs.openSync(logPath, 'a');
     core.info(`Agent logs will be written to: ${logPath}`);
 
-    const { spawn } = require('child_process');
-    const agentProcess = spawn(agentExePath, [], {
+    const agentProcess = cp.spawn(agentExePath, [], {
       cwd: agentDir,
       detached: true,
       stdio: ['ignore', logStream, logStream],

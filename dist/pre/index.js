@@ -85521,6 +85521,8 @@ function verifyChecksum(downloadPath, isTLS, variant, platform) {
         case "win32":
             expectedChecksum = CHECKSUMS["windows"][variant];
             break;
+        default:
+            throw new Error(`Unsupported platform: ${platform}`);
     }
     if (checksum !== expectedChecksum) {
         lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
@@ -85616,8 +85618,7 @@ function installWindowsAgent(configStr) {
             const logPath = external_path_.join(agentDir, "agent.log");
             const logStream = external_fs_.openSync(logPath, 'a');
             lib_core.info(`Agent logs will be written to: ${logPath}`);
-            const { spawn } = __nccwpck_require__(5317);
-            const agentProcess = spawn(agentExePath, [], {
+            const agentProcess = external_child_process_.spawn(agentExePath, [], {
                 cwd: agentDir,
                 detached: true,
                 stdio: ['ignore', logStream, logStream],

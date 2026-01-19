@@ -82,30 +82,30 @@ import { context } from "@actions/github";
     const log = "/home/agent/agent.log";
     if (fs.existsSync(log)) {
       console.log("log:");
-      var content = fs.readFileSync(log, "utf-8");
+      const content = fs.readFileSync(log, "utf-8");
       console.log(content);
     }
 
     const daemonLog = "/home/agent/daemon.log";
     if (fs.existsSync(daemonLog)) {
       console.log("daemonLog:");
-      var content = fs.readFileSync(daemonLog, "utf-8");
+      const content = fs.readFileSync(daemonLog, "utf-8");
       console.log(content);
     }
 
-    var status = "/home/agent/agent.status";
+    const status = "/home/agent/agent.status";
     if (fs.existsSync(status)) {
       console.log("status:");
-      var content = fs.readFileSync(status, "utf-8");
+      const content = fs.readFileSync(status, "utf-8");
       console.log(content);
     }
 
-    var disable_sudo = process.env.STATE_disableSudo;
-    var disable_sudo_and_containers = process.env.STATE_disableSudoAndContainers;
+    const disable_sudo = process.env.STATE_disableSudo;
+    const disable_sudo_and_containers = process.env.STATE_disableSudoAndContainers;
 
     if (disable_sudo !== "true" && disable_sudo_and_containers !== "true") {
       try {
-        var journalLog = cp.execSync(
+        const journalLog = cp.execSync(
           "sudo journalctl -u agent.service --lines=1000",
           {
             encoding: "utf8",
@@ -124,7 +124,7 @@ import { context } from "@actions/github";
     const postEventFile = path.join(agentDir, "post_event.json");
 
     if (isGithubHosted() && fs.existsSync(postEventFile)) {
-      console.log("windows post step already executed, skipping");
+      console.log("Windows post step already executed, skipping");
       return;
     }
 
@@ -205,7 +205,7 @@ import { context } from "@actions/github";
     const log = path.join(agentDir, "agent.log");
     if (fs.existsSync(log)) {
       console.log("agent log:");
-      var content = fs.readFileSync(log, "utf-8");
+      const content = fs.readFileSync(log, "utf-8");
       console.log(content);
     }
   }
