@@ -13,8 +13,8 @@ import { context } from "@actions/github";
     return;
   }
 
-  if (process.platform !== "linux") {
-    console.log(common.UBUNTU_MESSAGE);
+  if (process.platform !== "linux" && process.platform !== "win32") {
+    console.log(common.UNSUPPORTED_PLATFORM_MESSAGE);
     return;
   }
   if (isGithubHosted() && isDocker()) {
