@@ -131,6 +131,9 @@ export const CONTAINER_MESSAGE =
 export const UBUNTU_MESSAGE =
   "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
 
+export const UNSUPPORTED_PLATFORM_MESSAGE =
+  "This job is not running on a supported platform. Harden Runner supports Linux (Ubuntu) and Windows runners. This job will not be monitored.";
+
 export const SELF_HOSTED_RUNNER_MESSAGE =
   "This job is running on a self-hosted runner.";
 

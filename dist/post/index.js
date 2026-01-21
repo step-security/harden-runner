@@ -31878,6 +31878,8 @@ var __webpack_exports__ = {};
 var external_fs_ = __nccwpck_require__(9896);
 // EXTERNAL MODULE: external "child_process"
 var external_child_process_ = __nccwpck_require__(5317);
+// EXTERNAL MODULE: external "path"
+var external_path_ = __nccwpck_require__(6928);
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var lib_core = __nccwpck_require__(7484);
 ;// CONCATENATED MODULE: ./src/configs.ts
@@ -31986,6 +31988,7 @@ function addSummary() {
 const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 const CONTAINER_MESSAGE = "This job is running in a container. Such jobs can be monitored by installing Harden Runner in a custom VM image for GitHub-hosted runners.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
+const UNSUPPORTED_PLATFORM_MESSAGE = "This job is not running on a supported platform. Harden Runner supports Linux (Ubuntu) and Windows runners. This job will not be monitored.";
 const SELF_HOSTED_RUNNER_MESSAGE = "This job is running on a self-hosted runner.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner.";
@@ -32132,6 +32135,7 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
 
 
 
+
 (() => cleanup_awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     console.log("[harden-runner] post-step");
@@ -32140,8 +32144,8 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
         return;
     }
-    if (process.platform !== "linux") {
-        console.log(UBUNTU_MESSAGE);
+    if (process.platform !== "linux" && process.platform !== "win32") {
+        console.log(UNSUPPORTED_PLATFORM_MESSAGE);
         return;
     }
     if (isGithubHosted() && isDocker()) {
@@ -32158,7 +32162,10 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
     if (process.env.STATE_customVMImage === "true") {
         return;
     }
-    if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
+    if (process.platform === "linux" && process.env.STATE_isTLS === "false" && process.arch === "arm64") {
+        return;
+    }
+    else if (process.platform === "win32" && process.arch === "arm64") {
         return;
     }
     if (String(process.env.STATE_monitorStatusCode) ===
@@ -32166,57 +32173,136 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
         return;
     }
-    if (isGithubHosted() && external_fs_.existsSync("/home/agent/post_event.json")) {
-        console.log("Post step already executed, skipping");
-        return;
-    }
-    external_fs_.writeFileSync("/home/agent/post_event.json", JSON.stringify({ event: "post" }));
-    const doneFile = "/home/agent/done.json";
-    let counter = 0;
-    while (true) {
-        if (!external_fs_.existsSync(doneFile)) {
-            counter++;
-            if (counter > 10) {
-                console.log("timed out");
+    if (process.platform === "linux") {
+        if (isGithubHosted() && external_fs_.existsSync("/home/agent/post_event.json")) {
+            console.log("Post step already executed, skipping");
+            return;
+        }
+        external_fs_.writeFileSync("/home/agent/post_event.json", JSON.stringify({ event: "post" }));
+        const doneFile = "/home/agent/done.json";
+        let counter = 0;
+        while (true) {
+            if (!external_fs_.existsSync(doneFile)) {
+                counter++;
+                if (counter > 10) {
+                    console.log("timed out");
+                    break;
+                }
+                yield sleep(1000);
+            } // The file *does* exist
+            else {
                 break;
             }
-            yield sleep(1000);
-        } // The file *does* exist
-        else {
-            break;
+        }
+        const log = "/home/agent/agent.log";
+        if (external_fs_.existsSync(log)) {
+            console.log("log:");
+            const content = external_fs_.readFileSync(log, "utf-8");
+            console.log(content);
+        }
+        const daemonLog = "/home/agent/daemon.log";
+        if (external_fs_.existsSync(daemonLog)) {
+            console.log("daemonLog:");
+            const content = external_fs_.readFileSync(daemonLog, "utf-8");
+            console.log(content);
+        }
+        const status = "/home/agent/agent.status";
+        if (external_fs_.existsSync(status)) {
+            console.log("status:");
+            const content = external_fs_.readFileSync(status, "utf-8");
+            console.log(content);
+        }
+        const disable_sudo = process.env.STATE_disableSudo;
+        const disable_sudo_and_containers = process.env.STATE_disableSudoAndContainers;
+        if (disable_sudo !== "true" && disable_sudo_and_containers !== "true") {
+            try {
+                const journalLog = external_child_process_.execSync("sudo journalctl -u agent.service --lines=1000", {
+                    encoding: "utf8",
+                    maxBuffer: 1024 * 1024 * 10, // 10MB buffer
+                });
+                console.log("agent.service log:");
+                console.log(journalLog);
+            }
+            catch (error) {
+                console.log("Warning: Could not fetch service logs:", error.message);
+            }
         }
     }
-    const log = "/home/agent/agent.log";
-    if (external_fs_.existsSync(log)) {
-        console.log("log:");
-        var content = external_fs_.readFileSync(log, "utf-8");
-        console.log(content);
-    }
-    const daemonLog = "/home/agent/daemon.log";
-    if (external_fs_.existsSync(daemonLog)) {
-        console.log("daemonLog:");
-        var content = external_fs_.readFileSync(daemonLog, "utf-8");
-        console.log(content);
-    }
-    var status = "/home/agent/agent.status";
-    if (external_fs_.existsSync(status)) {
-        console.log("status:");
-        var content = external_fs_.readFileSync(status, "utf-8");
-        console.log(content);
-    }
-    var disable_sudo = process.env.STATE_disableSudo;
-    var disable_sudo_and_containers = process.env.STATE_disableSudoAndContainers;
-    if (disable_sudo !== "true" && disable_sudo_and_containers !== "true") {
+    else if (process.platform === "win32") {
+        // windows cleanup
+        const agentDir = process.env.STATE_agentDir || "C:\\agent";
+        const postEventFile = external_path_.join(agentDir, "post_event.json");
+        if (isGithubHosted() && external_fs_.existsSync(postEventFile)) {
+            console.log("Windows post step already executed, skipping");
+            return;
+        }
+        const p = external_child_process_.spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", "query user; exit $LASTEXITCODE"], { stdio: ["ignore", "pipe", "pipe"], shell: false, windowsHide: true });
+        p.unref();
+        external_fs_.writeFileSync(postEventFile, JSON.stringify({ event: "post" }));
+        const doneFile = external_path_.join(agentDir, "done.json");
+        let counter = 0;
+        while (true) {
+            if (!external_fs_.existsSync(doneFile)) {
+                counter++;
+                if (counter > 10) {
+                    console.log("timed out");
+                    break;
+                }
+                yield sleep(1000);
+            }
+            else {
+                break;
+            }
+        }
+        console.log("stopping windows agent process...");
+        const pidFile = external_path_.join(agentDir, "agent.pid");
         try {
-            var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service --lines=1000", {
-                encoding: "utf8",
-                maxBuffer: 1024 * 1024 * 10, // 10MB buffer
-            });
-            console.log("agent.service log:");
-            console.log(journalLog);
+            if (!external_fs_.existsSync(pidFile)) {
+                console.log("PID file not found. Agent may not be running.");
+                return;
+            }
+            const pid = parseInt(external_fs_.readFileSync(pidFile, "utf8").trim());
+            console.log(`agent PID from file: ${pid}`);
+            try {
+                process.kill(pid, 0); // signal 0 just checks if process exists
+            }
+            catch (_c) {
+                console.log("agent process not running.");
+                external_fs_.unlinkSync(pidFile);
+                return;
+            }
+            console.log(`stopping agent process (PID: ${pid})...`);
+            process.kill(pid, 'SIGINT');
+            let gracefulShutdown = false;
+            for (let i = 0; i < 10; i++) {
+                yield sleep(1000);
+                try {
+                    process.kill(pid, 0); // check if still exists
+                }
+                catch (_d) {
+                    gracefulShutdown = true;
+                    console.log("agent process stopped gracefully");
+                    break;
+                }
+            }
+            if (!gracefulShutdown) {
+                console.log("graceful shutdown timeout (10s), forcing termination...");
+                process.kill(pid, 'SIGKILL');
+                console.log("agent process terminated forcefully");
+            }
+            if (external_fs_.existsSync(pidFile)) {
+                external_fs_.unlinkSync(pidFile);
+                console.log("PID file cleaned up");
+            }
         }
         catch (error) {
-            console.log("Warning: Could not fetch service logs:", error.message);
+            console.log("warning: error stopping agent process:", error.message);
+        }
+        const log = external_path_.join(agentDir, "agent.log");
+        if (external_fs_.existsSync(log)) {
+            console.log("agent log:");
+            const content = external_fs_.readFileSync(log, "utf-8");
+            console.log(content);
         }
     }
     try {

@@ -85250,6 +85250,7 @@ function addSummary() {
 const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 const CONTAINER_MESSAGE = "This job is running in a container. Such jobs can be monitored by installing Harden Runner in a custom VM image for GitHub-hosted runners.";
 const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
+const UNSUPPORTED_PLATFORM_MESSAGE = "This job is not running on a supported platform. Harden Runner supports Linux (Ubuntu) and Windows runners. This job will not be monitored.";
 const SELF_HOSTED_RUNNER_MESSAGE = "This job is running on a self-hosted runner.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner.";
@@ -85501,18 +85502,27 @@ const CHECKSUMS = {
     non_tls: {
         amd64: "336093af8ebe969567b66fd035af3bd4f7e1c723ce680d6b4b5b2a1f79bc329e", // v0.14.2
     },
+    windows: {
+        amd64: "4ce2409d5802e947b563e29dbd8e803525dc78b21996b0ecedb51ceb046911a3", // v1.0.0-int
+    },
 };
-function verifyChecksum(downloadPath, isTLS, variant) {
+function verifyChecksum(downloadPath, isTLS, variant, platform) {
     const fileBuffer = external_fs_.readFileSync(downloadPath);
     const checksum = external_crypto_.createHash("sha256")
         .update(fileBuffer)
         .digest("hex"); // checksum of downloaded file
     let expectedChecksum = "";
-    if (isTLS) {
-        expectedChecksum = CHECKSUMS["tls"][variant];
-    }
-    else {
-        expectedChecksum = CHECKSUMS["non_tls"][variant];
+    switch (platform) {
+        case "linux":
+            expectedChecksum = isTLS
+                ? CHECKSUMS["tls"][variant]
+                : CHECKSUMS["non_tls"][variant];
+            break;
+        case "win32":
+            expectedChecksum = CHECKSUMS["windows"][variant];
+            break;
+        default:
+            throw new Error(`Unsupported platform: ${platform}`);
     }
     if (checksum !== expectedChecksum) {
         lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
@@ -85558,7 +85568,7 @@ function installAgent(isTLS, configStr) {
             }
             downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.14.2/agent_0.14.2_linux_amd64.tar.gz", undefined, auth);
         }
-        verifyChecksum(downloadPath, isTLS, variant);
+        verifyChecksum(downloadPath, isTLS, variant, process.platform);
         const extractPath = yield tool_cache.extractTar(downloadPath);
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
@@ -85574,6 +85584,59 @@ function installAgent(isTLS, configStr) {
         external_child_process_.execSync("sudo systemctl daemon-reload");
         external_child_process_.execSync("sudo service agent start", { timeout: 15000 });
         return true;
+    });
+}
+function installWindowsAgent(configStr) {
+    return install_agent_awaiter(this, void 0, void 0, function* () {
+        const token = lib_core.getInput("token", { required: true });
+        const auth = `token ${token}`;
+        const variant = process.arch === "x64" ? "amd64" : "arm64";
+        if (variant === "arm64") {
+            console.log(ARM64_RUNNER_MESSAGE);
+            return false;
+        }
+        const agentDir = "C:\\agent";
+        lib_core.info(`Creating agent directory: ${agentDir}`);
+        if (!external_fs_.existsSync(agentDir)) {
+            external_fs_.mkdirSync(agentDir, { recursive: true });
+        }
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `agentDir=${agentDir}${external_os_.EOL}`, {
+            encoding: "utf8",
+        });
+        const agentExePath = external_path_.join(agentDir, "agent.exe");
+        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-releases/releases/download/v1.0.0-int/harden-runner-agent-windows_int_windows_amd64.tar.gz `, undefined, auth);
+        verifyChecksum(downloadPath, false, variant, process.platform);
+        const extractPath = yield tool_cache.extractTar(downloadPath);
+        const extractedAgentPath = external_path_.join(extractPath, "agent.exe");
+        external_fs_.copyFileSync(extractedAgentPath, agentExePath);
+        lib_core.info(`Copied agent from ${extractedAgentPath} to ${agentExePath}`);
+        const configPath = external_path_.join(agentDir, "config.json");
+        external_fs_.writeFileSync(configPath, configStr);
+        lib_core.info(`Created config file: ${configPath}`);
+        lib_core.info("Starting Windows Agent...");
+        try {
+            const logPath = external_path_.join(agentDir, "agent.log");
+            const logStream = external_fs_.openSync(logPath, 'a');
+            lib_core.info(`Agent logs will be written to: ${logPath}`);
+            const agentProcess = external_child_process_.spawn(agentExePath, [], {
+                cwd: agentDir,
+                detached: true,
+                stdio: ['ignore', logStream, logStream],
+                windowsHide: false,
+                shell: false
+            });
+            const pidFile = external_path_.join(agentDir, "agent.pid");
+            external_fs_.writeFileSync(pidFile, agentProcess.pid.toString());
+            lib_core.info(`Agent process started with PID: ${agentProcess.pid}`);
+            lib_core.info(`PID saved to: ${pidFile}`);
+            agentProcess.unref();
+            lib_core.info("Windows Agent process started successfully");
+            return true;
+        }
+        catch (error) {
+            lib_core.setFailed(`Failed to start Windows agent process: ${error.message}`);
+            return false;
+        }
     });
 }
 
@@ -85617,8 +85680,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
             return;
         }
-        if (process.platform !== "linux") {
-            console.log(UBUNTU_MESSAGE);
+        if (process.platform !== "linux" && process.platform !== "win32") {
+            console.log(UNSUPPORTED_PLATFORM_MESSAGE);
             return;
         }
         if (isGithubHosted() && isDocker()) {
@@ -85820,14 +85883,29 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             return;
         }
         const confgStr = JSON.stringify(confg);
-        external_child_process_.execSync("sudo mkdir -p /home/agent");
-        chownForFolder(process.env.USER, "/home/agent");
-        let isTLS = yield isTLSEnabled(github.context.repo.owner);
-        const agentInstalled = yield installAgent(isTLS, confgStr);
+        // install agent based on platform
+        let agentInstalled = false;
+        let statusFile;
+        let logFile;
+        if (process.platform === "win32") {
+            // Windows installation
+            lib_core.info("Installing Windows Agent...");
+            agentInstalled = yield installWindowsAgent(confgStr);
+            const agentDir = process.env.STATE_agentDir || "C:\\agent";
+            statusFile = external_path_.join(agentDir, "agent.status");
+            logFile = external_path_.join(agentDir, "agent.log");
+        }
+        else {
+            // Linux installation
+            external_child_process_.execSync("sudo mkdir -p /home/agent");
+            chownForFolder(process.env.USER, "/home/agent");
+            let isTLS = yield isTLSEnabled(github.context.repo.owner);
+            agentInstalled = yield installAgent(isTLS, confgStr);
+            statusFile = "/home/agent/agent.status";
+            logFile = "/home/agent/agent.log";
+        }
         if (agentInstalled) {
             // Check that the file exists locally
-            var statusFile = "/home/agent/agent.status";
-            var logFile = "/home/agent/agent.log";
             var counter = 0;
             while (true) {
                 if (!external_fs_.existsSync(statusFile)) {

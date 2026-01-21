@@ -27,7 +27,7 @@ import * as utils from "@actions/cache/lib/internal/cacheUtils";
 import { isARCRunner, sendAllowedEndpoints } from "./arc-runner";
 import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
 import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
-import { installAgent } from "./install-agent";
+import { installAgent, installWindowsAgent } from "./install-agent";
 
 interface MonitorResponse {
   runner_ip_address?: string;
@@ -45,8 +45,8 @@ interface MonitorResponse {
       return;
     }
 
-    if (process.platform !== "linux") {
-      console.log(common.UBUNTU_MESSAGE);
+    if (process.platform !== "linux" && process.platform !== "win32") {
+      console.log(common.UNSUPPORTED_PLATFORM_MESSAGE);
       return;
     }
     if (isGithubHosted() && isDocker()) {
@@ -322,17 +322,34 @@ interface MonitorResponse {
     }
 
     const confgStr = JSON.stringify(confg);
-    cp.execSync("sudo mkdir -p /home/agent");
-    chownForFolder(process.env.USER, "/home/agent");
+    
+    // install agent based on platform
+    let agentInstalled = false;
+    let statusFile: string;
+    let logFile: string;
 
-    let isTLS = await isTLSEnabled(context.repo.owner);
+    if (process.platform === "win32") {
+      // Windows installation
+      core.info("Installing Windows Agent...");
+      agentInstalled = await installWindowsAgent(confgStr);
 
-    const agentInstalled = await installAgent(isTLS, confgStr);
+      const agentDir = process.env.STATE_agentDir || "C:\\agent";
+      statusFile = path.join(agentDir, "agent.status");
+      logFile = path.join(agentDir, "agent.log");
+    } else {
+      // Linux installation
+      cp.execSync("sudo mkdir -p /home/agent");
+      chownForFolder(process.env.USER, "/home/agent");
+
+      let isTLS = await isTLSEnabled(context.repo.owner);
+      agentInstalled = await installAgent(isTLS, confgStr);
+
+      statusFile = "/home/agent/agent.status";
+      logFile = "/home/agent/agent.log";
+    }
 
     if (agentInstalled) {
       // Check that the file exists locally
-      var statusFile = "/home/agent/agent.status";
-      var logFile = "/home/agent/agent.log";
       var counter = 0;
       while (true) {
         if (!fs.existsSync(statusFile)) {
