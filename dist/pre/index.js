@@ -85503,7 +85503,7 @@ const CHECKSUMS = {
         amd64: "336093af8ebe969567b66fd035af3bd4f7e1c723ce680d6b4b5b2a1f79bc329e", // v0.14.2
     },
     windows: {
-        amd64: "sha256:46b6abbdab4766bc9c71187f13df1c25ce1fbb4ff87e12d925654586ab6cff74", // v1.0.0-int
+        amd64: "46b6abbdab4766bc9c71187f13df1c25ce1fbb4ff87e12d925654586ab6cff74", // v1.0.0-int
     },
 };
 function verifyChecksum(downloadPath, isTLS, variant, platform) {
