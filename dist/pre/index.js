@@ -85763,6 +85763,13 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                 encoding: "utf8",
             });
             lib_core.info(SELF_HOSTED_RUNNER_MESSAGE);
+            // Install agent for self-hosted runner (only if not already installed)
+            if (!external_fs_.existsSync("/home/agent/agent.status")) {
+                yield installAgentForSelfHosted(github.context.repo.owner);
+            }
+            else {
+                console.log("Agent already installed for self-hosted runner, skipping installation");
+            }
             if (confg.egress_policy === "block") {
                 sendAllowedEndpoints(confg.allowed_endpoints);
                 yield setup_sleep(5000);
@@ -85866,6 +85873,59 @@ function chownForFolder(newOwner, target) {
     let cmd = "sudo";
     let args = ["chown", "-R", newOwner, target];
     external_child_process_.execFileSync(cmd, args);
+}
+function installAgentForSelfHosted(owner) {
+    return setup_awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log("Installing Harden Runner agent for self-hosted runner");
+            // Determine TLS support
+            let isTLS = yield isTLSEnabled(owner);
+            if (!isTLS) {
+                console.log("TLS is not enabled for this organization. Agent installation skipped for self-hosted runner.");
+                return;
+            }
+            // Create self-hosted specific config
+            const selfHostedConfig = {
+                customer: owner,
+                working_directory: process.env.GITHUB_WORKSPACE,
+                api_key: v4()
+            };
+            const selfHostedConfigStr = JSON.stringify(selfHostedConfig);
+            // Create /home/agent directory
+            external_child_process_.execSync("sudo mkdir -p /home/agent");
+            chownForFolder(process.env.USER, "/home/agent");
+            // Install the agent
+            const agentInstalled = yield installAgent(isTLS, selfHostedConfigStr);
+            if (agentInstalled) {
+                // Wait for agent.status file
+                var statusFile = "/home/agent/agent.status";
+                var logFile = "/home/agent/agent.log";
+                var counter = 0;
+                while (true) {
+                    if (!external_fs_.existsSync(statusFile)) {
+                        counter++;
+                        if (counter > 30) {
+                            console.log("timed out");
+                            if (external_fs_.existsSync(logFile)) {
+                                var content = external_fs_.readFileSync(logFile, "utf-8");
+                                console.log(content);
+                            }
+                            break;
+                        }
+                        yield setup_sleep(300);
+                    }
+                    else {
+                        var content = external_fs_.readFileSync(statusFile, "utf-8");
+                        console.log(content);
+                        break;
+                    }
+                }
+            }
+        }
+        catch (error) {
+            console.log(`Failed to install agent for self-hosted runner: ${error.message}`);
+        }
+    });
 }
 
 })();

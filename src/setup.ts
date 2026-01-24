@@ -242,6 +242,13 @@ interface MonitorResponse {
 
       core.info(common.SELF_HOSTED_RUNNER_MESSAGE);
 
+      // Install agent for self-hosted runner (only if not already installed)
+      if (!fs.existsSync("/home/agent/agent.status")) {
+        await installAgentForSelfHosted(context.repo.owner);
+      } else {
+        console.log("Agent already installed for self-hosted runner, skipping installation");
+      }
+
       if (confg.egress_policy === "block") {
         sendAllowedEndpoints(confg.allowed_endpoints);
         await sleep(5000);
@@ -372,4 +379,60 @@ function chownForFolder(newOwner: string, target: string) {
   let cmd = "sudo";
   let args = ["chown", "-R", newOwner, target];
   cp.execFileSync(cmd, args);
+}
+
+async function installAgentForSelfHosted(owner: string) {
+  try {
+    console.log("Installing Harden Runner agent for self-hosted runner");
+
+    // Determine TLS support
+    let isTLS = await isTLSEnabled(owner);
+
+    if (!isTLS) {
+      console.log("TLS is not enabled for this organization. Agent installation skipped for self-hosted runner.");
+      return;
+    }
+
+    // Create self-hosted specific config
+    const selfHostedConfig = {
+      customer: owner,
+      working_directory: process.env.GITHUB_WORKSPACE,
+      api_key: uuidv4()
+    };
+    const selfHostedConfigStr = JSON.stringify(selfHostedConfig);
+
+    // Create /home/agent directory
+    cp.execSync("sudo mkdir -p /home/agent");
+    chownForFolder(process.env.USER, "/home/agent");
+
+    // Install the agent
+    const agentInstalled = await installAgent(isTLS, selfHostedConfigStr);
+
+    if (agentInstalled) {
+      // Wait for agent.status file
+      var statusFile = "/home/agent/agent.status";
+      var logFile = "/home/agent/agent.log";
+      var counter = 0;
+      while (true) {
+        if (!fs.existsSync(statusFile)) {
+          counter++;
+          if (counter > 30) {
+            console.log("timed out");
+            if (fs.existsSync(logFile)) {
+              var content = fs.readFileSync(logFile, "utf-8");
+              console.log(content);
+            }
+            break;
+          }
+          await sleep(300);
+        } else {
+          var content = fs.readFileSync(statusFile, "utf-8");
+          console.log(content);
+          break;
+        }
+      }
+    }
+  } catch (error) {
+    console.log(`Failed to install agent for self-hosted runner: ${error.message}`);
+  }
 }
