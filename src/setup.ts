@@ -39,12 +39,9 @@ interface MonitorResponse {
   try {
     console.log("[harden-runner] pre-step");
 
-    const customProperties =
-      context?.payload?.repository?.custom_properties || {};
+    const customProperties = context?.payload?.repository?.custom_properties || {};
     if (customProperties["skip-harden-runner"] === "true") {
-      console.log(
-        "Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'"
-      );
+      console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
       return;
     }
 
@@ -101,17 +98,12 @@ interface MonitorResponse {
       } catch (err) {
         core.info(`[!] ${err}`);
         // Only fail the job if ID token is not available
-        if (
-          err.message &&
-          err.message.includes("Unable to get ACTIONS_ID_TOKEN_REQUEST")
-        ) {
-          core.setFailed(
-            'Policy store requires id-token write permission as it uses OIDC to fetch the policy from StepSecurity API. Please add "id-token: write" to your job permissions.'
-          );
-        } else {
+        if (err.message && err.message.includes('Unable to get ACTIONS_ID_TOKEN_REQUEST')) {
+          core.setFailed('Policy store requires id-token write permission as it uses OIDC to fetch the policy from StepSecurity API. Please add "id-token: write" to your job permissions.');
+        }  else {
           // Handle different HTTP status codes
           if (err.statusCode >= 400 && err.statusCode < 500) {
-            core.error("Policy not found");
+            core.error('Policy not found');
           } else {
             core.error(
               `Unexpected error occurred: ${err}. Falling back to egress policy audit`
@@ -265,17 +257,12 @@ interface MonitorResponse {
       return;
     }
 
-    if (
-      isGithubHosted() &&
-      process.env.STEP_SECURITY_HARDEN_RUNNER === "true"
-    ) {
+    if (isGithubHosted() && process.env.STEP_SECURITY_HARDEN_RUNNER === "true") {
       fs.appendFileSync(process.env.GITHUB_STATE, `customVMImage=true${EOL}`, {
         encoding: "utf8",
       });
 
-      core.info(
-        "This job is running on a custom VM image with Harden Runner installed."
-      );
+      core.info("This job is running on a custom VM image with Harden Runner installed.");
 
       if (confg.egress_policy === "block") {
         sendAllowedEndpoints(confg.allowed_endpoints);

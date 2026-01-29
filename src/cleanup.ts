@@ -8,12 +8,9 @@ import { context } from "@actions/github";
 (async () => {
   console.log("[harden-runner] post-step");
 
-  const customProperties =
-    context?.payload?.repository?.custom_properties || {};
+  const customProperties = context?.payload?.repository?.custom_properties || {};
   if (customProperties["skip-harden-runner"] === "true") {
-    console.log(
-      "Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'"
-    );
+    console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
     return;
   }
 

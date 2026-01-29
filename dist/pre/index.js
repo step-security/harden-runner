@@ -88225,14 +88225,13 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             catch (err) {
                 lib_core.info(`[!] ${err}`);
                 // Only fail the job if ID token is not available
-                if (err.message &&
-                    err.message.includes("Unable to get ACTIONS_ID_TOKEN_REQUEST")) {
+                if (err.message && err.message.includes('Unable to get ACTIONS_ID_TOKEN_REQUEST')) {
                     lib_core.setFailed('Policy store requires id-token write permission as it uses OIDC to fetch the policy from StepSecurity API. Please add "id-token: write" to your job permissions.');
                 }
                 else {
                     // Handle different HTTP status codes
                     if (err.statusCode >= 400 && err.statusCode < 500) {
-                        lib_core.error("Policy not found");
+                        lib_core.error('Policy not found');
                     }
                     else {
                         lib_core.error(`Unexpected error occurred: ${err}. Falling back to egress policy audit`);
@@ -88339,8 +88338,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             }
             return;
         }
-        if (isGithubHosted() &&
-            process.env.STEP_SECURITY_HARDEN_RUNNER === "true") {
+        if (isGithubHosted() && process.env.STEP_SECURITY_HARDEN_RUNNER === "true") {
             external_fs_.appendFileSync(process.env.GITHUB_STATE, `customVMImage=true${external_os_.EOL}`, {
                 encoding: "utf8",
             });
