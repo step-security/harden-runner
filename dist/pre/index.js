@@ -88094,7 +88094,7 @@ function installMacosAgent(confgStr) {
             external_fs_.writeFileSync("/opt/step-security/agent.json", confgStr);
             lib_core.info("✓ Successfully created agent.json at /opt/step-security/agent.json");
             // Download installer package
-            const downloadUrl = "https://github.com/step-security/agent-releases/releases/download/v1.0.0-int/macos-installer-0.0.1-rc4.tar.gz";
+            const downloadUrl = "https://github.com/step-security/agent-releases/releases/download/v1.0.0-int/macos-installer-0.0.1.tar.gz";
             lib_core.info(`Downloading macOS installer.. : ${downloadUrl}`);
             const downloadPath = yield tool_cache.downloadTool(downloadUrl);
             lib_core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
