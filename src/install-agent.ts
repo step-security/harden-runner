@@ -129,12 +129,12 @@ export async function installMacosAgent(confgStr: string): Promise<boolean> {
       `sudo "${installerBinaryPath}" -workdir /opt/step-security >> /opt/step-security/agent.log 2>&1`,
       {
         shell: "/bin/bash",
-        timeout: 60000, // 60 second timeout
+        timeout: 10000, // 10 second timeout
       }
     );
     core.info("✓ Installer completed successfully");
 
-    core.info("✅ macOS agent installation (method 2) completed successfully");
+    core.info("✅ macOS agent installation completed successfully");
     return true;
   } catch (error) {
     core.error(`❌ Failed to install macOS agent: ${error}`);
