@@ -34,7 +34,7 @@ export function verifyChecksum(
         : CHECKSUMS["non_tls"][variant];
       break;
     case "darwin":
-      expectedChecksum = CHECKSUMS["darwin"][variant];
+      expectedChecksum = CHECKSUMS["darwin"];
       break;
     default:
       throw new Error(`Unsupported platform: ${platform}`);
