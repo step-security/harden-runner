@@ -87997,30 +87997,31 @@ const CHECKSUMS = {
     non_tls: {
         amd64: "336093af8ebe969567b66fd035af3bd4f7e1c723ce680d6b4b5b2a1f79bc329e", // v0.14.2
     },
+    darwin: "caaacc24bbf6a39ba7560e5e4701353c537883cb3ab9553359bd5caf5097246f", // v0.0.1
 };
-function verifyChecksum(downloadPath, isTLS, variant) {
+function verifyChecksum(downloadPath, isTLS, variant, platform) {
     const fileBuffer = external_fs_.readFileSync(downloadPath);
     const checksum = external_crypto_.createHash("sha256")
         .update(fileBuffer)
         .digest("hex"); // checksum of downloaded file
     let expectedChecksum = "";
-    if (isTLS) {
-        expectedChecksum = CHECKSUMS["tls"][variant];
-    }
-    else {
-        expectedChecksum = CHECKSUMS["non_tls"][variant];
+    switch (platform) {
+        case "linux":
+            expectedChecksum = isTLS
+                ? CHECKSUMS["tls"][variant]
+                : CHECKSUMS["non_tls"][variant];
+            break;
+        case "darwin":
+            expectedChecksum = CHECKSUMS["darwin"][variant];
+            break;
+        default:
+            throw new Error(`Unsupported platform: ${platform}`);
     }
     if (checksum !== expectedChecksum) {
-        lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
+        lib_core.setFailed(`❌ Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
+        return;
     }
-    lib_core.debug("Checksum verification passed.");
-}
-function calculateSha256(filePath) {
-    const fileBuffer = external_fs_.readFileSync(filePath);
-    const checksum = external_crypto_.createHash("sha256")
-        .update(fileBuffer)
-        .digest("hex");
-    return checksum;
+    lib_core.info(`✅ Checksum verification passed. checksum=${checksum}`);
 }
 
 ;// CONCATENATED MODULE: ./src/install-agent.ts
@@ -88061,7 +88062,7 @@ function installAgent(isTLS, configStr) {
             }
             downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.14.2/agent_0.14.2_linux_amd64.tar.gz", undefined, auth);
         }
-        verifyChecksum(downloadPath, isTLS, variant);
+        verifyChecksum(downloadPath, isTLS, variant, process.platform);
         const extractPath = yield tool_cache.extractTar(downloadPath);
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
@@ -88098,10 +88099,9 @@ function installMacosAgent(confgStr) {
             lib_core.info(`Downloading macOS installer.. : ${downloadUrl}`);
             const downloadPath = yield tool_cache.downloadTool(downloadUrl);
             lib_core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
-            // Calculate and print SHA256 checksum
-            lib_core.info("Calculating SHA256 checksum of downloaded tar file...");
-            const sha256sum = calculateSha256(downloadPath);
-            lib_core.info(`SHA256: ${sha256sum}`);
+            // Verify SHA256 checksum
+            lib_core.info("Verifying SHA256 checksum of downloaded tar file...");
+            verifyChecksum(downloadPath, false, "", "darwin");
             // Extract installer package
             lib_core.info("Extracting installer...");
             const extractPath = yield tool_cache.extractTar(downloadPath);
