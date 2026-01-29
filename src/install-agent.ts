@@ -3,9 +3,9 @@ import * as core from "@actions/core";
 import * as cp from "child_process";
 import * as path from "path";
 import * as fs from "fs";
-import { verifyChecksum } from "./checksum";
+import { verifyChecksum, calculateSha256 } from "./checksum";
 import { EOL } from "os";
-import { ARM64_RUNNER_MESSAGE } from "./common";
+import { ARM64_RUNNER_MESSAGE, chownForFolder } from "./common";
 
 export async function installAgent(
   isTLS: boolean,
@@ -64,4 +64,84 @@ export async function installAgent(
   cp.execSync("sudo systemctl daemon-reload");
   cp.execSync("sudo service agent start", { timeout: 15000 });
   return true;
+}
+
+export async function installMacosAgent(confgStr: string): Promise<boolean> {
+  const token = core.getInput("token", { required: true });
+  const auth = `token ${token}`;
+
+  try {
+    // Create working directory
+    core.info("Creating /opt/step-security directory...");
+    cp.execSync("sudo mkdir -p /opt/step-security");
+    chownForFolder(process.env.USER, "/opt/step-security");
+    core.info("✓ Successfully created /opt/step-security directory");
+
+    // Create agent configuration file
+    core.info("Creating agent.json");
+    fs.writeFileSync("/opt/step-security/agent.json", confgStr);
+    core.info(
+      "✓ Successfully created agent.json at /opt/step-security/agent.json"
+    );
+
+    // Download installer package
+    const downloadUrl =
+      "https://github.com/step-security/agent-releases/releases/download/v1.0.0-int/macos-installer-0.0.1-rc4.tar.gz";
+    core.info(`Downloading macOS installer.. : ${downloadUrl}`);
+    const downloadPath = await tc.downloadTool(downloadUrl);
+    core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
+
+    // Calculate and print SHA256 checksum
+    core.info("Calculating SHA256 checksum of downloaded tar file...");
+    const sha256sum = calculateSha256(downloadPath);
+    core.info(`SHA256: ${sha256sum}`);
+
+    // Extract installer package
+    core.info("Extracting installer...");
+    const extractPath = await tc.extractTar(downloadPath);
+    core.info(`✓ Successfully extracted installer to: ${extractPath}`);
+
+    // Copy Installer binary to /opt/step-security
+    const installerSourcePath = path.join(extractPath, "Installer");
+    core.info(
+      `Copying Installer from ${installerSourcePath} to /opt/step-security...`
+    );
+    cp.execSync(`cp "${installerSourcePath}" /opt/step-security/`);
+    core.info("✓ Successfully copied Installer to /opt/step-security");
+
+    const installerBinaryPath = "/opt/step-security/Installer";
+
+    // Verify installer binary exists
+    if (!fs.existsSync(installerBinaryPath)) {
+      throw new Error(
+        "Installer binary not found at /opt/step-security/Installer"
+      );
+    }
+    core.info("✓ Installer binary verified");
+
+    // Make installer executable
+    core.info("Making installer executable...");
+    cp.execSync(`chmod +x "${installerBinaryPath}"`);
+    core.info("✓ Installer is now executable");
+
+    // Run installer
+    core.info("Running installer...");
+    cp.execSync(
+      `sudo "${installerBinaryPath}" -workdir /opt/step-security >> /opt/step-security/agent.log 2>&1`,
+      {
+        shell: "/bin/bash",
+        timeout: 60000, // 60 second timeout
+      }
+    );
+    core.info("✓ Installer completed successfully");
+
+    core.info("✅ macOS agent installation (method 2) completed successfully");
+    return true;
+  } catch (error) {
+    core.error(`❌ Failed to install macOS agent: ${error}`);
+    if (error instanceof Error && error.stack) {
+      core.debug(error.stack);
+    }
+    return false;
+  }
 }

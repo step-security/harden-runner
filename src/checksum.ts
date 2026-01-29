@@ -39,3 +39,12 @@ export function verifyChecksum(
 
   core.debug("Checksum verification passed.");
 }
+
+export function calculateSha256(filePath: string): string {
+  const fileBuffer: Buffer = fs.readFileSync(filePath);
+  const checksum: string = crypto
+    .createHash("sha256")
+    .update(fileBuffer)
+    .digest("hex");
+  return checksum;
+}

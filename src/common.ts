@@ -1,5 +1,6 @@
 import * as core from "@actions/core";
 import * as fs from "fs";
+import * as cp from "child_process";
 import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
 
 export function printInfo(web_url) {
@@ -64,7 +65,6 @@ export async function addSummary() {
     return;
   }
 
-
   let needsSubscription = false;
   try {
     let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
@@ -97,23 +97,25 @@ export async function addSummary() {
   // Extract owner and repo from GITHUB_REPOSITORY (format: owner/repo)
   const [owner, repo] = process.env["GITHUB_REPOSITORY"]?.split("/") || [];
   const run_id = process.env["GITHUB_RUN_ID"];
-  
+
   if (!owner || !repo || !run_id || !correlation_id) {
     return;
   }
 
   // Fetch job summary from API
   const apiUrl = `${STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/runs/${run_id}/correlation/${correlation_id}/job-markdown-summary`;
-  
+
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) {
-      console.error(`Failed to fetch job summary: ${response.status} ${response.statusText}`);
+      console.error(
+        `Failed to fetch job summary: ${response.status} ${response.statusText}`
+      );
       return;
     }
-    
+
     const markdownSummary = await response.text();
-    
+
     // Render the markdown summary using core.summary.addRaw
     await core.summary.addRaw(markdownSummary).write();
     return;
@@ -121,6 +123,12 @@ export async function addSummary() {
     console.error(`Error fetching job summary: ${error}`);
     return;
   }
+}
+
+export function chownForFolder(newOwner: string, target: string) {
+  let cmd = "sudo";
+  let args = ["chown", "-R", newOwner, target];
+  cp.execFileSync(cmd, args);
 }
 
 export const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";

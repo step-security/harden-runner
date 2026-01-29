@@ -27,7 +27,7 @@ import * as utils from "@actions/cache/lib/internal/cacheUtils";
 import { isARCRunner, sendAllowedEndpoints } from "./arc-runner";
 import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
 import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
-import { installAgent } from "./install-agent";
+import { installAgent, installMacosAgent } from "./install-agent";
 
 interface MonitorResponse {
   runner_ip_address?: string;
@@ -39,16 +39,25 @@ interface MonitorResponse {
   try {
     console.log("[harden-runner] pre-step");
 
-    const customProperties = context?.payload?.repository?.custom_properties || {};
+    const customProperties =
+      context?.payload?.repository?.custom_properties || {};
     if (customProperties["skip-harden-runner"] === "true") {
-      console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
+      console.log(
+        "Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'"
+      );
       return;
     }
 
-    if (process.platform !== "linux") {
-      console.log(common.UBUNTU_MESSAGE);
-      return;
+    let platform = process.platform;
+    switch (platform) {
+      case "linux":
+      case "darwin":
+        break;
+      default:
+        console.log(common.UBUNTU_MESSAGE);
+        return;
     }
+
     if (isGithubHosted() && isDocker()) {
       console.log(common.CONTAINER_MESSAGE);
       return;
@@ -92,15 +101,22 @@ interface MonitorResponse {
       } catch (err) {
         core.info(`[!] ${err}`);
         // Only fail the job if ID token is not available
-        if (err.message && err.message.includes('Unable to get ACTIONS_ID_TOKEN_REQUEST')) {
-          core.setFailed('Policy store requires id-token write permission as it uses OIDC to fetch the policy from StepSecurity API. Please add "id-token: write" to your job permissions.');
+        if (
+          err.message &&
+          err.message.includes("Unable to get ACTIONS_ID_TOKEN_REQUEST")
+        ) {
+          core.setFailed(
+            'Policy store requires id-token write permission as it uses OIDC to fetch the policy from StepSecurity API. Please add "id-token: write" to your job permissions.'
+          );
         } else {
           // Handle different HTTP status codes
           if (err.statusCode >= 400 && err.statusCode < 500) {
-            core.error('Policy not found');
+            core.error("Policy not found");
           } else {
-            core.error(`Unexpected error occurred: ${err}. Falling back to egress policy audit`);
-            confg.egress_policy = 'audit';
+            core.error(
+              `Unexpected error occurred: ${err}. Falling back to egress policy audit`
+            );
+            confg.egress_policy = "audit";
           }
         }
       }
@@ -249,12 +265,17 @@ interface MonitorResponse {
       return;
     }
 
-    if (isGithubHosted() && process.env.STEP_SECURITY_HARDEN_RUNNER === "true") {
+    if (
+      isGithubHosted() &&
+      process.env.STEP_SECURITY_HARDEN_RUNNER === "true"
+    ) {
       fs.appendFileSync(process.env.GITHUB_STATE, `customVMImage=true${EOL}`, {
         encoding: "utf8",
       });
 
-      core.info("This job is running on a custom VM image with Harden Runner installed.");
+      core.info(
+        "This job is running on a custom VM image with Harden Runner installed."
+      );
 
       if (confg.egress_policy === "block") {
         sendAllowedEndpoints(confg.allowed_endpoints);
@@ -322,39 +343,51 @@ interface MonitorResponse {
     }
 
     const confgStr = JSON.stringify(confg);
-    cp.execSync("sudo mkdir -p /home/agent");
-    chownForFolder(process.env.USER, "/home/agent");
 
-    let isTLS = await isTLSEnabled(context.repo.owner);
+    switch (platform) {
+      case "linux":
+        cp.execSync("sudo mkdir -p /home/agent");
+        common.chownForFolder(process.env.USER, "/home/agent");
 
-    const agentInstalled = await installAgent(isTLS, confgStr);
+        let isTLS = await isTLSEnabled(context.repo.owner);
 
-    if (agentInstalled) {
-      // Check that the file exists locally
-      var statusFile = "/home/agent/agent.status";
-      var logFile = "/home/agent/agent.log";
-      var counter = 0;
-      while (true) {
-        if (!fs.existsSync(statusFile)) {
-          counter++;
-          if (counter > 30) {
-            console.log("timed out");
-            if (fs.existsSync(logFile)) {
-              var content = fs.readFileSync(logFile, "utf-8");
+        const agentInstalled = await installAgent(isTLS, confgStr);
+
+        if (agentInstalled) {
+          // Check that the file exists locally
+          var statusFile = "/home/agent/agent.status";
+          var logFile = "/home/agent/agent.log";
+          var counter = 0;
+          while (true) {
+            if (!fs.existsSync(statusFile)) {
+              counter++;
+              if (counter > 30) {
+                console.log("timed out");
+                if (fs.existsSync(logFile)) {
+                  var content = fs.readFileSync(logFile, "utf-8");
+                  console.log(content);
+                }
+                break;
+              }
+              await sleep(300);
+            } // The file *does* exist
+            else {
+              // Read the file
+              var content = fs.readFileSync(statusFile, "utf-8");
               console.log(content);
+              break;
             }
-            break;
           }
-          await sleep(300);
-        } // The file *does* exist
-        else {
-          // Read the file
-          var content = fs.readFileSync(statusFile, "utf-8");
-          console.log(content);
-          break;
         }
-      }
+
+      case "darwin":
+        const installed = await installMacosAgent(confgStr);
+        if (!installed) {
+          core.warning("😭 macos agent installation failed");
+          return;
+        }
     }
+
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -366,10 +399,4 @@ export function sleep(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
-}
-
-function chownForFolder(newOwner: string, target: string) {
-  let cmd = "sudo";
-  let args = ["chown", "-R", newOwner, target];
-  cp.execFileSync(cmd, args);
 }
