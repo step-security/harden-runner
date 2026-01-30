@@ -14,9 +14,14 @@ import { context } from "@actions/github";
     return;
   }
 
-  if (process.platform !== "linux") {
-    console.log(common.UBUNTU_MESSAGE);
-    return;
+  let platform = process.platform;
+  switch (platform) {
+    case "linux":
+    case "darwin":
+      break;
+    default:
+      console.log(common.UBUNTU_MESSAGE);
+      return;
   }
   if (isGithubHosted() && isDocker()) {
     console.log(common.CONTAINER_MESSAGE);
@@ -28,6 +33,72 @@ import { context } from "@actions/github";
     return;
   }
 
+  switch (platform) {
+    case "darwin":
+      await handleDarwinCleanup();
+      break;
+
+    case "linux":
+      await handleLinuxCleanup();
+      break;
+  }
+
+  try {
+    await common.addSummary();
+  } catch (exception) {
+    console.log(exception);
+  }
+})();
+
+async function handleDarwinCleanup() {
+  fs.writeFileSync(
+    "/opt/step-security/post_event.json",
+    JSON.stringify({ event: "post" })
+  );
+
+  let macDone = "/opt/step-security/done.json";
+  let counter = 0;
+  while (true) {
+    if (!fs.existsSync(macDone)) {
+      counter++;
+      if (counter > 10) {
+        console.log("timed out");
+        break;
+      }
+      await sleep(1000);
+    } else {
+      // The file *does* exist
+      break;
+    }
+  }
+
+  let macAgenLog = "/opt/step-security/agent.log";
+  if (fs.existsSync(macAgenLog)) {
+    console.log("macAgenLog:");
+    var content = fs.readFileSync(macAgenLog, "utf-8");
+    console.log(content);
+  } else {
+    console.log("😭 macos agent.log file not found");
+  }
+
+  // Capture system log stream for harden-runner subsystem
+  try {
+    console.log("\nSystem log stream for io.stepsecurity.harden-runner:");
+    const logStreamOutput = cp.execSync(
+      "log show --predicate 'subsystem == \"io.stepsecurity.harden-runner\"' --info --last 10m",
+      {
+        encoding: "utf8",
+        maxBuffer: 1024 * 1024 * 10, // 10MB buffer
+        timeout: 10000, // 30 second timeout
+      }
+    );
+    console.log(logStreamOutput);
+  } catch (error) {
+    console.log("Warning: Could not fetch system log stream:", error.message);
+  }
+}
+
+async function handleLinuxCleanup() {
   if (process.env.STATE_selfHosted === "true") {
     return;
   }
@@ -65,12 +136,11 @@ import { context } from "@actions/github";
       counter++;
       if (counter > 10) {
         console.log("timed out");
-
         break;
       }
       await sleep(1000);
-    } // The file *does* exist
-    else {
+    } else {
+      // The file *does* exist
       break;
     }
   }
@@ -114,13 +184,7 @@ import { context } from "@actions/github";
       console.log("Warning: Could not fetch service logs:", error.message);
     }
   }
-
-  try {
-    await common.addSummary();
-  } catch (exception) {
-    console.log(exception);
-  }
-})();
+}
 
 function sleep(ms) {
   return new Promise((resolve) => {
