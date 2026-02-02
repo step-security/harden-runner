@@ -34379,12 +34379,57 @@ __nccwpck_require__.r(__webpack_exports__);
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var lib_core = __nccwpck_require__(2186);
-// EXTERNAL MODULE: external "fs"
-var external_fs_ = __nccwpck_require__(5747);
 ;// CONCATENATED MODULE: ./src/configs.ts
 const STEPSECURITY_ENV = "agent"; // agent or int
 const configs_STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
 const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
+
+// EXTERNAL MODULE: external "child_process"
+var external_child_process_ = __nccwpck_require__(3129);
+// EXTERNAL MODULE: external "fs"
+var external_fs_ = __nccwpck_require__(5747);
+;// CONCATENATED MODULE: ./src/utils.ts
+
+
+function isPlatformSupported(platform) {
+    switch (platform) {
+        case "linux":
+        case "win32":
+        case "darwin":
+            return true;
+        default:
+            return false;
+    }
+}
+function chownForFolder(newOwner, target) {
+    let cmd = "sudo";
+    let args = ["chown", "-R", newOwner, target];
+    cp.execFileSync(cmd, args);
+}
+function isAgentInstalled(platform) {
+    switch (platform) {
+        case "linux":
+            return fs.existsSync("/home/agent/agent.status");
+        case "win32":
+            return fs.existsSync("C:\\agent\\agent.status");
+        case "darwin":
+            return fs.existsSync("/opt/step-security/agent.status");
+        default:
+            return false;
+    }
+}
+function utils_getAnnotationLogs(platform) {
+    switch (platform) {
+        case "linux":
+            return fs.readFileSync("/home/agent/annotation.log");
+        case "win32":
+            return fs.readFileSync("C:\\agent\\annotation.log");
+        case "darwin":
+            return fs.readFileSync("/opt/step-security/annotation.log");
+        default:
+            throw new Error("platform not supported");
+    }
+}
 
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -34438,8 +34483,9 @@ function addSummary() {
         }
         let needsSubscription = false;
         try {
-            let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
-            if (data.includes("StepSecurity Harden Runner is disabled")) {
+            let data = getAnnotationLogs(process.platform);
+            if (data !== undefined &&
+                data.includes("StepSecurity Harden Runner is disabled")) {
                 needsSubscription = true;
             }
         }
@@ -34570,39 +34616,6 @@ function isGithubHosted() {
 
 // EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
 var github = __nccwpck_require__(5438);
-// EXTERNAL MODULE: external "child_process"
-var external_child_process_ = __nccwpck_require__(3129);
-;// CONCATENATED MODULE: ./src/utils.ts
-
-
-function isPlatformSupported(platform) {
-    switch (platform) {
-        case "linux":
-        case "win32":
-        case "darwin":
-            return true;
-        default:
-            return false;
-    }
-}
-function chownForFolder(newOwner, target) {
-    let cmd = "sudo";
-    let args = ["chown", "-R", newOwner, target];
-    cp.execFileSync(cmd, args);
-}
-function isAgentInstalled(platform) {
-    switch (platform) {
-        case "linux":
-            return fs.existsSync("/home/agent/agent.status");
-        case "win32":
-            return fs.existsSync("C:\\agent\\agent.status");
-        case "darwin":
-            return fs.existsSync("/opt/step-security/agent.status");
-        default:
-            return false;
-    }
-}
-
 ;// CONCATENATED MODULE: ./src/index.ts
 var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }

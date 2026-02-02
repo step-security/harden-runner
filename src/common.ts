@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
-import * as fs from "fs";
 import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
+import { getAnnotationLogs } from "./utils";
 
 export function printInfo(web_url) {
   console.log(
@@ -67,8 +67,11 @@ export async function addSummary() {
 
   let needsSubscription = false;
   try {
-    let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
-    if (data.includes("StepSecurity Harden Runner is disabled")) {
+    let data = getAnnotationLogs(process.platform);
+    if (
+      data !== undefined &&
+      data.includes("StepSecurity Harden Runner is disabled")
+    ) {
       needsSubscription = true;
     }
   } catch (err) {

@@ -34386,6 +34386,51 @@ const STEPSECURITY_ENV = "agent"; // agent or int
 const configs_STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
 const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
 
+// EXTERNAL MODULE: external "child_process"
+var external_child_process_ = __nccwpck_require__(3129);
+;// CONCATENATED MODULE: ./src/utils.ts
+
+
+function isPlatformSupported(platform) {
+    switch (platform) {
+        case "linux":
+        case "win32":
+        case "darwin":
+            return true;
+        default:
+            return false;
+    }
+}
+function chownForFolder(newOwner, target) {
+    let cmd = "sudo";
+    let args = ["chown", "-R", newOwner, target];
+    cp.execFileSync(cmd, args);
+}
+function isAgentInstalled(platform) {
+    switch (platform) {
+        case "linux":
+            return fs.existsSync("/home/agent/agent.status");
+        case "win32":
+            return fs.existsSync("C:\\agent\\agent.status");
+        case "darwin":
+            return fs.existsSync("/opt/step-security/agent.status");
+        default:
+            return false;
+    }
+}
+function getAnnotationLogs(platform) {
+    switch (platform) {
+        case "linux":
+            return external_fs_.readFileSync("/home/agent/annotation.log");
+        case "win32":
+            return external_fs_.readFileSync("C:\\agent\\annotation.log");
+        case "darwin":
+            return external_fs_.readFileSync("/opt/step-security/annotation.log");
+        default:
+            throw new Error("platform not supported");
+    }
+}
+
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -34438,8 +34483,9 @@ function addSummary() {
         }
         let needsSubscription = false;
         try {
-            let data = external_fs_.readFileSync("/home/agent/annotation.log", "utf8");
-            if (data.includes("StepSecurity Harden Runner is disabled")) {
+            let data = getAnnotationLogs(process.platform);
+            if (data !== undefined &&
+                data.includes("StepSecurity Harden Runner is disabled")) {
                 needsSubscription = true;
             }
         }
@@ -34490,8 +34536,6 @@ const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing 
 const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner.";
 const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner community tier.";
 
-// EXTERNAL MODULE: external "child_process"
-var external_child_process_ = __nccwpck_require__(3129);
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(5622);
 ;// CONCATENATED MODULE: external "node:fs"
@@ -34618,37 +34662,6 @@ function isGithubHosted() {
 
 // EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
 var github = __nccwpck_require__(5438);
-;// CONCATENATED MODULE: ./src/utils.ts
-
-
-function isPlatformSupported(platform) {
-    switch (platform) {
-        case "linux":
-        case "win32":
-        case "darwin":
-            return true;
-        default:
-            return false;
-    }
-}
-function chownForFolder(newOwner, target) {
-    let cmd = "sudo";
-    let args = ["chown", "-R", newOwner, target];
-    cp.execFileSync(cmd, args);
-}
-function isAgentInstalled(platform) {
-    switch (platform) {
-        case "linux":
-            return fs.existsSync("/home/agent/agent.status");
-        case "win32":
-            return fs.existsSync("C:\\agent\\agent.status");
-        case "darwin":
-            return fs.existsSync("/opt/step-security/agent.status");
-        default:
-            return false;
-    }
-}
-
 ;// CONCATENATED MODULE: ./src/cleanup.ts
 var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -34780,7 +34793,12 @@ function handleLinuxCleanup() {
 }
 function handleMacosCleanup() {
     return cleanup_awaiter(this, void 0, void 0, function* () {
-        external_fs_.writeFileSync("/opt/step-security/post_event.json", JSON.stringify({ event: "post" }));
+        const post_event = "/opt/step-security/post_event.json";
+        if (isGithubHosted() && external_fs_.existsSync(post_event)) {
+            console.log("Post step already executed, skipping");
+            return;
+        }
+        external_fs_.writeFileSync(post_event, JSON.stringify({ event: "post" }));
         let macDone = "/opt/step-security/done.json";
         let counter = 0;
         while (true) {
@@ -34797,10 +34815,10 @@ function handleMacosCleanup() {
                 break;
             }
         }
-        let macAgenLog = "/opt/step-security/agent.log";
-        if (external_fs_.existsSync(macAgenLog)) {
+        let macAgentLog = "/opt/step-security/agent.log";
+        if (external_fs_.existsSync(macAgentLog)) {
             console.log("macAgenLog:");
-            var content = external_fs_.readFileSync(macAgenLog, "utf-8");
+            var content = external_fs_.readFileSync(macAgentLog, "utf-8");
             console.log(content);
         }
         else {
@@ -34812,7 +34830,7 @@ function handleMacosCleanup() {
             const logStreamOutput = external_child_process_.execSync("log show --predicate 'subsystem == \"io.stepsecurity.harden-runner\"' --info --last 10m", {
                 encoding: "utf8",
                 maxBuffer: 1024 * 1024 * 10,
-                timeout: 10000, // 10 second timeout
+                timeout: 5000, // 5 seconds timeout
             });
             console.log(logStreamOutput);
         }

@@ -140,10 +140,14 @@ async function handleLinuxCleanup() {
 }
 
 async function handleMacosCleanup() {
-  fs.writeFileSync(
-    "/opt/step-security/post_event.json",
-    JSON.stringify({ event: "post" })
-  );
+  const post_event = "/opt/step-security/post_event.json";
+
+  if (isGithubHosted() && fs.existsSync(post_event)) {
+    console.log("Post step already executed, skipping");
+    return;
+  }
+
+  fs.writeFileSync(post_event, JSON.stringify({ event: "post" }));
 
   let macDone = "/opt/step-security/done.json";
   let counter = 0;
@@ -161,10 +165,10 @@ async function handleMacosCleanup() {
     }
   }
 
-  let macAgenLog = "/opt/step-security/agent.log";
-  if (fs.existsSync(macAgenLog)) {
+  let macAgentLog = "/opt/step-security/agent.log";
+  if (fs.existsSync(macAgentLog)) {
     console.log("macAgenLog:");
-    var content = fs.readFileSync(macAgenLog, "utf-8");
+    var content = fs.readFileSync(macAgentLog, "utf-8");
     console.log(content);
   } else {
     console.log("😭 macos agent.log file not found");
@@ -178,7 +182,7 @@ async function handleMacosCleanup() {
       {
         encoding: "utf8",
         maxBuffer: 1024 * 1024 * 10, // 10MB buffer
-        timeout: 10000, // 10 second timeout
+        timeout: 5000, // 5 seconds timeout
       }
     );
     console.log(logStreamOutput);

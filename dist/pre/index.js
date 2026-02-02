@@ -87644,6 +87644,49 @@ const STEPSECURITY_ENV = "agent"; // agent or int
 const configs_STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
 const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
 
+;// CONCATENATED MODULE: ./src/utils.ts
+
+
+function isPlatformSupported(platform) {
+    switch (platform) {
+        case "linux":
+        case "win32":
+        case "darwin":
+            return true;
+        default:
+            return false;
+    }
+}
+function chownForFolder(newOwner, target) {
+    let cmd = "sudo";
+    let args = ["chown", "-R", newOwner, target];
+    external_child_process_.execFileSync(cmd, args);
+}
+function isAgentInstalled(platform) {
+    switch (platform) {
+        case "linux":
+            return external_fs_.existsSync("/home/agent/agent.status");
+        case "win32":
+            return external_fs_.existsSync("C:\\agent\\agent.status");
+        case "darwin":
+            return external_fs_.existsSync("/opt/step-security/agent.status");
+        default:
+            return false;
+    }
+}
+function utils_getAnnotationLogs(platform) {
+    switch (platform) {
+        case "linux":
+            return fs.readFileSync("/home/agent/annotation.log");
+        case "win32":
+            return fs.readFileSync("C:\\agent\\annotation.log");
+        case "darwin":
+            return fs.readFileSync("/opt/step-security/annotation.log");
+        default:
+            throw new Error("platform not supported");
+    }
+}
+
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -87696,8 +87739,9 @@ function addSummary() {
         }
         let needsSubscription = false;
         try {
-            let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
-            if (data.includes("StepSecurity Harden Runner is disabled")) {
+            let data = getAnnotationLogs(process.platform);
+            if (data !== undefined &&
+                data.includes("StepSecurity Harden Runner is disabled")) {
                 needsSubscription = true;
             }
         }
@@ -88022,37 +88066,6 @@ function verifyChecksum(downloadPath, isTLS, variant, platform) {
         return;
     }
     lib_core.info(`✅ Checksum verification passed. checksum=${checksum}`);
-}
-
-;// CONCATENATED MODULE: ./src/utils.ts
-
-
-function isPlatformSupported(platform) {
-    switch (platform) {
-        case "linux":
-        case "win32":
-        case "darwin":
-            return true;
-        default:
-            return false;
-    }
-}
-function chownForFolder(newOwner, target) {
-    let cmd = "sudo";
-    let args = ["chown", "-R", newOwner, target];
-    external_child_process_.execFileSync(cmd, args);
-}
-function isAgentInstalled(platform) {
-    switch (platform) {
-        case "linux":
-            return external_fs_.existsSync("/home/agent/agent.status");
-        case "win32":
-            return external_fs_.existsSync("C:\\agent\\agent.status");
-        case "darwin":
-            return external_fs_.existsSync("/opt/step-security/agent.status");
-        default:
-            return false;
-    }
 }
 
 ;// CONCATENATED MODULE: ./src/install-agent.ts
