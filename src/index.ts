@@ -4,6 +4,8 @@ import isDocker from "is-docker";
 import { STEPSECURITY_WEB_URL } from "./configs";
 import { isGithubHosted } from "./tls-inspect";
 import { context } from "@actions/github";
+import { isPlatformSupported } from "./utils";
+
 (async () => {
   console.log("[harden-runner] main-step");
 
@@ -13,8 +15,8 @@ import { context } from "@actions/github";
     return;
   }
 
-  if (process.platform !== "linux") {
-    console.log(common.UBUNTU_MESSAGE);
+  if (!isPlatformSupported(process.platform)) {
+    console.log(common.UNSUPPORTED_RUNNER_MESSAGE);
     return;
   }
   if (isGithubHosted() && isDocker()) {
