@@ -87677,11 +87677,11 @@ function isAgentInstalled(platform) {
 function utils_getAnnotationLogs(platform) {
     switch (platform) {
         case "linux":
-            return fs.readFileSync("/home/agent/annotation.log");
+            return fs.readFileSync("/home/agent/annotation.log", "utf8");
         case "win32":
-            return fs.readFileSync("C:\\agent\\annotation.log");
+            return fs.readFileSync("C:\\agent\\annotation.log", "utf8");
         case "darwin":
-            return fs.readFileSync("/opt/step-security/annotation.log");
+            return fs.readFileSync("/opt/step-security/annotation.log", "utf8");
         default:
             throw new Error("platform not supported");
     }
@@ -88125,7 +88125,7 @@ function installAgent(isTLS, configStr) {
         return true;
     });
 }
-function installMacosAgent(confgStr) {
+function installMacosAgent(configStr) {
     return install_agent_awaiter(this, void 0, void 0, function* () {
         const token = lib_core.getInput("token", { required: true });
         const auth = `token ${token}`;
@@ -88137,7 +88137,7 @@ function installMacosAgent(confgStr) {
             lib_core.info("✓ Successfully created /opt/step-security directory");
             // Create agent configuration file
             lib_core.info("Creating agent.json");
-            external_fs_.writeFileSync("/opt/step-security/agent.json", confgStr);
+            external_fs_.writeFileSync("/opt/step-security/agent.json", configStr);
             lib_core.info("✓ Successfully created agent.json at /opt/step-security/agent.json");
             // Download installer package
             const downloadUrl = "https://github.com/step-security/agent-releases/releases/download/v1.0.0-int/macos-installer-0.0.1.tar.gz";
@@ -88233,7 +88233,8 @@ function installWindowsAgent(configStr) {
             return true;
         }
         catch (error) {
-            lib_core.setFailed(`Failed to start Windows agent process: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            lib_core.setFailed(`Failed to start Windows agent process: ${errorMessage}`);
             return false;
         }
     });
@@ -88482,7 +88483,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
             return;
         }
-        const confgStr = JSON.stringify(confg);
+        const configStr = JSON.stringify(confg);
         // platform specific
         let statusFile = "";
         let logFile = "";
@@ -88494,17 +88495,17 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                 external_child_process_.execSync("sudo mkdir -p /home/agent");
                 chownForFolder(process.env.USER, "/home/agent");
                 let isTLS = yield isTLSEnabled(github.context.repo.owner);
-                agentInstalled = yield installAgent(isTLS, confgStr);
+                agentInstalled = yield installAgent(isTLS, configStr);
                 break;
             case "win32":
                 lib_core.info("Installing Windows Agent...");
-                agentInstalled = yield installWindowsAgent(confgStr);
+                agentInstalled = yield installWindowsAgent(configStr);
                 const agentDir = process.env.STATE_agentDir || "C:\\agent";
                 statusFile = external_path_.join(agentDir, "agent.status");
                 logFile = external_path_.join(agentDir, "agent.log");
                 break;
             case "darwin":
-                const installed = yield installMacosAgent(confgStr);
+                const installed = yield installMacosAgent(configStr);
                 if (!installed) {
                     lib_core.warning("😭 macos agent installation failed");
                 }

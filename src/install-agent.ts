@@ -67,7 +67,7 @@ export async function installAgent(
   return true;
 }
 
-export async function installMacosAgent(confgStr: string): Promise<boolean> {
+export async function installMacosAgent(configStr: string): Promise<boolean> {
   const token = core.getInput("token", { required: true });
   const auth = `token ${token}`;
 
@@ -80,7 +80,7 @@ export async function installMacosAgent(confgStr: string): Promise<boolean> {
 
     // Create agent configuration file
     core.info("Creating agent.json");
-    fs.writeFileSync("/opt/step-security/agent.json", confgStr);
+    fs.writeFileSync("/opt/step-security/agent.json", configStr);
     core.info(
       "✓ Successfully created agent.json at /opt/step-security/agent.json"
     );
@@ -208,7 +208,8 @@ export async function installWindowsAgent(configStr: string): Promise<boolean> {
     core.info("Windows Agent process started successfully");
     return true;
   } catch (error) {
-    core.setFailed(`Failed to start Windows agent process: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    core.setFailed(`Failed to start Windows agent process: ${errorMessage}`);
     return false;
   }
 }

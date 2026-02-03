@@ -167,7 +167,7 @@ async function handleMacosCleanup() {
 
   let macAgentLog = "/opt/step-security/agent.log";
   if (fs.existsSync(macAgentLog)) {
-    console.log("macAgenLog:");
+    console.log("macAgentLog:");
     var content = fs.readFileSync(macAgentLog, "utf-8");
     console.log(content);
   } else {

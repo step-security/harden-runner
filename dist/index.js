@@ -34421,11 +34421,11 @@ function isAgentInstalled(platform) {
 function utils_getAnnotationLogs(platform) {
     switch (platform) {
         case "linux":
-            return fs.readFileSync("/home/agent/annotation.log");
+            return fs.readFileSync("/home/agent/annotation.log", "utf8");
         case "win32":
-            return fs.readFileSync("C:\\agent\\annotation.log");
+            return fs.readFileSync("C:\\agent\\annotation.log", "utf8");
         case "darwin":
-            return fs.readFileSync("/opt/step-security/annotation.log");
+            return fs.readFileSync("/opt/step-security/annotation.log", "utf8");
         default:
             throw new Error("platform not supported");
     }

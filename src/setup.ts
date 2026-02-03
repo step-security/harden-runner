@@ -327,7 +327,7 @@ interface MonitorResponse {
       return;
     }
 
-    const confgStr = JSON.stringify(confg);
+    const configStr = JSON.stringify(confg);
 
     // platform specific
     let statusFile = "";
@@ -343,12 +343,12 @@ interface MonitorResponse {
         chownForFolder(process.env.USER, "/home/agent");
 
         let isTLS = await isTLSEnabled(context.repo.owner);
-        agentInstalled = await installAgent(isTLS, confgStr);
+        agentInstalled = await installAgent(isTLS, configStr);
 
         break;
       case "win32":
         core.info("Installing Windows Agent...");
-        agentInstalled = await installWindowsAgent(confgStr);
+        agentInstalled = await installWindowsAgent(configStr);
 
         const agentDir = process.env.STATE_agentDir || "C:\\agent";
         statusFile = path.join(agentDir, "agent.status");
@@ -356,7 +356,7 @@ interface MonitorResponse {
 
         break;
       case "darwin":
-        const installed = await installMacosAgent(confgStr);
+        const installed = await installMacosAgent(configStr);
         if (!installed) {
           core.warning("😭 macos agent installation failed");
         }

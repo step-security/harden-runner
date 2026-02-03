@@ -34421,11 +34421,11 @@ function isAgentInstalled(platform) {
 function getAnnotationLogs(platform) {
     switch (platform) {
         case "linux":
-            return external_fs_.readFileSync("/home/agent/annotation.log");
+            return external_fs_.readFileSync("/home/agent/annotation.log", "utf8");
         case "win32":
-            return external_fs_.readFileSync("C:\\agent\\annotation.log");
+            return external_fs_.readFileSync("C:\\agent\\annotation.log", "utf8");
         case "darwin":
-            return external_fs_.readFileSync("/opt/step-security/annotation.log");
+            return external_fs_.readFileSync("/opt/step-security/annotation.log", "utf8");
         default:
             throw new Error("platform not supported");
     }
@@ -34817,7 +34817,7 @@ function handleMacosCleanup() {
         }
         let macAgentLog = "/opt/step-security/agent.log";
         if (external_fs_.existsSync(macAgentLog)) {
-            console.log("macAgenLog:");
+            console.log("macAgentLog:");
             var content = external_fs_.readFileSync(macAgentLog, "utf-8");
             console.log(content);
         }
