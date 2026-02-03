@@ -88035,11 +88035,12 @@ const CHECKSUMS = {
     non_tls: {
         amd64: "336093af8ebe969567b66fd035af3bd4f7e1c723ce680d6b4b5b2a1f79bc329e", // v0.14.2
     },
-    darwin: "caaacc24bbf6a39ba7560e5e4701353c537883cb3ab9553359bd5caf5097246f",
+    darwin: "eefb162810c378653c16e122e024314a2e47592dc98b295433b26ad1a4f28590",
     windows: {
         amd64: "9e4fde66331be3261ae6ff954e531e94335b5774ac7e105f0126b391ee1c6d66", // v1.0.0-int
     },
 };
+// verifyChecksum returns true if checksum is valid
 function verifyChecksum(downloadPath, isTLS, variant, platform) {
     const fileBuffer = external_fs_.readFileSync(downloadPath);
     const checksum = external_crypto_.createHash("sha256")
@@ -88059,13 +88060,15 @@ function verifyChecksum(downloadPath, isTLS, variant, platform) {
             expectedChecksum = CHECKSUMS["windows"][variant];
             break;
         default:
-            throw new Error(`Unsupported platform: ${platform}`);
+            console.log(`Unsupported platform: ${platform}`);
+            return false;
     }
     if (checksum !== expectedChecksum) {
         lib_core.setFailed(`❌ Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
-        return;
+        return false;
     }
     lib_core.info(`✅ Checksum verification passed. checksum=${checksum}`);
+    return true;
 }
 
 ;// CONCATENATED MODULE: ./src/install-agent.ts
@@ -88107,7 +88110,9 @@ function installAgent(isTLS, configStr) {
             }
             downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.14.2/agent_0.14.2_linux_amd64.tar.gz", undefined, auth);
         }
-        verifyChecksum(downloadPath, isTLS, variant, "linux");
+        if (!verifyChecksum(downloadPath, isTLS, variant, "linux")) {
+            return false;
+        }
         const extractPath = yield tool_cache.extractTar(downloadPath);
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
@@ -88146,7 +88151,9 @@ function installMacosAgent(configStr) {
             lib_core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
             // Verify SHA256 checksum
             lib_core.info("Verifying SHA256 checksum of downloaded tar file...");
-            verifyChecksum(downloadPath, false, "", "darwin");
+            if (!verifyChecksum(downloadPath, false, "", "darwin")) {
+                return false;
+            }
             // Extract installer package
             lib_core.info("Extracting installer...");
             const extractPath = yield tool_cache.extractTar(downloadPath);
@@ -88204,7 +88211,10 @@ function installWindowsAgent(configStr) {
         });
         const agentExePath = external_path_.join(agentDir, "agent.exe");
         const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-releases/releases/download/v1.0.0-int/harden-runner-agent-windows_int_windows_amd64.tar.gz`, undefined, auth);
-        verifyChecksum(downloadPath, false, variant, process.platform);
+        // validate the checksum
+        if (!verifyChecksum(downloadPath, false, variant, process.platform)) {
+            return false;
+        }
         const extractPath = yield tool_cache.extractTar(downloadPath);
         const extractedAgentPath = external_path_.join(extractPath, "agent.exe");
         external_fs_.copyFileSync(extractedAgentPath, agentExePath);

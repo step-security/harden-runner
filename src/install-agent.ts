@@ -42,7 +42,9 @@ export async function installAgent(
     );
   }
 
-  verifyChecksum(downloadPath, isTLS, variant, "linux");
+  if (!verifyChecksum(downloadPath, isTLS, variant, "linux")) {
+    return false;
+  }
 
   const extractPath = await tc.extractTar(downloadPath);
 
@@ -94,7 +96,9 @@ export async function installMacosAgent(configStr: string): Promise<boolean> {
 
     // Verify SHA256 checksum
     core.info("Verifying SHA256 checksum of downloaded tar file...");
-    verifyChecksum(downloadPath, false, "", "darwin");
+    if (!verifyChecksum(downloadPath, false, "", "darwin")) {
+      return false;
+    }
 
     // Extract installer package
     core.info("Extracting installer...");
@@ -171,7 +175,11 @@ export async function installWindowsAgent(configStr: string): Promise<boolean> {
     undefined,
     auth
   );
-  verifyChecksum(downloadPath, false, variant, process.platform);
+
+  // validate the checksum
+  if (!verifyChecksum(downloadPath, false, variant, process.platform)) {
+    return false;
+  }
 
   const extractPath = await tc.extractTar(downloadPath);
 
