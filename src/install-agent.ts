@@ -87,7 +87,7 @@ export async function installMacosAgent(configStr: string): Promise<boolean> {
 
     // Download installer package
     const downloadUrl =
-      "https://github.com/step-security/agent-releases/releases/download/v1.0.0-int/macos-installer-0.0.1.tar.gz";
+      "https://github.com/step-security/agent-int-releases/releases/download/v0.0.2-mac/macos-installer-0.0.2.tar.gz";
     core.info(`Downloading macOS installer.. : ${downloadUrl}`);
     const downloadPath = await tc.downloadTool(downloadUrl, undefined, auth);
     core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
