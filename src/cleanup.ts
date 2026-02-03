@@ -6,7 +6,7 @@ import isDocker from "is-docker";
 import { isARCRunner } from "./arc-runner";
 import { isGithubHosted } from "./tls-inspect";
 import { context } from "@actions/github";
-import { isPlatformSupported } from "./utils";
+import { isPlatformSupported, isAgentInstalled } from "./utils";
 
 (async () => {
   console.log("[harden-runner] post-step");
@@ -149,19 +149,22 @@ async function handleMacosCleanup() {
 
   fs.writeFileSync(post_event, JSON.stringify({ event: "post" }));
 
-  let macDone = "/opt/step-security/done.json";
-  let counter = 0;
-  while (true) {
-    if (!fs.existsSync(macDone)) {
-      counter++;
-      if (counter > 10) {
-        console.log("timed out");
+  // if agent is installed; wait for it to create done.json
+  if (isAgentInstalled(process.platform)) {
+    let macDone = "/opt/step-security/done.json";
+    let counter = 0;
+    while (true) {
+      if (!fs.existsSync(macDone)) {
+        counter++;
+        if (counter > 10) {
+          console.log("timed out");
+          break;
+        }
+        await sleep(1000);
+      } else {
+        // The file *does* exist
         break;
       }
-      await sleep(1000);
-    } else {
-      // The file *does* exist
-      break;
     }
   }
 
@@ -215,18 +218,21 @@ async function handleWindowsCleanup() {
 
   fs.writeFileSync(postEventFile, JSON.stringify({ event: "post" }));
 
-  const doneFile = path.join(agentDir, "done.json");
-  let counter = 0;
-  while (true) {
-    if (!fs.existsSync(doneFile)) {
-      counter++;
-      if (counter > 10) {
-        console.log("timed out");
+  // if agent is installed; wait for it to create done.json
+  if (isAgentInstalled(process.platform)) {
+    const doneFile = path.join(agentDir, "done.json");
+    let counter = 0;
+    while (true) {
+      if (!fs.existsSync(doneFile)) {
+        counter++;
+        if (counter > 10) {
+          console.log("timed out");
+          break;
+        }
+        await sleep(1000);
+      } else {
         break;
       }
-      await sleep(1000);
-    } else {
-      break;
     }
   }
 

@@ -34409,11 +34409,11 @@ function chownForFolder(newOwner, target) {
 function isAgentInstalled(platform) {
     switch (platform) {
         case "linux":
-            return fs.existsSync("/home/agent/agent.status");
+            return external_fs_.existsSync("/home/agent/agent.status");
         case "win32":
-            return fs.existsSync("C:\\agent\\agent.status");
+            return external_fs_.existsSync("C:\\agent\\agent.status");
         case "darwin":
-            return fs.existsSync("/opt/step-security/agent.status");
+            return external_fs_.existsSync("/opt/step-security/agent.status");
         default:
             return false;
     }
@@ -34799,20 +34799,23 @@ function handleMacosCleanup() {
             return;
         }
         external_fs_.writeFileSync(post_event, JSON.stringify({ event: "post" }));
-        let macDone = "/opt/step-security/done.json";
-        let counter = 0;
-        while (true) {
-            if (!external_fs_.existsSync(macDone)) {
-                counter++;
-                if (counter > 10) {
-                    console.log("timed out");
+        // if agent is installed; wait for it to create done.json
+        if (isAgentInstalled(process.platform)) {
+            let macDone = "/opt/step-security/done.json";
+            let counter = 0;
+            while (true) {
+                if (!external_fs_.existsSync(macDone)) {
+                    counter++;
+                    if (counter > 10) {
+                        console.log("timed out");
+                        break;
+                    }
+                    yield sleep(1000);
+                }
+                else {
+                    // The file *does* exist
                     break;
                 }
-                yield sleep(1000);
-            }
-            else {
-                // The file *does* exist
-                break;
             }
         }
         let macAgentLog = "/opt/step-security/agent.log";
@@ -34856,19 +34859,22 @@ function handleWindowsCleanup() {
         ], { stdio: ["ignore", "pipe", "pipe"], shell: false, windowsHide: true });
         p.unref();
         external_fs_.writeFileSync(postEventFile, JSON.stringify({ event: "post" }));
-        const doneFile = external_path_.join(agentDir, "done.json");
-        let counter = 0;
-        while (true) {
-            if (!external_fs_.existsSync(doneFile)) {
-                counter++;
-                if (counter > 10) {
-                    console.log("timed out");
+        // if agent is installed; wait for it to create done.json
+        if (isAgentInstalled(process.platform)) {
+            const doneFile = external_path_.join(agentDir, "done.json");
+            let counter = 0;
+            while (true) {
+                if (!external_fs_.existsSync(doneFile)) {
+                    counter++;
+                    if (counter > 10) {
+                        console.log("timed out");
+                        break;
+                    }
+                    yield sleep(1000);
+                }
+                else {
                     break;
                 }
-                yield sleep(1000);
-            }
-            else {
-                break;
             }
         }
         console.log("stopping windows agent process...");
