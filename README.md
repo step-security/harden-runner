@@ -176,7 +176,7 @@ Want to know the technical details? Dive into the architecture of Harden-Runner 
 
 ## Limitations
 
-While Harden-Runner offers powerful features, there are certain limitations based on the environment, such as OS support. See the complete list in [Known Limitations](docs/limitations.md).
+While Harden-Runner offers powerful features, there are certain limitations. See the complete list in [Known Limitations](docs/limitations.md).
 
 ---
 
