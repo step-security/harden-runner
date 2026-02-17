@@ -162,7 +162,7 @@ Harden-Runner is designed to work seamlessly across a variety of runner environm
 
 | Environment Type | Compatibility | Audit Mode Deployment | Workflow Changes for Audit Mode |
 |------------------|---------------|--------------------------|-------------------|
-| GitHub-hosted runners | ✅ Full support | Add Harden-Runner Action to workflow | Yes |
+| GitHub-hosted runners (Linux, macOS, Windows) | ✅ Full support | Add Harden-Runner Action to workflow | Yes |
 | Self-hosted VM runners | ✅ Full support | Include agent in runner image | No |
 | Self-hosted bare-metal runners | ✅ Full support | Install agent as a service | No |
 | Actions Runner Controller (ARC) | ✅ Full support | Deploy as DaemonSet | No |
