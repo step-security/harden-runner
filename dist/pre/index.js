@@ -85545,9 +85545,9 @@ const CHECKSUMS = {
     non_tls: {
         amd64: "23715f2485c16e2a2ad116abf0fe8443788c62e4f5f224c5858b0b41b591fc89", // v0.14.3
     },
-    darwin: "eefb162810c378653c16e122e024314a2e47592dc98b295433b26ad1a4f28590",
+    darwin: "c15dea4604bb3f15c7b45bf74658a154827d3c1285cb9b13f21d4a2ad2b9d9ce",
     windows: {
-        amd64: "9e4fde66331be3261ae6ff954e531e94335b5774ac7e105f0126b391ee1c6d66", // v1.0.0-int
+        amd64: "e98f8b9cf9ecf6566f1e16a470fbe4aef01610a644fd8203a1bab3ff142186c8", // v1.0.0
     },
 };
 // verifyChecksum returns true if checksum is valid
@@ -85655,7 +85655,7 @@ function installMacosAgent(configStr) {
             external_fs_.writeFileSync("/opt/step-security/agent.json", configStr);
             lib_core.info("✓ Successfully created agent.json at /opt/step-security/agent.json");
             // Download installer package
-            const downloadUrl = "https://github.com/step-security/agent-int-releases/releases/download/v0.0.2-mac/macos-installer-0.0.2.tar.gz";
+            const downloadUrl = "https://github.com/step-security/agent-releases/releases/download/v0.0.3-mac/macos-installer-0.0.3.tar.gz";
             lib_core.info(`Downloading macOS installer.. : ${downloadUrl}`);
             const downloadPath = yield tool_cache.downloadTool(downloadUrl, undefined, auth);
             lib_core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
@@ -85670,10 +85670,10 @@ function installMacosAgent(configStr) {
             lib_core.info(`✓ Successfully extracted installer to: ${extractPath}`);
             // Copy Installer binary to /opt/step-security
             const installerSourcePath = external_path_.join(extractPath, "Installer");
-            lib_core.info(`Copying Installer from ${installerSourcePath} to /opt/step-security...`);
-            external_child_process_.execSync(`cp "${installerSourcePath}" /opt/step-security/`);
-            lib_core.info("✓ Successfully copied Installer to /opt/step-security");
             const installerBinaryPath = "/opt/step-security/Installer";
+            lib_core.info(`Copying Installer from ${installerSourcePath} to /opt/step-security...`);
+            external_child_process_.execFileSync("cp", [installerSourcePath, installerBinaryPath]);
+            lib_core.info("✓ Successfully copied Installer to /opt/step-security");
             // Verify installer binary exists
             if (!external_fs_.existsSync(installerBinaryPath)) {
                 throw new Error("Installer binary not found at /opt/step-security/Installer");
@@ -85720,7 +85720,7 @@ function installWindowsAgent(configStr) {
             encoding: "utf8",
         });
         const agentExePath = external_path_.join(agentDir, "agent.exe");
-        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-releases/releases/download/v1.0.0-int/harden-runner-agent-windows_int_windows_amd64.tar.gz`, undefined, auth);
+        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-releases/releases/download/v1.0.0-win/harden-runner-agent-windows_1.0.0_windows_amd64.tar.gz`, undefined, auth);
         // validate the checksum
         if (!verifyChecksum(downloadPath, false, variant, process.platform)) {
             return false;

@@ -10,9 +10,9 @@ const CHECKSUMS = {
   non_tls: {
     amd64: "23715f2485c16e2a2ad116abf0fe8443788c62e4f5f224c5858b0b41b591fc89", // v0.14.3
   },
-  darwin: "eefb162810c378653c16e122e024314a2e47592dc98b295433b26ad1a4f28590", // v0.0.2
+  darwin: "c15dea4604bb3f15c7b45bf74658a154827d3c1285cb9b13f21d4a2ad2b9d9ce", // v0.0.3
   windows: {
-    amd64: "9e4fde66331be3261ae6ff954e531e94335b5774ac7e105f0126b391ee1c6d66", // v1.0.0-int
+    amd64: "e98f8b9cf9ecf6566f1e16a470fbe4aef01610a644fd8203a1bab3ff142186c8", // v1.0.0
   },
 };
 

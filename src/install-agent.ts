@@ -89,7 +89,7 @@ export async function installMacosAgent(configStr: string): Promise<boolean> {
 
     // Download installer package
     const downloadUrl =
-      "https://github.com/step-security/agent-int-releases/releases/download/v0.0.2-mac/macos-installer-0.0.2.tar.gz";
+      "https://github.com/step-security/agent-releases/releases/download/v0.0.3-mac/macos-installer-0.0.3.tar.gz";
     core.info(`Downloading macOS installer.. : ${downloadUrl}`);
     const downloadPath = await tc.downloadTool(downloadUrl, undefined, auth);
     core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
@@ -107,13 +107,14 @@ export async function installMacosAgent(configStr: string): Promise<boolean> {
 
     // Copy Installer binary to /opt/step-security
     const installerSourcePath = path.join(extractPath, "Installer");
+    const installerBinaryPath = "/opt/step-security/Installer";
+
     core.info(
       `Copying Installer from ${installerSourcePath} to /opt/step-security...`
     );
-    cp.execSync(`cp "${installerSourcePath}" /opt/step-security/`);
+    cp.execFileSync("cp", [installerSourcePath, installerBinaryPath]);
     core.info("✓ Successfully copied Installer to /opt/step-security");
 
-    const installerBinaryPath = "/opt/step-security/Installer";
 
     // Verify installer binary exists
     if (!fs.existsSync(installerBinaryPath)) {
@@ -171,7 +172,7 @@ export async function installWindowsAgent(configStr: string): Promise<boolean> {
   const agentExePath = path.join(agentDir, "agent.exe");
 
   const downloadPath = await tc.downloadTool(
-    `https://github.com/step-security/agent-releases/releases/download/v1.0.0-int/harden-runner-agent-windows_int_windows_amd64.tar.gz`,
+    `https://github.com/step-security/agent-releases/releases/download/v1.0.0-win/harden-runner-agent-windows_1.0.0_windows_amd64.tar.gz`,
     undefined,
     auth
   );
