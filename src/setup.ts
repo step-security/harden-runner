@@ -27,7 +27,13 @@ import * as utils from "@actions/cache/lib/internal/cacheUtils";
 import { isARCRunner, sendAllowedEndpoints } from "./arc-runner";
 import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
 import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
-import { installAgent } from "./install-agent";
+import {
+  installAgent,
+  installMacosAgent,
+  installWindowsAgent,
+} from "./install-agent";
+
+import { chownForFolder, isAgentInstalled, isPlatformSupported } from "./utils";
 
 interface MonitorResponse {
   runner_ip_address?: string;
@@ -45,8 +51,8 @@ interface MonitorResponse {
       return;
     }
 
-    if (process.platform !== "linux") {
-      console.log(common.UBUNTU_MESSAGE);
+    if (!isPlatformSupported(process.platform)) {
+      console.log(common.UNSUPPORTED_RUNNER_MESSAGE);
       return;
     }
     if (isGithubHosted() && isDocker()) {
@@ -263,7 +269,7 @@ interface MonitorResponse {
       return;
     }
 
-    if (isGithubHosted() && fs.existsSync("/home/agent/agent.status")) {
+    if (isGithubHosted() && isAgentInstalled(process.platform)) {
       console.log("Agent already installed, skipping installation");
       return;
     }
@@ -321,18 +327,47 @@ interface MonitorResponse {
       return;
     }
 
-    const confgStr = JSON.stringify(confg);
-    cp.execSync("sudo mkdir -p /home/agent");
-    chownForFolder(process.env.USER, "/home/agent");
+    const configStr = JSON.stringify(confg);
 
-    let isTLS = await isTLSEnabled(context.repo.owner);
+    // platform specific
+    let statusFile = "";
+    let logFile = "";
+    let agentInstalled = false;
 
-    const agentInstalled = await installAgent(isTLS, confgStr);
+    switch (process.platform) {
+      case "linux":
+        statusFile = "/home/agent/agent.status";
+        logFile = "/home/agent/agent.log";
+
+        cp.execSync("sudo mkdir -p /home/agent");
+        chownForFolder(process.env.USER, "/home/agent");
+
+        let isTLS = await isTLSEnabled(context.repo.owner);
+        agentInstalled = await installAgent(isTLS, configStr);
+
+        break;
+      case "win32":
+        core.info("Installing Windows Agent...");
+        agentInstalled = await installWindowsAgent(configStr);
+
+        const agentDir = process.env.STATE_agentDir || "C:\\agent";
+        statusFile = path.join(agentDir, "agent.status");
+        logFile = path.join(agentDir, "agent.log");
+
+        break;
+      case "darwin":
+        const installed = await installMacosAgent(configStr);
+        if (!installed) {
+          core.warning("😭 macos agent installation failed");
+        }
+        return; // early return
+      default:
+        throw new Error(
+          `Setup failed because of unsupported platform: ${process.platform}`
+        );
+    }
 
     if (agentInstalled) {
-      // Check that the file exists locally
-      var statusFile = "/home/agent/agent.status";
-      var logFile = "/home/agent/agent.log";
       var counter = 0;
       while (true) {
         if (!fs.existsSync(statusFile)) {
@@ -366,10 +401,4 @@ export function sleep(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
-}
-
-function chownForFolder(newOwner: string, target: string) {
-  let cmd = "sudo";
-  let args = ["chown", "-R", newOwner, target];
-  cp.execFileSync(cmd, args);
 }
