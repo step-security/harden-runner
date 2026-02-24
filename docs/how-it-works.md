@@ -5,8 +5,7 @@
 For GitHub-hosted runners, Harden-Runner GitHub Action downloads and installs the StepSecurity Agent.
 
 - The code to monitor file, process, and network activity is in the Agent.
-- The community tier agent is open-source and can be found [here](https://github.com/step-security/agent). The enterprise tier agent is closed-source. Both agents are written in Go.
-- The agent's build is reproducible. You can view the steps to reproduce the build [here](http://app.stepsecurity.io/github/step-security/agent/releases/latest)
+- The community tier agent for Linux is open-source and can be found [here](https://github.com/step-security/agent). The enterprise agent for Linux and agents for Windows and macOS are closed-source.
 
 ### Self-Hosted Actions Runner Controller (ARC) Runners
 

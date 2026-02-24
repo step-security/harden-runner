@@ -23,15 +23,16 @@ StepSecurity Harden-Runner addresses this gap by providing security monitoring t
 ### Harden-Runner: Security Incidents Detected
 
 - [Harden-Runner Detected the tj-actions/changed-files compromise](https://www.stepsecurity.io/blog/harden-runner-detection-tj-actions-changed-files-action-is-compromised) ([CVE-2025-30066](https://github.com/advisories/GHSA-mrrh-fwg8-r2c3))
-- [Harden-Runner Detected a CI/CD Supply Chain Attack in Google’s Open-Source Project Flank](https://www.stepsecurity.io/case-studies/flank)
+- [Harden Runner Detected the Sha1-Hulud Supply Chain Attack in CNCF’s Backstage Repository](https://www.stepsecurity.io/blog/how-harden-runner-detected-the-sha1-hulud-supply-chain-attack-in-cncfs-backstage-repository)
 - [Harden-Runner Detected the NX Build System compromise](https://www.stepsecurity.io/blog/supply-chain-security-alert-popular-nx-build-system-package-compromised-with-data-stealing-malware)
+- [Harden-Runner Detected a CI/CD Supply Chain Attack in Google’s Open-Source Project Flank](https://www.stepsecurity.io/case-studies/flank)
 - [Harden-Runner Detected a CI/CD Supply Chain Attack in Microsoft’s Open-Source Project Azure Karpenter Provider in Real-Time](https://www.stepsecurity.io/case-studies/azure-karpenter-provider)
 - [Harden-Runner Detected Anomalous Traffic to api.ipify.org Across Multiple Customers](https://www.stepsecurity.io/blog/harden-runner-detects-anomalous-traffic-to-api-ipify-org-across-multiple-customers)  
 - [Harden-Runner Detected an Unexpected Microsoft Defender Installation on GitHub-Hosted Ubuntu Runners](https://www.stepsecurity.io/blog/how-stepsecurity-harden-runner-detected-unexpected-microsoft-defender-installation-on-github-hosted-ubuntu-runners)
 - [Harden-Runner Flagged an Anomalous Outbound Call, Leading to a Docker Documentation Update](https://www.stepsecurity.io/blog/harden-runner-flags-anomalous-outbound-call-leading-to-docker-documentation-update)
 
 ### See It in Action
-Harden-Runner secures over **8 million CI/CD workflow runs every week**, protecting thousands of pipelines, including those from popular open-source projects by **Microsoft, Google, and CISA**. See how top projects are using Harden-Runner and explore the insights:  
+Harden-Runner secures over **18 million CI/CD workflow runs every week**, protecting thousands of pipelines, including those from popular open-source projects by **Microsoft, Google, and CISA**. See how top projects are using Harden-Runner and explore the insights:  
 ➡️ [Who's using Harden-Runner?](https://docs.stepsecurity.io/whos-using-harden-runner)
 
 ## Quick Links
@@ -69,7 +70,7 @@ To integrate Harden-Runner, follow these steps:
    ```yaml
    steps:
      - name: Harden Runner
-       uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+       uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
        with:
          egress-policy: audit
 
@@ -176,7 +177,7 @@ Want to know the technical details? Dive into the architecture of Harden-Runner 
 
 ## Limitations
 
-While Harden-Runner offers powerful features, there are certain limitations based on the environment, such as OS support. See the complete list in [Known Limitations](docs/limitations.md).
+While Harden-Runner offers powerful features, there are certain limitations. See the complete list in [Known Limitations](docs/limitations.md).
 
 ---
 
