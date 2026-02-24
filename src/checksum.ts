@@ -10,12 +10,18 @@ const CHECKSUMS = {
   non_tls: {
     amd64: "23715f2485c16e2a2ad116abf0fe8443788c62e4f5f224c5858b0b41b591fc89", // v0.14.3
   },
+  darwin: "797399a3a3f6f9c4c000a02e0d8c7b16499129c9bdc2ad9cf2a10072c10654fb", // v0.0.4
+  windows: {
+    amd64: "e98f8b9cf9ecf6566f1e16a470fbe4aef01610a644fd8203a1bab3ff142186c8", // v1.0.0
+  },
 };
 
+// verifyChecksum returns true if checksum is valid
 export function verifyChecksum(
   downloadPath: string,
   isTLS: boolean,
-  variant: string
+  variant: string,
+  platform: string
 ) {
   const fileBuffer: Buffer = fs.readFileSync(downloadPath);
   const checksum: string = crypto
@@ -25,17 +31,30 @@ export function verifyChecksum(
 
   let expectedChecksum: string = "";
 
-  if (isTLS) {
-    expectedChecksum = CHECKSUMS["tls"][variant];
-  } else {
-    expectedChecksum = CHECKSUMS["non_tls"][variant];
+  switch (platform) {
+    case "linux":
+      expectedChecksum = isTLS
+        ? CHECKSUMS["tls"][variant]
+        : CHECKSUMS["non_tls"][variant];
+      break;
+    case "darwin":
+      expectedChecksum = CHECKSUMS["darwin"];
+      break;
+    case "win32":
+      expectedChecksum = CHECKSUMS["windows"][variant];
+      break;
+    default:
+      console.log(`Unsupported platform: ${platform}`);
+      return false;
   }
 
   if (checksum !== expectedChecksum) {
     core.setFailed(
-      `Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`
+      `❌ Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`
     );
+    return false;
   }
 
-  core.debug("Checksum verification passed.");
+  core.info(`✅ Checksum verification passed. checksum=${checksum}`);
+  return true;
 }

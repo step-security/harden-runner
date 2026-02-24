@@ -31876,8 +31876,53 @@ var __webpack_exports__ = {};
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var lib_core = __nccwpck_require__(7484);
+// EXTERNAL MODULE: external "child_process"
+var external_child_process_ = __nccwpck_require__(5317);
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __nccwpck_require__(9896);
+;// CONCATENATED MODULE: ./src/utils.ts
+
+
+function isPlatformSupported(platform) {
+    switch (platform) {
+        case "linux":
+        case "win32":
+        case "darwin":
+            return true;
+        default:
+            return false;
+    }
+}
+function chownForFolder(newOwner, target) {
+    let cmd = "sudo";
+    let args = ["chown", "-R", newOwner, target];
+    cp.execFileSync(cmd, args);
+}
+function isAgentInstalled(platform) {
+    switch (platform) {
+        case "linux":
+            return fs.existsSync("/home/agent/agent.status");
+        case "win32":
+            return fs.existsSync("C:\\agent\\agent.status");
+        case "darwin":
+            return fs.existsSync("/opt/step-security/agent.status");
+        default:
+            return false;
+    }
+}
+function utils_getAnnotationLogs(platform) {
+    switch (platform) {
+        case "linux":
+            return fs.readFileSync("/home/agent/annotation.log", "utf8");
+        case "win32":
+            return fs.readFileSync("C:\\agent\\annotation.log", "utf8");
+        case "darwin":
+            return fs.readFileSync("/opt/step-security/annotation.log", "utf8");
+        default:
+            throw new Error("platform not supported");
+    }
+}
+
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -31930,8 +31975,9 @@ function addSummary() {
         }
         let needsSubscription = false;
         try {
-            let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
-            if (data.includes("StepSecurity Harden Runner is disabled")) {
+            let data = getAnnotationLogs(process.platform);
+            if (data !== undefined &&
+                data.includes("StepSecurity Harden Runner is disabled")) {
                 needsSubscription = true;
             }
         }
@@ -31978,7 +32024,7 @@ function addSummary() {
 }
 const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 const CONTAINER_MESSAGE = "This job is running in a container. Such jobs can be monitored by installing Harden Runner in a custom VM image for GitHub-hosted runners.";
-const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
+const UNSUPPORTED_RUNNER_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner. Harden Runner is only supported on GitHub-hosted runners (Ubuntu, Windows, and macOS). This job will not be monitored.";
 const SELF_HOSTED_RUNNER_MESSAGE = "This job is running on a self-hosted runner.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner.";
@@ -32083,6 +32129,7 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
 
 
 
+
 (() => src_awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     console.log("[harden-runner] main-step");
@@ -32091,8 +32138,8 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
         console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
         return;
     }
-    if (process.platform !== "linux") {
-        console.log(UBUNTU_MESSAGE);
+    if (!isPlatformSupported(process.platform)) {
+        console.log(UNSUPPORTED_RUNNER_MESSAGE);
         return;
     }
     if (isGithubHosted() && isDocker()) {

@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
-import * as fs from "fs";
 import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
+import { getAnnotationLogs } from "./utils";
 
 export function printInfo(web_url) {
   console.log(
@@ -67,8 +67,11 @@ export async function addSummary() {
 
   let needsSubscription = false;
   try {
-    let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
-    if (data.includes("StepSecurity Harden Runner is disabled")) {
+    let data = getAnnotationLogs(process.platform);
+    if (
+      data !== undefined &&
+      data.includes("StepSecurity Harden Runner is disabled")
+    ) {
       needsSubscription = true;
     }
   } catch (err) {
@@ -97,23 +100,23 @@ export async function addSummary() {
   // Extract owner and repo from GITHUB_REPOSITORY (format: owner/repo)
   const [owner, repo] = process.env["GITHUB_REPOSITORY"]?.split("/") || [];
   const run_id = process.env["GITHUB_RUN_ID"];
-  
+
   if (!owner || !repo || !run_id || !correlation_id) {
     return;
   }
 
   // Fetch job summary from API
   const apiUrl = `${STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/runs/${run_id}/correlation/${correlation_id}/job-markdown-summary`;
-  
+
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) {
       console.error(`Failed to fetch job summary: ${response.status} ${response.statusText}`);
       return;
     }
-    
+
     const markdownSummary = await response.text();
-    
+
     // Render the markdown summary using core.summary.addRaw
     await core.summary.addRaw(markdownSummary).write();
     return;
@@ -128,8 +131,8 @@ export const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 export const CONTAINER_MESSAGE =
   "This job is running in a container. Such jobs can be monitored by installing Harden Runner in a custom VM image for GitHub-hosted runners.";
 
-export const UBUNTU_MESSAGE =
-  "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
+export const UNSUPPORTED_RUNNER_MESSAGE =
+  "This job is not running in a GitHub Actions Hosted Runner. Harden Runner is only supported on GitHub-hosted runners (Ubuntu, Windows, and macOS). This job will not be monitored.";
 
 export const SELF_HOSTED_RUNNER_MESSAGE =
   "This job is running on a self-hosted runner.";
