@@ -85545,7 +85545,7 @@ const CHECKSUMS = {
     non_tls: {
         amd64: "23715f2485c16e2a2ad116abf0fe8443788c62e4f5f224c5858b0b41b591fc89", // v0.14.3
     },
-    darwin: "c15dea4604bb3f15c7b45bf74658a154827d3c1285cb9b13f21d4a2ad2b9d9ce",
+    darwin: "797399a3a3f6f9c4c000a02e0d8c7b16499129c9bdc2ad9cf2a10072c10654fb",
     windows: {
         amd64: "e98f8b9cf9ecf6566f1e16a470fbe4aef01610a644fd8203a1bab3ff142186c8", // v1.0.0
     },
@@ -85655,7 +85655,7 @@ function installMacosAgent(configStr) {
             external_fs_.writeFileSync("/opt/step-security/agent.json", configStr);
             lib_core.info("✓ Successfully created agent.json at /opt/step-security/agent.json");
             // Download installer package
-            const downloadUrl = "https://github.com/step-security/agent-releases/releases/download/v0.0.3-mac/macos-installer-0.0.3.tar.gz";
+            const downloadUrl = "https://github.com/step-security/agent-releases/releases/download/v0.0.4-mac/macos-installer-0.0.4.tar.gz";
             lib_core.info(`Downloading macOS installer.. : ${downloadUrl}`);
             const downloadPath = yield tool_cache.downloadTool(downloadUrl, undefined, auth);
             lib_core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
