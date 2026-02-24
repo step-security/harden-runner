@@ -85149,6 +85149,49 @@ const validate = dist/* validate */.tf;
 const stringify = dist/* stringify */.As;
 const parse = dist/* parse */.qg;
 
+;// CONCATENATED MODULE: ./src/utils.ts
+
+
+function isPlatformSupported(platform) {
+    switch (platform) {
+        case "linux":
+        case "win32":
+        case "darwin":
+            return true;
+        default:
+            return false;
+    }
+}
+function chownForFolder(newOwner, target) {
+    let cmd = "sudo";
+    let args = ["chown", "-R", newOwner, target];
+    external_child_process_.execFileSync(cmd, args);
+}
+function isAgentInstalled(platform) {
+    switch (platform) {
+        case "linux":
+            return external_fs_.existsSync("/home/agent/agent.status");
+        case "win32":
+            return external_fs_.existsSync("C:\\agent\\agent.status");
+        case "darwin":
+            return external_fs_.existsSync("/opt/step-security/agent.status");
+        default:
+            return false;
+    }
+}
+function utils_getAnnotationLogs(platform) {
+    switch (platform) {
+        case "linux":
+            return fs.readFileSync("/home/agent/annotation.log", "utf8");
+        case "win32":
+            return fs.readFileSync("C:\\agent\\annotation.log", "utf8");
+        case "darwin":
+            return fs.readFileSync("/opt/step-security/annotation.log", "utf8");
+        default:
+            throw new Error("platform not supported");
+    }
+}
+
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -85201,8 +85244,9 @@ function addSummary() {
         }
         let needsSubscription = false;
         try {
-            let data = fs.readFileSync("/home/agent/annotation.log", "utf8");
-            if (data.includes("StepSecurity Harden Runner is disabled")) {
+            let data = getAnnotationLogs(process.platform);
+            if (data !== undefined &&
+                data.includes("StepSecurity Harden Runner is disabled")) {
                 needsSubscription = true;
             }
         }
@@ -85249,7 +85293,7 @@ function addSummary() {
 }
 const STATUS_HARDEN_RUNNER_UNAVAILABLE = "409";
 const CONTAINER_MESSAGE = "This job is running in a container. Such jobs can be monitored by installing Harden Runner in a custom VM image for GitHub-hosted runners.";
-const UBUNTU_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner Ubuntu VM. Harden Runner is only supported on Ubuntu VM. This job will not be monitored.";
+const UNSUPPORTED_RUNNER_MESSAGE = "This job is not running in a GitHub Actions Hosted Runner. Harden Runner is only supported on GitHub-hosted runners (Ubuntu, Windows, and macOS). This job will not be monitored.";
 const SELF_HOSTED_RUNNER_MESSAGE = "This job is running on a self-hosted runner.";
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner.";
@@ -85501,23 +85545,40 @@ const CHECKSUMS = {
     non_tls: {
         amd64: "23715f2485c16e2a2ad116abf0fe8443788c62e4f5f224c5858b0b41b591fc89", // v0.14.3
     },
+    darwin: "797399a3a3f6f9c4c000a02e0d8c7b16499129c9bdc2ad9cf2a10072c10654fb",
+    windows: {
+        amd64: "e98f8b9cf9ecf6566f1e16a470fbe4aef01610a644fd8203a1bab3ff142186c8", // v1.0.0
+    },
 };
-function verifyChecksum(downloadPath, isTLS, variant) {
+// verifyChecksum returns true if checksum is valid
+function verifyChecksum(downloadPath, isTLS, variant, platform) {
     const fileBuffer = external_fs_.readFileSync(downloadPath);
     const checksum = external_crypto_.createHash("sha256")
         .update(fileBuffer)
         .digest("hex"); // checksum of downloaded file
     let expectedChecksum = "";
-    if (isTLS) {
-        expectedChecksum = CHECKSUMS["tls"][variant];
-    }
-    else {
-        expectedChecksum = CHECKSUMS["non_tls"][variant];
+    switch (platform) {
+        case "linux":
+            expectedChecksum = isTLS
+                ? CHECKSUMS["tls"][variant]
+                : CHECKSUMS["non_tls"][variant];
+            break;
+        case "darwin":
+            expectedChecksum = CHECKSUMS["darwin"];
+            break;
+        case "win32":
+            expectedChecksum = CHECKSUMS["windows"][variant];
+            break;
+        default:
+            console.log(`Unsupported platform: ${platform}`);
+            return false;
     }
     if (checksum !== expectedChecksum) {
-        lib_core.setFailed(`Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
+        lib_core.setFailed(`❌ Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`);
+        return false;
     }
-    lib_core.debug("Checksum verification passed.");
+    lib_core.info(`✅ Checksum verification passed. checksum=${checksum}`);
+    return true;
 }
 
 ;// CONCATENATED MODULE: ./src/install-agent.ts
@@ -85530,6 +85591,7 @@ var install_agent_awaiter = (undefined && undefined.__awaiter) || function (this
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -85558,7 +85620,9 @@ function installAgent(isTLS, configStr) {
             }
             downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.14.3/agent_0.14.3_linux_amd64.tar.gz", undefined, auth);
         }
-        verifyChecksum(downloadPath, isTLS, variant);
+        if (!verifyChecksum(downloadPath, isTLS, variant, "linux")) {
+            return false;
+        }
         const extractPath = yield tool_cache.extractTar(downloadPath);
         let cmd = "cp", args = [external_path_.join(extractPath, "agent"), "/home/agent/agent"];
         external_child_process_.execFileSync(cmd, args);
@@ -85574,6 +85638,125 @@ function installAgent(isTLS, configStr) {
         external_child_process_.execSync("sudo systemctl daemon-reload");
         external_child_process_.execSync("sudo service agent start", { timeout: 15000 });
         return true;
+    });
+}
+function installMacosAgent(configStr) {
+    return install_agent_awaiter(this, void 0, void 0, function* () {
+        const token = lib_core.getInput("token", { required: true });
+        const auth = `token ${token}`;
+        try {
+            // Create working directory
+            lib_core.info("Creating /opt/step-security directory...");
+            external_child_process_.execSync("sudo mkdir -p /opt/step-security");
+            chownForFolder(process.env.USER, "/opt/step-security");
+            lib_core.info("✓ Successfully created /opt/step-security directory");
+            // Create agent configuration file
+            lib_core.info("Creating agent.json");
+            external_fs_.writeFileSync("/opt/step-security/agent.json", configStr);
+            lib_core.info("✓ Successfully created agent.json at /opt/step-security/agent.json");
+            // Download installer package
+            const downloadUrl = "https://github.com/step-security/agent-releases/releases/download/v0.0.4-mac/macos-installer-0.0.4.tar.gz";
+            lib_core.info(`Downloading macOS installer.. : ${downloadUrl}`);
+            const downloadPath = yield tool_cache.downloadTool(downloadUrl, undefined, auth);
+            lib_core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
+            // Verify SHA256 checksum
+            lib_core.info("Verifying SHA256 checksum of downloaded tar file...");
+            if (!verifyChecksum(downloadPath, false, "", "darwin")) {
+                return false;
+            }
+            // Extract installer package
+            lib_core.info("Extracting installer...");
+            const extractPath = yield tool_cache.extractTar(downloadPath);
+            lib_core.info(`✓ Successfully extracted installer to: ${extractPath}`);
+            // Copy Installer binary to /opt/step-security
+            const installerSourcePath = external_path_.join(extractPath, "Installer");
+            const installerBinaryPath = "/opt/step-security/Installer";
+            lib_core.info(`Copying Installer from ${installerSourcePath} to /opt/step-security...`);
+            external_child_process_.execFileSync("cp", [installerSourcePath, installerBinaryPath]);
+            lib_core.info("✓ Successfully copied Installer to /opt/step-security");
+            // Verify installer binary exists
+            if (!external_fs_.existsSync(installerBinaryPath)) {
+                throw new Error("Installer binary not found at /opt/step-security/Installer");
+            }
+            lib_core.info("✓ Installer binary verified");
+            // Make installer executable
+            lib_core.info("Making installer executable...");
+            external_child_process_.execSync(`chmod +x "${installerBinaryPath}"`);
+            lib_core.info("✓ Installer is now executable");
+            // Run installer
+            lib_core.info("Running installer...");
+            external_child_process_.execSync(`sudo "${installerBinaryPath}" -workdir /opt/step-security >> /opt/step-security/agent.log 2>&1`, {
+                shell: "/bin/bash",
+                timeout: 10000, // 10 second timeout
+            });
+            lib_core.info("✓ Installer completed successfully");
+            lib_core.info("✅ macOS agent installation completed successfully");
+            return true;
+        }
+        catch (error) {
+            lib_core.error(`❌ Failed to install macOS agent: ${error}`);
+            if (error instanceof Error && error.stack) {
+                lib_core.debug(error.stack);
+            }
+            return false;
+        }
+    });
+}
+function installWindowsAgent(configStr) {
+    return install_agent_awaiter(this, void 0, void 0, function* () {
+        const token = lib_core.getInput("token", { required: true });
+        const auth = `token ${token}`;
+        const variant = process.arch === "x64" ? "amd64" : "arm64";
+        if (variant === "arm64") {
+            console.log(ARM64_RUNNER_MESSAGE);
+            return false;
+        }
+        const agentDir = "C:\\agent";
+        lib_core.info(`Creating agent directory: ${agentDir}`);
+        if (!external_fs_.existsSync(agentDir)) {
+            external_fs_.mkdirSync(agentDir, { recursive: true });
+        }
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `agentDir=${agentDir}${external_os_.EOL}`, {
+            encoding: "utf8",
+        });
+        const agentExePath = external_path_.join(agentDir, "agent.exe");
+        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-releases/releases/download/v1.0.0-win/harden-runner-agent-windows_1.0.0_windows_amd64.tar.gz`, undefined, auth);
+        // validate the checksum
+        if (!verifyChecksum(downloadPath, false, variant, process.platform)) {
+            return false;
+        }
+        const extractPath = yield tool_cache.extractTar(downloadPath);
+        const extractedAgentPath = external_path_.join(extractPath, "agent.exe");
+        external_fs_.copyFileSync(extractedAgentPath, agentExePath);
+        lib_core.info(`Copied agent from ${extractedAgentPath} to ${agentExePath}`);
+        const configPath = external_path_.join(agentDir, "config.json");
+        external_fs_.writeFileSync(configPath, configStr);
+        lib_core.info(`Created config file: ${configPath}`);
+        lib_core.info("Starting Windows Agent...");
+        try {
+            const logPath = external_path_.join(agentDir, "agent.log");
+            const logStream = external_fs_.openSync(logPath, "a");
+            lib_core.info(`Agent logs will be written to: ${logPath}`);
+            const agentProcess = external_child_process_.spawn(agentExePath, [], {
+                cwd: agentDir,
+                detached: true,
+                stdio: ["ignore", logStream, logStream],
+                windowsHide: false,
+                shell: false,
+            });
+            const pidFile = external_path_.join(agentDir, "agent.pid");
+            external_fs_.writeFileSync(pidFile, agentProcess.pid.toString());
+            lib_core.info(`Agent process started with PID: ${agentProcess.pid}`);
+            lib_core.info(`PID saved to: ${pidFile}`);
+            agentProcess.unref();
+            lib_core.info("Windows Agent process started successfully");
+            return true;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            lib_core.setFailed(`Failed to start Windows agent process: ${errorMessage}`);
+            return false;
+        }
     });
 }
 
@@ -85608,6 +85791,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
 
 
 
+
 (() => setup_awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
     try {
@@ -85617,8 +85801,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
             return;
         }
-        if (process.platform !== "linux") {
-            console.log(UBUNTU_MESSAGE);
+        if (!isPlatformSupported(process.platform)) {
+            console.log(UNSUPPORTED_RUNNER_MESSAGE);
             return;
         }
         if (isGithubHosted() && isDocker()) {
@@ -85780,7 +85964,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             }
             return;
         }
-        if (isGithubHosted() && external_fs_.existsSync("/home/agent/agent.status")) {
+        if (isGithubHosted() && isAgentInstalled(process.platform)) {
             console.log("Agent already installed, skipping installation");
             return;
         }
@@ -85819,15 +86003,37 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
             return;
         }
-        const confgStr = JSON.stringify(confg);
-        external_child_process_.execSync("sudo mkdir -p /home/agent");
-        chownForFolder(process.env.USER, "/home/agent");
-        let isTLS = yield isTLSEnabled(github.context.repo.owner);
-        const agentInstalled = yield installAgent(isTLS, confgStr);
+        const configStr = JSON.stringify(confg);
+        // platform specific
+        let statusFile = "";
+        let logFile = "";
+        let agentInstalled = false;
+        switch (process.platform) {
+            case "linux":
+                statusFile = "/home/agent/agent.status";
+                logFile = "/home/agent/agent.log";
+                external_child_process_.execSync("sudo mkdir -p /home/agent");
+                chownForFolder(process.env.USER, "/home/agent");
+                let isTLS = yield isTLSEnabled(github.context.repo.owner);
+                agentInstalled = yield installAgent(isTLS, configStr);
+                break;
+            case "win32":
+                lib_core.info("Installing Windows Agent...");
+                agentInstalled = yield installWindowsAgent(configStr);
+                const agentDir = process.env.STATE_agentDir || "C:\\agent";
+                statusFile = external_path_.join(agentDir, "agent.status");
+                logFile = external_path_.join(agentDir, "agent.log");
+                break;
+            case "darwin":
+                const installed = yield installMacosAgent(configStr);
+                if (!installed) {
+                    lib_core.warning("😭 macos agent installation failed");
+                }
+                return; // early return
+            default:
+                throw new Error(`Setup failed because of unsupported platform: ${process.platform}`);
+        }
         if (agentInstalled) {
-            // Check that the file exists locally
-            var statusFile = "/home/agent/agent.status";
-            var logFile = "/home/agent/agent.log";
             var counter = 0;
             while (true) {
                 if (!external_fs_.existsSync(statusFile)) {
@@ -85861,11 +86067,6 @@ function setup_sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
-}
-function chownForFolder(newOwner, target) {
-    let cmd = "sudo";
-    let args = ["chown", "-R", newOwner, target];
-    external_child_process_.execFileSync(cmd, args);
 }
 
 })();

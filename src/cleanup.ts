@@ -1,10 +1,13 @@
 import * as fs from "fs";
-import * as cp from "child_process";
 import * as common from "./common";
+import * as cp from "child_process";
+import * as path from "path";
 import isDocker from "is-docker";
 import { isARCRunner } from "./arc-runner";
 import { isGithubHosted } from "./tls-inspect";
 import { context } from "@actions/github";
+import { isPlatformSupported, isAgentInstalled } from "./utils";
+
 (async () => {
   console.log("[harden-runner] post-step");
 
@@ -14,8 +17,8 @@ import { context } from "@actions/github";
     return;
   }
 
-  if (process.platform !== "linux") {
-    console.log(common.UBUNTU_MESSAGE);
+  if (!isPlatformSupported(process.platform)) {
+    console.log(common.UNSUPPORTED_RUNNER_MESSAGE);
     return;
   }
   if (isGithubHosted() && isDocker()) {
@@ -36,15 +39,35 @@ import { context } from "@actions/github";
     return;
   }
 
-  if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
-    return;
-  }
-
   if (
     String(process.env.STATE_monitorStatusCode) ===
     common.STATUS_HARDEN_RUNNER_UNAVAILABLE
   ) {
     console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+    return;
+  }
+
+  switch (process.platform) {
+    case "linux":
+      await handleLinuxCleanup();
+      break;
+    case "win32":
+      await handleWindowsCleanup();
+      break;
+    case "darwin":
+      await handleMacosCleanup();
+      break;
+  }
+
+  try {
+    await common.addSummary();
+  } catch (exception) {
+    console.log(exception);
+  }
+})();
+
+async function handleLinuxCleanup() {
+  if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
     return;
   }
 
@@ -69,8 +92,8 @@ import { context } from "@actions/github";
         break;
       }
       await sleep(1000);
-    } // The file *does* exist
-    else {
+    } else {
+      // The file *does* exist
       break;
     }
   }
@@ -114,13 +137,162 @@ import { context } from "@actions/github";
       console.log("Warning: Could not fetch service logs:", error.message);
     }
   }
+}
+
+async function handleMacosCleanup() {
+  const post_event = "/opt/step-security/post_event.json";
+
+  if (isGithubHosted() && fs.existsSync(post_event)) {
+    console.log("Post step already executed, skipping");
+    return;
+  }
+
+  fs.writeFileSync(post_event, JSON.stringify({ event: "post" }));
+
+  // if agent is installed; wait for it to create done.json
+  if (isAgentInstalled(process.platform)) {
+    let macDone = "/opt/step-security/done.json";
+    let counter = 0;
+    while (true) {
+      if (!fs.existsSync(macDone)) {
+        counter++;
+        if (counter > 10) {
+          console.log("timed out");
+          break;
+        }
+        await sleep(1000);
+      } else {
+        // The file *does* exist
+        break;
+      }
+    }
+  }
+
+  let macAgentLog = "/opt/step-security/agent.log";
+  if (fs.existsSync(macAgentLog)) {
+    console.log("macAgentLog:");
+    var content = fs.readFileSync(macAgentLog, "utf-8");
+    console.log(content);
+  } else {
+    console.log("😭 macos agent.log file not found");
+  }
+
+  // Capture system log stream for harden-runner subsystem
+  try {
+    console.log("\nSystem log stream for io.stepsecurity.harden-runner:");
+    const logStreamOutput = cp.execSync(
+      "log show --predicate 'subsystem == \"io.stepsecurity.harden-runner\"' --info --last 10m",
+      {
+        encoding: "utf8",
+        maxBuffer: 1024 * 1024 * 10, // 10MB buffer
+        timeout: 5000, // 5 seconds timeout
+      }
+    );
+    console.log(logStreamOutput);
+  } catch (error) {
+    console.log("Warning: Could not fetch system log stream:", error.message);
+  }
+}
+
+async function handleWindowsCleanup() {
+  // windows cleanup
+  const agentDir = process.env.STATE_agentDir || "C:\\agent";
+  const postEventFile = path.join(agentDir, "post_event.json");
+
+  if (isGithubHosted() && fs.existsSync(postEventFile)) {
+    console.log("Windows post step already executed, skipping");
+    return;
+  }
+
+  const p = cp.spawn(
+    "powershell.exe",
+    [
+      "-NoProfile",
+      "-NonInteractive",
+      "-Command",
+      "query user; exit $LASTEXITCODE",
+    ],
+    { stdio: ["ignore", "pipe", "pipe"], shell: false, windowsHide: true }
+  );
+  p.unref();
+
+  fs.writeFileSync(postEventFile, JSON.stringify({ event: "post" }));
+
+  // if agent is installed; wait for it to create done.json
+  if (isAgentInstalled(process.platform)) {
+    const doneFile = path.join(agentDir, "done.json");
+    let counter = 0;
+    while (true) {
+      if (!fs.existsSync(doneFile)) {
+        counter++;
+        if (counter > 10) {
+          console.log("timed out");
+          break;
+        }
+        await sleep(1000);
+      } else {
+        break;
+      }
+    }
+  }
+
+  console.log("stopping windows agent process...");
+  const pidFile = path.join(agentDir, "agent.pid");
 
   try {
-    await common.addSummary();
-  } catch (exception) {
-    console.log(exception);
+    if (!fs.existsSync(pidFile)) {
+      console.log("PID file not found. Agent may not be running.");
+      return;
+    }
+
+    const pid = parseInt(fs.readFileSync(pidFile, "utf8").trim());
+    console.log(`agent PID from file: ${pid}`);
+
+    try {
+      process.kill(pid, 0); // signal 0 just checks if process exists
+    } catch {
+      console.log("agent process not running.");
+      fs.unlinkSync(pidFile);
+      return;
+    }
+
+    console.log(`stopping agent process (PID: ${pid})...`);
+    process.kill(pid, "SIGINT");
+
+    let gracefulShutdown = false;
+    for (let i = 0; i < 10; i++) {
+      await sleep(1000);
+
+      try {
+        process.kill(pid, 0); // check if still exists
+      } catch {
+        gracefulShutdown = true;
+        console.log("agent process stopped gracefully");
+        break;
+      }
+    }
+
+    if (!gracefulShutdown) {
+      console.log("graceful shutdown timeout (10s), forcing termination...");
+      process.kill(pid, "SIGKILL");
+      console.log("agent process terminated forcefully");
+    }
+
+    if (fs.existsSync(pidFile)) {
+      fs.unlinkSync(pidFile);
+      console.log("PID file cleaned up");
+    }
+  } catch (error) {
+    console.log("warning: error stopping agent process:", error.message);
   }
-})();
+
+  const log = path.join(agentDir, "agent.log");
+  if (fs.existsSync(log)) {
+    console.log("agent log:");
+    const content = fs.readFileSync(log, "utf-8");
+    console.log(content);
+  }
+}
 
 function sleep(ms) {
   return new Promise((resolve) => {
