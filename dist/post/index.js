@@ -32034,6 +32034,7 @@ const SELF_HOSTED_RUNNER_MESSAGE = "This job is running on a self-hosted runner.
 const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing issues with the Harden Runner installation process. It is currently unavailable.";
 const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner.";
 const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner community tier.";
+const ARM64_WINDOWS_RUNNER_MESSAGE = "Windows ARM runners are not yet supported by Harden-Runner.";
 
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(6928);
@@ -32349,6 +32350,10 @@ function handleWindowsCleanup() {
         if (isGithubHosted() && external_fs_.existsSync(postEventFile)) {
             console.log("Windows post step already executed, skipping");
             return;
+        }
+        if (process.arch === "arm64") {
+            console.log(ARM64_WINDOWS_RUNNER_MESSAGE);
+            return false;
         }
         const p = external_child_process_.spawn("powershell.exe", [
             "-NoProfile",
