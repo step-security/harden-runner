@@ -206,7 +206,7 @@ async function handleWindowsCleanup() {
 
   if (process.arch === "arm64") {
     console.log(common.ARM64_WINDOWS_RUNNER_MESSAGE);
-    return false;
+    return;
   }
 
   const p = cp.spawn(

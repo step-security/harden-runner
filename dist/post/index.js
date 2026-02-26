@@ -32353,7 +32353,7 @@ function handleWindowsCleanup() {
         }
         if (process.arch === "arm64") {
             console.log(ARM64_WINDOWS_RUNNER_MESSAGE);
-            return false;
+            return;
         }
         const p = external_child_process_.spawn("powershell.exe", [
             "-NoProfile",
