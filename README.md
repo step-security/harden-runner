@@ -19,7 +19,7 @@ Corporate laptops and production servers typically have robust security monitori
 
 Traditional security monitoring and EDR solutions are ineffective for CI/CD runners due to their ephemeral nature. These tools also lack the necessary context to correlate events with specific workflow runs in a CI/CD environment.
 
-StepSecurity Harden-Runner addresses this gap by providing security monitoring tailored for CI/CD runners. This approach brings CI/CD runners under the same level of security scrutiny as other critical systems, addressing a significant gap in the software supply chain.
+StepSecurity Harden-Runner addresses this gap by providing security monitoring tailored for CI/CD runners, with support for Linux, Windows, and macOS runners. This approach brings CI/CD runners under the same level of security scrutiny as other critical systems, addressing a significant gap in the software supply chain.
 ### Harden-Runner: Security Incidents Detected
 
 - [Harden-Runner Detected the tj-actions/changed-files compromise](https://www.stepsecurity.io/blog/harden-runner-detection-tj-actions-changed-files-action-is-compromised) ([CVE-2025-30066](https://github.com/advisories/GHSA-mrrh-fwg8-r2c3))
@@ -138,7 +138,7 @@ Explore the full feature set in the [Features Documentation](https://docs.stepse
 
 ## Trusted By and Case Studies
 
-Harden-Runner is trusted by over 8000 leading open-source projects and enterprises, including Microsoft, Google, Kubernetes, and more.
+Harden-Runner is trusted by over 11,000 leading open-source projects and enterprises, including Microsoft, Google, Kubernetes, and more.
 
 ### Trusted by
 
@@ -163,7 +163,8 @@ Harden-Runner is designed to work seamlessly across a variety of runner environm
 
 | Environment Type | Compatibility | Audit Mode Deployment | Workflow Changes for Audit Mode |
 |------------------|---------------|--------------------------|-------------------|
-| GitHub-hosted runners | ✅ Full support | Add Harden-Runner Action to workflow | Yes |
+| GitHub-hosted runners (Linux) | ✅ Full support | Add Harden-Runner Action to workflow | Yes |
+| GitHub-hosted runners (Windows, macOS) | ✅ Audit mode only | Add Harden-Runner Action to workflow | Yes |
 | Self-hosted VM runners | ✅ Full support | Include agent in runner image | No |
 | Self-hosted bare-metal runners | ✅ Full support | Install agent as a service | No |
 | Actions Runner Controller (ARC) | ✅ Full support | Deploy as DaemonSet | No |
