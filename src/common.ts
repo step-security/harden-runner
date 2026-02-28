@@ -145,3 +145,6 @@ export const ARC_RUNNER_MESSAGE =
 
 export const ARM64_RUNNER_MESSAGE =
   "ARM runners are not supported in the Harden-Runner community tier.";
+
+export const ARM64_WINDOWS_RUNNER_MESSAGE =
+  "Windows ARM runners are not yet supported by Harden-Runner.";
