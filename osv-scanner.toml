@@ -9,3 +9,7 @@ reason = "Untrusted headers are not processed"
 [[IgnoredVulns]]
 id = "GHSA-xx4v-prfh-6cgc"
 reason = "Untrusted headers are not processed"
+
+[[IgnoredVulns]]
+id = "GHSA-g9mf-h72j-4rw9"
+reason = "undici fetch() is only used to call GitHub API; exploitation requires a malicious server"

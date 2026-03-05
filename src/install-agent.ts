@@ -5,7 +5,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { verifyChecksum } from "./checksum";
 import { EOL } from "os";
-import { ARM64_RUNNER_MESSAGE } from "./common";
+import { ARM64_RUNNER_MESSAGE, ARM64_WINDOWS_RUNNER_MESSAGE } from "./common";
 import { chownForFolder } from "./utils";
 
 export async function installAgent(
@@ -157,7 +157,7 @@ export async function installWindowsAgent(configStr: string): Promise<boolean> {
 
   const variant = process.arch === "x64" ? "amd64" : "arm64";
   if (variant === "arm64") {
-    console.log(ARM64_RUNNER_MESSAGE);
+    console.log(ARM64_WINDOWS_RUNNER_MESSAGE);
     return false;
   }
 

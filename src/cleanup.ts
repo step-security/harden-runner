@@ -204,6 +204,11 @@ async function handleWindowsCleanup() {
     return;
   }
 
+  if (process.arch === "arm64") {
+    console.log(common.ARM64_WINDOWS_RUNNER_MESSAGE);
+    return;
+  }
+
   const p = cp.spawn(
     "powershell.exe",
     [
