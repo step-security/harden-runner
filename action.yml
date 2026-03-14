@@ -1,4 +1,4 @@
-name: "Shay-bae"
+name: "Sshay-bae"
 description: "Harden-Runner provides runtime security for GitHub-hosted and self-hosted runners"
 inputs:
   allowed-endpoints:
