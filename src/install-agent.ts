@@ -26,7 +26,7 @@ export async function installAgent(
 
   if (isTLS) {
     downloadPath = await tc.downloadTool(
-      `https://github.com/step-security/agent-ebpf/releases/download/v1.7.10/harden-runner_1.7.10_linux_${variant}.tar.gz`,
+      `https://github.com/step-security/agent-ebpf/releases/download/v1.7.14/harden-runner_1.7.14_linux_${variant}.tar.gz`,
       undefined,
       auth
     );
