@@ -4,24 +4,18 @@ import * as fs from "fs";
 
 const CHECKSUMS = {
   tls: {
-    amd64: "19c35eee1347077eb71306b122ad4a1cf83f36ef0f69fd91b0c0d79ffd0eabdd", // v1.7.10
-    arm64: "f9192788e86b2e44b795f072e8cc03eec9852649609aeedac0761d3b67c991fa",
+    amd64: "10ce2304f2d097222e625327ead6f68f32211df407cfe11b34f1cd070675b01a", // v1.3.3
+    arm64: "f6466873e7cca88b0f74ebf66521b32207b8209395270cb090829b3fc57f037a",
   },
   non_tls: {
-    amd64: "1531bda40026b799b0704d0f775c372653a91fe436628fa8b416849d9c0707a8", // v0.14.4
-  },
-  darwin: "797399a3a3f6f9c4c000a02e0d8c7b16499129c9bdc2ad9cf2a10072c10654fb", // v0.0.4
-  windows: {
-    amd64: "e98f8b9cf9ecf6566f1e16a470fbe4aef01610a644fd8203a1bab3ff142186c8", // v1.0.0
+    amd64: "a9f1842e3d7f3d38c143dbe8ffe1948e6c8173cd04da072d9f9d128bb400844a", // v0.13.7
   },
 };
 
-// verifyChecksum returns true if checksum is valid
 export function verifyChecksum(
   downloadPath: string,
   isTLS: boolean,
-  variant: string,
-  platform: string
+  variant: string
 ) {
   const fileBuffer: Buffer = fs.readFileSync(downloadPath);
   const checksum: string = crypto
@@ -31,30 +25,17 @@ export function verifyChecksum(
 
   let expectedChecksum: string = "";
 
-  switch (platform) {
-    case "linux":
-      expectedChecksum = isTLS
-        ? CHECKSUMS["tls"][variant]
-        : CHECKSUMS["non_tls"][variant];
-      break;
-    case "darwin":
-      expectedChecksum = CHECKSUMS["darwin"];
-      break;
-    case "win32":
-      expectedChecksum = CHECKSUMS["windows"][variant];
-      break;
-    default:
-      console.log(`Unsupported platform: ${platform}`);
-      return false;
+  if (isTLS) {
+    expectedChecksum = CHECKSUMS["tls"][variant];
+  } else {
+    expectedChecksum = CHECKSUMS["non_tls"][variant];
   }
 
   if (checksum !== expectedChecksum) {
     core.setFailed(
-      `❌ Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`
+      `Checksum verification failed, expected ${expectedChecksum} instead got ${checksum}`
     );
-    return false;
   }
 
-  core.info(`✅ Checksum verification passed. checksum=${checksum}`);
-  return true;
+  core.debug("Checksum verification passed.");
 }

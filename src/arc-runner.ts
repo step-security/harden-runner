@@ -1,8 +1,8 @@
 import * as cp from "child_process";
 import * as fs from "fs";
-import path from "path";
+import { sleep } from "./setup";
 
-export function isARCRunner(): boolean {
+export function isArcRunner(): boolean {
   const runnerUserAgent = process.env["GITHUB_ACTIONS_RUNNER_EXTRA_USER_AGENT"];
 
   let isARC = false;
@@ -18,40 +18,45 @@ export function isARCRunner(): boolean {
 
 function isSecondaryPod(): boolean {
   const workDir = "/__w";
-  let hasKubeEnv = process.env["KUBERNETES_PORT"] !== undefined;
-  return fs.existsSync(workDir) && hasKubeEnv;
+  return fs.existsSync(workDir);
+}
+
+function getRunnerTempDir(): string {
+  const isTest = process.env["isTest"];
+
+  if (isTest === "1") {
+    return "/tmp";
+  }
+
+  return process.env["RUNNER_TEMP"] || "/tmp";
 }
 
 export function sendAllowedEndpoints(endpoints: string): void {
-  const startTime = Date.now();
   const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
 
-  let sent = 0;
-  for (let endpoint of allowedEndpoints) {
-    endpoint = endpoint.trim();
-    if (endpoint.length > 0) {
-      let encodedEndpoint = Buffer.from(endpoint).toString("base64");
-      let endpointPolicyStr = `step_policy_endpoint_${encodedEndpoint}`;
-      echo(endpointPolicyStr);
-      sent++;
+  for (const endpoint of allowedEndpoints) {
+    if (endpoint) {
+      const encodedEndpoint = Buffer.from(endpoint).toString("base64");
+      cp.execSync(
+        `echo "${endpoint}" > "${getRunnerTempDir()}/step_policy_endpoint_${encodedEndpoint}"`
+      );
     }
   }
 
-  if (sent > 0) {
-    applyPolicy(sent);
+  if (allowedEndpoints.length > 0) {
+    applyPolicy(allowedEndpoints.length);
   }
-
-  const duration = Date.now() - startTime;
-  console.log(
-    `[harden-runner] sendAllowedEndpoints completed in ${duration}ms (sent ${sent} endpoints)`
-  );
 }
 
 function applyPolicy(count: number): void {
-  let applyPolicyStr = `step_policy_apply_${count}`;
-  echo(applyPolicyStr);
+  const fileName = `step_policy_apply_${count}`;
+  cp.execSync(`echo "${fileName}" > "${getRunnerTempDir()}/${fileName}"`);
 }
 
-function echo(content: string) {
-  cp.execFileSync("echo", [content]);
+export function removeStepPolicyFiles() {
+  cp.execSync(`rm ${getRunnerTempDir()}/step_policy_*`);
+}
+
+export function arcCleanUp() {
+  cp.execSync(`echo "cleanup" > "${getRunnerTempDir()}/step_policy_cleanup"`);
 }

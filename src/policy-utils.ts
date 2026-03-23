@@ -39,12 +39,7 @@ export async function fetchPolicy(
   }
 
   if (response === undefined && err !== undefined) {
-    // Preserve the original error's statusCode if it exists
-    const error = new Error(`[Policy Fetch] ${err}`);
-    if (err.statusCode !== undefined) {
-      (error as any).statusCode = err.statusCode;
-    }
-    throw error;
+    throw new Error(`[Policy Fetch] ${err}`);
   } else {
     return response.result;
   }
@@ -61,10 +56,6 @@ export function mergeConfigs(
     localConfig.disable_sudo = remoteConfig.disable_sudo;
   }
 
-  if (remoteConfig.disable_sudo_and_containers !== undefined) {
-    localConfig.disable_sudo_and_containers = remoteConfig.disable_sudo_and_containers;
-  }
-
   if (remoteConfig.disable_file_monitoring !== undefined) {
     localConfig.disable_file_monitoring = remoteConfig.disable_file_monitoring;
   }
@@ -75,7 +66,7 @@ export function mergeConfigs(
   return localConfig;
 }
 
-function sleep(ms: number) {
+function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
