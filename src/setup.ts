@@ -19,11 +19,21 @@ import { Configuration, PolicyResponse } from "./interfaces";
 import { fetchPolicy, mergeConfigs } from "./policy-utils";
 import * as cache from "@actions/cache";
 import { getCacheEntry } from "@actions/cache/lib/internal/cacheHttpClient";
+import * as cacheTwirpClient from "@actions/cache/lib/internal/shared/cacheTwirpClient";
+import { GetCacheEntryDownloadURLRequest } from "@actions/cache/lib/generated/results/api/v1/cache";
+import { getCacheServiceVersion } from "@actions/cache/lib/internal/config";
+
 import * as utils from "@actions/cache/lib/internal/cacheUtils";
 import { isArcRunner, sendAllowedEndpoints } from "./arc-runner";
 import { STEPSECURITY_API_URL, STEPSECURITY_TELEMETRY_URL, STEPSECURITY_WEB_URL } from "./configs";
 import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
-import { installAgent } from "./install-agent";
+import {
+  installAgent,
+  installMacosAgent,
+  installWindowsAgent,
+} from "./install-agent";
+
+import { chownForFolder, isAgentInstalled, isPlatformSupported } from "./utils";
 
 interface MonitorResponse {
   runner_ip_address?: string;
@@ -35,11 +45,17 @@ interface MonitorResponse {
   try {
     console.log("[harden-runner] pre-step");
 
-    if (process.platform !== "linux") {
-      console.log(common.UBUNTU_MESSAGE);
+    const customProperties = context?.payload?.repository?.custom_properties || {};
+    if (customProperties["skip-harden-runner"] === "true") {
+      console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
       return;
     }
-    if (isDocker()) {
+
+    if (!isPlatformSupported(process.platform)) {
+      console.log(common.UNSUPPORTED_RUNNER_MESSAGE);
+      return;
+    }
+    if (isGithubHosted() && isDocker()) {
       console.log(common.CONTAINER_MESSAGE);
       return;
     }
@@ -59,6 +75,9 @@ interface MonitorResponse {
       egress_policy: core.getInput("egress-policy"),
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
       disable_sudo: core.getBooleanInput("disable-sudo"),
+      disable_sudo_and_containers: core.getBooleanInput(
+        "disable-sudo-and-containers"
+      ),
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
       private: context?.payload?.repository?.private || false,
       is_github_hosted: isGithubHosted(),
@@ -79,12 +98,30 @@ interface MonitorResponse {
         confg = mergeConfigs(confg, result);
       } catch (err) {
         core.info(`[!] ${err}`);
-        core.setFailed(err);
+        // Only fail the job if ID token is not available
+        if (err.message && err.message.includes('Unable to get ACTIONS_ID_TOKEN_REQUEST')) {
+          core.setFailed('Policy store requires id-token write permission as it uses OIDC to fetch the policy from StepSecurity API. Please add "id-token: write" to your job permissions.');
+        } else {
+          // Handle different HTTP status codes
+          if (err.statusCode >= 400 && err.statusCode < 500) {
+            core.error('Policy not found');
+          } else {
+            core.error(`Unexpected error occurred: ${err}. Falling back to egress policy audit`);
+            confg.egress_policy = 'audit';
+          }
+        }
       }
     }
     fs.appendFileSync(
       process.env.GITHUB_STATE,
       `disableSudo=${confg.disable_sudo}${EOL}`,
+      {
+        encoding: "utf8",
+      }
+    );
+    fs.appendFileSync(
+      process.env.GITHUB_STATE,
+      `disableSudoAndContainers=${confg.disable_sudo_and_containers}${EOL}`,
       {
         encoding: "utf8",
       }
@@ -115,28 +152,78 @@ interface MonitorResponse {
       } catch (exception) {
         console.log(exception);
       }
-      try {
-        const compressionMethod: CompressionMethod =
-          await utils.getCompressionMethod();
-        const cacheFilePath = path.join(__dirname, "cache.txt");
-        core.info(`cacheFilePath ${cacheFilePath}`);
-        const cacheEntry: ArtifactCacheEntry = await getCacheEntry(
-          [cacheKey],
-          [cacheFilePath],
-          {
-            compressionMethod: compressionMethod,
+
+      const cacheServiceVersion: string = getCacheServiceVersion();
+
+      switch (cacheServiceVersion) {
+        case "v2":
+          core.info(`cache version: v2`);
+          try {
+            const cacheFilePath = path.join(__dirname, "cache.txt");
+            core.info(`cacheFilePath ${cacheFilePath}`);
+
+            const twirpClient = cacheTwirpClient.internalCacheTwirpClient();
+            const compressionMethod = await utils.getCompressionMethod();
+
+            const request: GetCacheEntryDownloadURLRequest = {
+              key: cacheKey,
+              restoreKeys: [],
+              version: utils.getCacheVersion(
+                [cacheFilePath],
+                compressionMethod,
+                false
+              ),
+            };
+
+            const response = await twirpClient.GetCacheEntryDownloadURL(
+              request
+            );
+
+            const url = new URL(response.signedDownloadUrl);
+            core.info(
+              `Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`
+            );
+
+            confg.allowed_endpoints += ` ${url.hostname}:443`;
+          } catch (e) {
+            core.info(`Unable to fetch cacheURL ${e}`);
+            if (confg.egress_policy === "block") {
+              core.info("Switching egress-policy to audit mode");
+              confg.egress_policy = "audit";
+            }
           }
-        );
-        const url = new URL(cacheEntry.archiveLocation);
-        core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
-        confg.allowed_endpoints += ` ${url.hostname}:443`;
-      } catch (exception) {
-        // some exception has occurred.
-        core.info(`Unable to fetch cacheURL`);
-        if (confg.egress_policy === "block") {
-          core.info("Switching egress-policy to audit mode");
-          confg.egress_policy = "audit";
-        }
+          break;
+
+        case "v1":
+          core.info(`cache version: v1`);
+
+          try {
+            const compressionMethod: CompressionMethod =
+              await utils.getCompressionMethod();
+            const cacheFilePath = path.join(__dirname, "cache.txt");
+            core.info(`cacheFilePath ${cacheFilePath}`);
+
+            const cacheEntry: ArtifactCacheEntry = await getCacheEntry(
+              [cacheKey],
+              [cacheFilePath],
+              {
+                compressionMethod: compressionMethod,
+              }
+            );
+            const url = new URL(cacheEntry.archiveLocation);
+            core.info(
+              `Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`
+            );
+
+            confg.allowed_endpoints += ` ${url.hostname}:443`;
+          } catch (exception) {
+            // some exception has occurred.
+            core.info(`Unable to fetch cacheURL ${exception}`);
+            if (confg.egress_policy === "block") {
+              core.info("Switching egress-policy to audit mode");
+              confg.egress_policy = "audit";
+            }
+          }
       }
     }
 
@@ -144,7 +231,7 @@ interface MonitorResponse {
       common.printInfo(web_url);
     }
 
-    if (isArcRunner()) {
+    if (isARCRunner()) {
       console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
       if (confg.egress_policy === "block") {
         sendAllowedEndpoints(confg.allowed_endpoints);
@@ -159,27 +246,37 @@ interface MonitorResponse {
       fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
         encoding: "utf8",
       });
-      if (!fs.existsSync("/home/agent/agent")) {
-        core.info(common.SELF_HOSTED_NO_AGENT_MESSAGE);
-        return;
-      }
+
+      core.info(common.SELF_HOSTED_RUNNER_MESSAGE);
+
       if (confg.egress_policy === "block") {
-        try {
-          if (process.env.USER) {
-            cp.execSync(`sudo chown -R ${process.env.USER} /home/agent`);
-          }
-          const confgStr = JSON.stringify(confg);
-          fs.writeFileSync("/home/agent/block_event.json", confgStr);
-          await sleep(5000);
-        } catch (error) {
-          core.info(`[!] Unable to write block_event.json: ${error}`);
-        }
+        sendAllowedEndpoints(confg.allowed_endpoints);
+        await sleep(5000);
       }
       return;
     }
 
+    if (isGithubHosted() && process.env.STEP_SECURITY_HARDEN_RUNNER === "true") {
+      fs.appendFileSync(process.env.GITHUB_STATE, `customVMImage=true${EOL}`, {
+        encoding: "utf8",
+      });
+
+      core.info("This job is running on a custom VM image with Harden Runner installed.");
+
+      if (confg.egress_policy === "block") {
+        sendAllowedEndpoints(confg.allowed_endpoints);
+        await sleep(5000);
+      }
+      return;
+    }
+
+    if (isGithubHosted() && isAgentInstalled(process.platform)) {
+      console.log("Agent already installed, skipping installation");
+      return;
+    }
+
     let _http = new httpm.HttpClient();
-    let statusCode;
+    let statusCode: number | undefined;
     _http.requestOptions = { socketTimeout: 3 * 1000 };
     let addSummary = "false";
     try {
@@ -217,6 +314,13 @@ interface MonitorResponse {
         encoding: "utf8",
       }
     );
+    fs.appendFileSync(
+      process.env.GITHUB_STATE,
+      `correlation_id=${correlation_id}${EOL}`,
+      {
+        encoding: "utf8",
+      }
+    );
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
     if (String(statusCode) === common.STATUS_HARDEN_RUNNER_UNAVAILABLE) {
@@ -224,18 +328,47 @@ interface MonitorResponse {
       return;
     }
 
-    const confgStr = JSON.stringify(confg);
-    cp.execSync("sudo mkdir -p /home/agent");
-    cp.execSync("sudo chown -R $USER /home/agent");
+    const configStr = JSON.stringify(confg);
 
-    let isTLS = await isTLSEnabled(context.repo.owner);
+    // platform specific
+    let statusFile = "";
+    let logFile = "";
+    let agentInstalled = false;
 
-    const agentInstalled = await installAgent(isTLS, confgStr);
+    switch (process.platform) {
+      case "linux":
+        statusFile = "/home/agent/agent.status";
+        logFile = "/home/agent/agent.log";
+
+        cp.execSync("sudo mkdir -p /home/agent");
+        chownForFolder(process.env.USER, "/home/agent");
+
+        let isTLS = await isTLSEnabled(context.repo.owner);
+        agentInstalled = await installAgent(isTLS, configStr);
+
+        break;
+      case "win32":
+        core.info("Installing Windows Agent...");
+        agentInstalled = await installWindowsAgent(configStr);
+
+        const agentDir = process.env.STATE_agentDir || "C:\\agent";
+        statusFile = path.join(agentDir, "agent.status");
+        logFile = path.join(agentDir, "agent.log");
+
+        break;
+      case "darwin":
+        const installed = await installMacosAgent(configStr);
+        if (!installed) {
+          core.warning("😭 macos agent installation failed");
+        }
+        return; // early return
+      default:
+        throw new Error(
+          `Setup failed because of unsupported platform: ${process.platform}`
+        );
+    }
 
     if (agentInstalled) {
-      // Check that the file exists locally
-      var statusFile = "/home/agent/agent.status";
-      var logFile = "/home/agent/agent.log";
       var counter = 0;
       while (true) {
         if (!fs.existsSync(statusFile)) {
@@ -265,7 +398,7 @@ interface MonitorResponse {
   process.exit(0);
 })();
 
-export function sleep(ms) {
+export function sleep(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });

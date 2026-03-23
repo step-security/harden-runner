@@ -2,15 +2,24 @@ import * as common from "./common";
 import * as core from "@actions/core";
 import isDocker from "is-docker";
 import { STEPSECURITY_WEB_URL } from "./configs";
+import { isGithubHosted } from "./tls-inspect";
+import { context } from "@actions/github";
+import { isPlatformSupported } from "./utils";
 
 (async () => {
   console.log("[harden-runner] main-step");
 
-  if (process.platform !== "linux") {
-    console.log(common.UBUNTU_MESSAGE);
+  const customProperties = context?.payload?.repository?.custom_properties || {};
+  if (customProperties["skip-harden-runner"] === "true") {
+    console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
     return;
   }
-  if (isDocker()) {
+
+  if (!isPlatformSupported(process.platform)) {
+    console.log(common.UNSUPPORTED_RUNNER_MESSAGE);
+    return;
+  }
+  if (isGithubHosted() && isDocker()) {
     console.log(common.CONTAINER_MESSAGE);
     return;
   }

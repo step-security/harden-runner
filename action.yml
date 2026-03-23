@@ -17,7 +17,11 @@ inputs:
     required: false
     default: "false"
   disable-sudo:
-    description: "Disable sudo access for the runner account"
+    description: "Disable sudo access for the runner account. Note: This parameter will be deprecated in the future. Please use disable-sudo-and-containers instead."
+    required: false
+    default: "false"
+  disable-sudo-and-containers:
+    description: "Disable sudo and container access for the runner account"
     required: false
     default: "false"
   disable-file-monitoring:
@@ -33,7 +37,7 @@ branding:
   icon: "check-square"
   color: "green"
 runs:
-  using: "node20"
+  using: "node24"
   pre: "dist/pre/index.js"
   main: "dist/index.js"
   post: "dist/post/index.js"

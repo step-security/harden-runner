@@ -1,0 +1,28 @@
+name: 'Publish Immutable Action Version'
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          egress-policy: audit
+
+      - name: Checking out
+        uses: actions/checkout@v4
+      - name: Publish
+        id: publish
+        uses: actions/publish-immutable-action@0.0.4
