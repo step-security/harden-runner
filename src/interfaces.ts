@@ -4,6 +4,7 @@ export interface Configuration {
   correlation_id: string;
   working_directory: string;
   api_url: string;
+  telemetry_url: string;
   allowed_endpoints: string;
   egress_policy: string;
   disable_telemetry: boolean;
