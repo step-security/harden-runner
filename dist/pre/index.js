@@ -85209,6 +85209,7 @@ function isValidEvent() {
 ;// CONCATENATED MODULE: ./src/configs.ts
 const STEPSECURITY_ENV = "agent"; // agent or int
 const configs_STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
+const STEPSECURITY_TELEMETRY_URL = "https://prod.app-api.stepsecurity.io/v1";
 const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
 
 ;// CONCATENATED MODULE: ./src/policy-utils.ts
@@ -85396,7 +85397,7 @@ const CHECKSUMS = {
         arm64: "f9192788e86b2e44b795f072e8cc03eec9852649609aeedac0761d3b67c991fa",
     },
     non_tls: {
-        amd64: "1531bda40026b799b0704d0f775c372653a91fe436628fa8b416849d9c0707a8", // v0.14.4
+        amd64: "4aaaeebbe10e619d8ce13e8cc4a1acbafc8f891e8cdd319984480b9ec08407b8", // v0.15.0
     },
     darwin: "797399a3a3f6f9c4c000a02e0d8c7b16499129c9bdc2ad9cf2a10072c10654fb",
     windows: {
@@ -85471,7 +85472,7 @@ function installAgent(isTLS, configStr) {
                 console.log(ARM64_RUNNER_MESSAGE);
                 return false;
             }
-            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.14.4/agent_0.14.4_linux_amd64.tar.gz", undefined, auth);
+            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.15.0/agent_0.15.0_linux_amd64.tar.gz", undefined, auth);
         }
         if (!verifyChecksum(downloadPath, isTLS, variant, "linux")) {
             return false;
@@ -85671,6 +85672,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             correlation_id: correlation_id,
             working_directory: process.env["GITHUB_WORKSPACE"],
             api_url: api_url,
+            telemetry_url: STEPSECURITY_TELEMETRY_URL,
             allowed_endpoints: lib_core.getInput("allowed-endpoints"),
             egress_policy: lib_core.getInput("egress-policy"),
             disable_telemetry: lib_core.getBooleanInput("disable-telemetry"),
