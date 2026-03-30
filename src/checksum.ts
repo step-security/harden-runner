@@ -4,11 +4,11 @@ import * as fs from "fs";
 
 const CHECKSUMS = {
   tls: {
-    amd64: "19c35eee1347077eb71306b122ad4a1cf83f36ef0f69fd91b0c0d79ffd0eabdd", // v1.7.10
-    arm64: "f9192788e86b2e44b795f072e8cc03eec9852649609aeedac0761d3b67c991fa",
+    amd64: "d4b80f15758bb950787000e802cc58a565919a8cb9ecf405777b304ef42911fe", // v1.7.15
+    arm64: "3c224ea1da1776d1ba9f70b8dd8f0d8432230a7c2d464bca84bbdee8b7d46f6c",
   },
   non_tls: {
-    amd64: "1531bda40026b799b0704d0f775c372653a91fe436628fa8b416849d9c0707a8", // v0.14.4
+    amd64: "4aaaeebbe10e619d8ce13e8cc4a1acbafc8f891e8cdd319984480b9ec08407b8", // v0.15.0
   },
   darwin: "797399a3a3f6f9c4c000a02e0d8c7b16499129c9bdc2ad9cf2a10072c10654fb", // v0.0.4
   windows: {
