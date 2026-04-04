@@ -43,6 +43,8 @@ test("merge configs", async () => {
     is_github_hosted: true,
     is_debug: false,
     one_time_key: "",
+    api_key: "",
+    use_policy_store: false,
   };
   let policyResponse: PolicyResponse = {
     owner: "h0x0er",
@@ -71,8 +73,280 @@ test("merge configs", async () => {
     is_github_hosted: true,
     is_debug: false,
     one_time_key: "",
+    api_key: "",
+    use_policy_store: false,
   };
 
   localConfig = mergeConfigs(localConfig, policyResponse);
   expect(localConfig).toStrictEqual(expectedConfiguration);
+});
+
+// ==================== additional fetchPolicy tests ====================
+
+test("fetchPolicy throws when idToken is empty", async () => {
+  await expect(fetchPolicy("owner", "policy1", "")).rejects.toThrow(
+    "[PolicyFetch]: id-token in empty"
+  );
+});
+
+test("fetchPolicy retries on failure and succeeds", async () => {
+  const owner = "test-owner";
+  const policyName = "test-policy";
+  const response = {
+    allowed_endpoints: ["example.com:443"],
+    egress_policy: "block",
+  };
+
+  nock(`${STEPSECURITY_API_URL}`)
+    .get(`/github/${owner}/actions/policies/${policyName}`)
+    .replyWithError("connection timeout");
+  nock(`${STEPSECURITY_API_URL}`)
+    .get(`/github/${owner}/actions/policies/${policyName}`)
+    .reply(200, response);
+
+  const policy = await fetchPolicy(owner, policyName, "token123");
+  expect(policy).toStrictEqual(response);
+});
+
+test("fetchPolicy throws after all retries exhausted", async () => {
+  const owner = "test-owner";
+  const policyName = "test-policy";
+
+  nock(`${STEPSECURITY_API_URL}`)
+    .get(`/github/${owner}/actions/policies/${policyName}`)
+    .times(3)
+    .replyWithError("connection timeout");
+
+  await expect(
+    fetchPolicy(owner, policyName, "token123")
+  ).rejects.toThrow("[Policy Fetch]");
+});
+
+test("fetchPolicy preserves statusCode from error", async () => {
+  const owner = "test-owner";
+  const policyName = "test-policy";
+
+  const errorWithStatus = new Error("Not Found");
+  (errorWithStatus as any).statusCode = 404;
+
+  nock(`${STEPSECURITY_API_URL}`)
+    .get(`/github/${owner}/actions/policies/${policyName}`)
+    .times(3)
+    .replyWithError(errorWithStatus);
+
+  try {
+    await fetchPolicy(owner, policyName, "token123");
+    fail("should have thrown");
+  } catch (err) {
+    expect(err.message).toContain("[Policy Fetch]");
+  }
+});
+
+// ==================== fetchPolicyFromStore ====================
+
+import { fetchPolicyFromStore } from "./policy-utils";
+
+test("success: fetches policy from store", async () => {
+  const owner = "test-owner";
+  const repo = "test-repo";
+  const response = {
+    allowed_endpoints: ["registry.npmjs.org:443", "github.com:443"],
+    egress_policy: "block",
+    disable_sudo: true,
+    disable_file_monitoring: false,
+  };
+
+  nock(`${STEPSECURITY_API_URL}`)
+    .get(`/github/${owner}/${repo}/actions/policy-store/policy`)
+    .reply(200, response);
+
+  const result = await fetchPolicyFromStore(owner, repo, "my-api-key");
+  expect(result).toStrictEqual(response);
+});
+
+test("fetchPolicyFromStore throws when apiKey is empty", async () => {
+  await expect(
+    fetchPolicyFromStore("owner", "repo", "")
+  ).rejects.toThrow("[PolicyStoreFetch]: api-key is empty");
+});
+
+test("fetchPolicyFromStore returns null when policy not found (404)", async () => {
+  const owner = "test-owner";
+  const repo = "test-repo";
+
+  nock(`${STEPSECURITY_API_URL}`)
+    .get(`/github/${owner}/${repo}/actions/policy-store/policy`)
+    .reply(404, { message: "not found" });
+
+  const result = await fetchPolicyFromStore(owner, repo, "my-api-key");
+  expect(result).toBeNull();
+});
+
+test("fetchPolicyFromStore retries on failure and succeeds", async () => {
+  const owner = "test-owner";
+  const repo = "test-repo";
+  const response = {
+    allowed_endpoints: ["example.com:443"],
+    egress_policy: "audit",
+  };
+
+  nock(`${STEPSECURITY_API_URL}`)
+    .get(`/github/${owner}/${repo}/actions/policy-store/policy`)
+    .replyWithError("timeout");
+  nock(`${STEPSECURITY_API_URL}`)
+    .get(`/github/${owner}/${repo}/actions/policy-store/policy`)
+    .reply(200, response);
+
+  const result = await fetchPolicyFromStore(owner, repo, "my-api-key");
+  expect(result).toStrictEqual(response);
+});
+
+test("fetchPolicyFromStore throws after all retries exhausted", async () => {
+  const owner = "test-owner";
+  const repo = "test-repo";
+
+  nock(`${STEPSECURITY_API_URL}`)
+    .get(`/github/${owner}/${repo}/actions/policy-store/policy`)
+    .times(3)
+    .replyWithError("connection refused");
+
+  await expect(
+    fetchPolicyFromStore(owner, repo, "my-api-key")
+  ).rejects.toThrow("[Policy Store Fetch]");
+});
+
+test("fetchPolicyFromStore preserves statusCode from error", async () => {
+  const owner = "test-owner";
+  const repo = "test-repo";
+
+  const errorWithStatus = new Error("Unauthorized");
+  (errorWithStatus as any).statusCode = 401;
+
+  nock(`${STEPSECURITY_API_URL}`)
+    .get(`/github/${owner}/${repo}/actions/policy-store/policy`)
+    .times(3)
+    .replyWithError(errorWithStatus);
+
+  try {
+    await fetchPolicyFromStore(owner, repo, "my-api-key");
+    fail("should have thrown");
+  } catch (err) {
+    expect(err.message).toContain("[Policy Store Fetch]");
+  }
+});
+
+test("fetchPolicyFromStore sends correct authorization header", async () => {
+  const owner = "test-owner";
+  const repo = "test-repo";
+  const apiKey = "secret-key-123";
+
+  nock(`${STEPSECURITY_API_URL}`, {
+    reqheaders: {
+      Authorization: `api-key ${apiKey}`,
+      Source: "github-actions",
+    },
+  })
+    .get(`/github/${owner}/${repo}/actions/policy-store/policy`)
+    .reply(200, { allowed_endpoints: [], egress_policy: "audit" });
+
+  const result = await fetchPolicyFromStore(owner, repo, apiKey);
+  expect(result).toStrictEqual({
+    allowed_endpoints: [],
+    egress_policy: "audit",
+  });
+});
+
+// ==================== additional mergeConfigs tests ====================
+
+test("mergeConfigs does not override local allowed_endpoints if not empty", () => {
+  let localConfig: Configuration = {
+    repo: "test/repo",
+    run_id: "xyx",
+    correlation_id: "aaaaa",
+    working_directory: "/xyz",
+    api_url: "xyz",
+    telemetry_url: "xyz",
+    allowed_endpoints: "local.endpoint:443",
+    egress_policy: "audit",
+    disable_telemetry: false,
+    disable_sudo: false,
+    disable_sudo_and_containers: false,
+    disable_file_monitoring: false,
+    private: "true",
+    is_github_hosted: true,
+    is_debug: false,
+    one_time_key: "",
+    api_key: "",
+    use_policy_store: false,
+  };
+  let policyResponse: PolicyResponse = {
+    allowed_endpoints: ["remote.endpoint:443"],
+    egress_policy: "block",
+  };
+
+  localConfig = mergeConfigs(localConfig, policyResponse);
+  expect(localConfig.allowed_endpoints).toBe("local.endpoint:443");
+  expect(localConfig.egress_policy).toBe("block");
+});
+
+test("mergeConfigs overrides disable_sudo_and_containers from remote", () => {
+  let localConfig: Configuration = {
+    repo: "test/repo",
+    run_id: "xyx",
+    correlation_id: "aaaaa",
+    working_directory: "/xyz",
+    api_url: "xyz",
+    telemetry_url: "xyz",
+    allowed_endpoints: "",
+    egress_policy: "audit",
+    disable_telemetry: false,
+    disable_sudo: false,
+    disable_sudo_and_containers: false,
+    disable_file_monitoring: false,
+    private: "true",
+    is_github_hosted: true,
+    is_debug: false,
+    one_time_key: "",
+    api_key: "",
+    use_policy_store: false,
+  };
+  let policyResponse: PolicyResponse = {
+    allowed_endpoints: [],
+    disable_sudo_and_containers: true,
+  };
+
+  localConfig = mergeConfigs(localConfig, policyResponse);
+  expect(localConfig.disable_sudo_and_containers).toBe(true);
+});
+
+test("mergeConfigs does not override fields when remote values are undefined", () => {
+  let localConfig: Configuration = {
+    repo: "test/repo",
+    run_id: "xyx",
+    correlation_id: "aaaaa",
+    working_directory: "/xyz",
+    api_url: "xyz",
+    telemetry_url: "xyz",
+    allowed_endpoints: "",
+    egress_policy: "block",
+    disable_telemetry: false,
+    disable_sudo: true,
+    disable_sudo_and_containers: true,
+    disable_file_monitoring: true,
+    private: "true",
+    is_github_hosted: true,
+    is_debug: false,
+    one_time_key: "",
+    api_key: "",
+    use_policy_store: false,
+  };
+  let policyResponse: PolicyResponse = {
+    allowed_endpoints: [],
+  };
+
+  localConfig = mergeConfigs(localConfig, policyResponse);
+  expect(localConfig.disable_sudo).toBe(true);
+  expect(localConfig.disable_sudo_and_containers).toBe(true);
+  expect(localConfig.disable_file_monitoring).toBe(true);
+  expect(localConfig.egress_policy).toBe("block");
 });

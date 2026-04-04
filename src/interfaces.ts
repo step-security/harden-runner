@@ -15,6 +15,8 @@ export interface Configuration {
   private: string;
   is_debug: boolean;
   one_time_key: string;
+  api_key: string;
+  use_policy_store: boolean;
 }
 
 export interface PolicyResponse {

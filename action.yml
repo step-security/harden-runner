@@ -32,6 +32,14 @@ inputs:
     description: "Policy name to be used from the policy store"
     required: false
     default: ""
+  api-key:
+    description: "StepSecurity API key for authenticating with the policy store"
+    required: false
+    default: ""
+  use-policy-store:
+    description: "Set to true to fetch policy from the policy store using the API key"
+    required: false
+    default: "false"
 
 branding:
   icon: "check-square"

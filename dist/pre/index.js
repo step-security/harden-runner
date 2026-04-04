@@ -85262,6 +85262,44 @@ function fetchPolicy(owner, policyName, idToken) {
         }
     });
 }
+function fetchPolicyFromStore(owner, repo, apiKey) {
+    return policy_utils_awaiter(this, void 0, void 0, function* () {
+        if (apiKey === "") {
+            throw new Error("[PolicyStoreFetch]: api-key is empty");
+        }
+        let policyEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/policy-store/policy`;
+        let httpClient = new lib.HttpClient();
+        let headers = {};
+        headers["Authorization"] = `api-key ${apiKey}`;
+        headers["Source"] = "github-actions";
+        let response = undefined;
+        let err = undefined;
+        let retry = 0;
+        while (retry < 3) {
+            try {
+                console.log(`Attempt: ${retry + 1}`);
+                response = yield httpClient.getJson(policyEndpoint, headers);
+                break;
+            }
+            catch (e) {
+                err = e;
+            }
+            retry += 1;
+            yield sleep(1000);
+        }
+        if (response === undefined && err !== undefined) {
+            const error = new Error(`[Policy Store Fetch] ${err}`);
+            if (err.statusCode !== undefined) {
+                error.statusCode = err.statusCode;
+            }
+            throw error;
+        }
+        if (response.statusCode === 404) {
+            return null;
+        }
+        return response.result;
+    });
+}
 function mergeConfigs(localConfig, remoteConfig) {
     if (localConfig.allowed_endpoints === "") {
         localConfig.allowed_endpoints = remoteConfig.allowed_endpoints.join(" ");
@@ -85683,9 +85721,41 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             is_github_hosted: isGithubHosted(),
             is_debug: lib_core.isDebug(),
             one_time_key: "",
+            api_key: lib_core.getInput("api-key"),
+            use_policy_store: lib_core.getBooleanInput("use-policy-store"),
         };
         let policyName = lib_core.getInput("policy");
-        if (policyName !== "") {
+        if (confg.use_policy_store) {
+            console.log(`Fetching policy from policy store`);
+            if (confg.api_key === "") {
+                lib_core.setFailed("api-key is required when use-policy-store is set to true");
+            }
+            else {
+                try {
+                    const repoName = (process.env["GITHUB_REPOSITORY"] || "").split("/")[1] || "";
+                    let result = yield fetchPolicyFromStore(github.context.repo.owner, repoName, confg.api_key);
+                    if (result !== null) {
+                        confg = mergeConfigs(confg, result);
+                    }
+                    else {
+                        lib_core.info("No policy found in policy store. Defaulting to audit mode.");
+                        confg.egress_policy = "audit";
+                    }
+                }
+                catch (err) {
+                    lib_core.info(`[!] ${err}`);
+                    if (err.statusCode >= 400 && err.statusCode < 500) {
+                        lib_core.info("Policy not found in policy store. Defaulting to audit mode.");
+                        confg.egress_policy = "audit";
+                    }
+                    else {
+                        lib_core.error(`Unexpected error fetching from policy store: ${err}. Falling back to audit mode.`);
+                        confg.egress_policy = "audit";
+                    }
+                }
+            }
+        }
+        else if (policyName !== "") {
             console.log(`Fetching policy from API with name: ${policyName}`);
             try {
                 let idToken = yield lib_core.getIDToken();
