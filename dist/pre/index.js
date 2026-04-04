@@ -85728,6 +85728,9 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             api_key: lib_core.getInput("api-key"),
             use_policy_store: lib_core.getBooleanInput("use-policy-store"),
         };
+        if (confg.api_key !== "") {
+            lib_core.setSecret(confg.api_key);
+        }
         let policyName = lib_core.getInput("policy");
         if (confg.use_policy_store) {
             console.log(`Fetching policy from policy store`);
@@ -85740,6 +85743,7 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
                     const workflow = process.env["GITHUB_WORKFLOW"] || "";
                     let result = yield fetchPolicyFromStore(github.context.repo.owner, repoName, confg.api_key, workflow, confg.run_id, confg.correlation_id);
                     if (result !== null) {
+                        lib_core.info(`Policy found: ${result.policy_name || "unnamed"}`);
                         confg = mergeConfigs(confg, result);
                     }
                     else {

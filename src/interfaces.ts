@@ -28,4 +28,5 @@ export interface PolicyResponse {
   disable_file_monitoring?: boolean;
   disable_telemetry?: boolean;
   egress_policy?: string;
+  policy_name?: string;
 }

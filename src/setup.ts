@@ -91,6 +91,10 @@ interface MonitorResponse {
       use_policy_store: core.getBooleanInput("use-policy-store"),
     };
 
+    if (confg.api_key !== "") {
+      core.setSecret(confg.api_key);
+    }
+
     let policyName = core.getInput("policy");
     if (confg.use_policy_store) {
       console.log(`Fetching policy from policy store`);
@@ -109,6 +113,7 @@ interface MonitorResponse {
             confg.correlation_id
           );
           if (result !== null) {
+            core.info(`Policy found: ${result.policy_name || "unnamed"}`);
             confg = mergeConfigs(confg, result);
           } else {
             core.info("No policy found in policy store. Defaulting to audit mode.");
