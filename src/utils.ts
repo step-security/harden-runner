@@ -32,6 +32,14 @@ export function isAgentInstalled(platform: NodeJS.Platform) {
   }
 }
 
+export function shouldDeployAgentOnSelfHosted(
+  deployOnSelfHostedVm: boolean,
+  isContainer: boolean,
+  agentAlreadyInstalled: boolean
+): boolean {
+  return deployOnSelfHostedVm && !isContainer && !agentAlreadyInstalled;
+}
+
 export function getAnnotationLogs(platform: NodeJS.Platform) {
   switch (platform) {
     case "linux":

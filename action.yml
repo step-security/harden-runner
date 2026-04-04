@@ -40,6 +40,10 @@ inputs:
     description: "Set to true to fetch policy from the policy store using the API key. This is the preferred method over the policy input which requires id-token: write permission. Policies can be defined and attached at workflow, repo, org, or cluster (for ARC) level in the policy store. The most granular policy will apply."
     required: false
     default: "false"
+  deploy-on-self-hosted-vm:
+    description: "Set to true to deploy the Harden Runner agent directly on a self-hosted runner VM (Linux only). The recommended approach for self-hosted VMs is to bake the agent into the VM image; see docs.stepsecurity.io. Use this option only if baking is not possible, and only for ephemeral runners."
+    required: false
+    default: "false"
 
 branding:
   icon: "check-square"

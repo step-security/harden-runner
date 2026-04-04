@@ -31910,6 +31910,9 @@ function isAgentInstalled(platform) {
             return false;
     }
 }
+function shouldDeployAgentOnSelfHosted(deployOnSelfHostedVm, isContainer, agentAlreadyInstalled) {
+    return deployOnSelfHostedVm && !isContainer && !agentAlreadyInstalled;
+}
 function utils_getAnnotationLogs(platform) {
     switch (platform) {
         case "linux":

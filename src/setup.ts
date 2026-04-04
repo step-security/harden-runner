@@ -37,7 +37,7 @@ import {
   installWindowsAgent,
 } from "./install-agent";
 
-import { chownForFolder, isAgentInstalled, isPlatformSupported } from "./utils";
+import { chownForFolder, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted } from "./utils";
 
 interface MonitorResponse {
   runner_ip_address?: string;
@@ -89,6 +89,7 @@ interface MonitorResponse {
       one_time_key: "",
       api_key: core.getInput("api-key"),
       use_policy_store: core.getBooleanInput("use-policy-store"),
+      deploy_on_self_hosted_vm: core.getBooleanInput("deploy-on-self-hosted-vm"),
     };
 
     if (confg.api_key !== "") {
@@ -294,6 +295,22 @@ interface MonitorResponse {
 
       core.info(common.SELF_HOSTED_RUNNER_MESSAGE);
 
+      if (shouldDeployAgentOnSelfHosted(confg.deploy_on_self_hosted_vm, isDocker(), isAgentInstalled(process.platform))) {
+        if (process.platform !== "linux") {
+          core.info("deploy-on-self-hosted-vm is only supported on Linux. Skipping agent deployment.");
+        } else {
+          core.info("deploy-on-self-hosted-vm is enabled. Installing agent on self-hosted runner.");
+          await installAgentForSelfHosted(context.repo.owner, confg);
+        }
+      } else {
+        if (confg.deploy_on_self_hosted_vm && isDocker()) {
+          core.info("Skipping agent deployment: running inside a container.");
+        }
+        if (confg.deploy_on_self_hosted_vm && isAgentInstalled(process.platform)) {
+          core.info("Agent already installed on self-hosted runner, skipping installation.");
+        }
+      }
+
       if (confg.egress_policy === "block") {
         sendAllowedEndpoints(confg.allowed_endpoints);
         await sleep(5000);
@@ -448,4 +465,62 @@ export function sleep(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+export async function installAgentForSelfHosted(owner: string, confg: Configuration) {
+  try {
+    console.log("Installing Harden Runner agent for self-hosted runner");
+
+    let isTLS = await isTLSEnabled(owner);
+
+    if (!isTLS) {
+      console.log("TLS is not enabled for this organization. Agent installation skipped for self-hosted runner.");
+      return;
+    }
+
+    const selfHostedConfig = {
+      customer: owner,
+      working_directory: confg.working_directory,
+      api_url: confg.api_url,
+      allowed_endpoints: confg.allowed_endpoints,
+      egress_policy: confg.egress_policy,
+      disable_telemetry: confg.disable_telemetry,
+      disable_sudo: confg.disable_sudo,
+      disable_sudo_and_containers: confg.disable_sudo_and_containers,
+      disable_file_monitoring: confg.disable_file_monitoring,
+      is_github_hosted: false,
+    };
+    const selfHostedConfigStr = JSON.stringify(selfHostedConfig);
+
+    cp.execSync("sudo mkdir -p /home/agent");
+    chownForFolder(process.env.USER, "/home/agent");
+
+    const agentInstalled = await installAgent(isTLS, selfHostedConfigStr);
+
+    if (agentInstalled) {
+      const statusFile = "/home/agent/agent.status";
+      const logFile = "/home/agent/agent.log";
+      let counter = 0;
+      while (true) {
+        if (!fs.existsSync(statusFile)) {
+          counter++;
+          if (counter > 30) {
+            console.log("timed out");
+            if (fs.existsSync(logFile)) {
+              const content = fs.readFileSync(logFile, "utf-8");
+              console.log(content);
+            }
+            break;
+          }
+          await sleep(300);
+        } else {
+          const content = fs.readFileSync(statusFile, "utf-8");
+          console.log(content);
+          break;
+        }
+      }
+    }
+  } catch (error) {
+    console.log(`Failed to install agent for self-hosted runner: ${error.message}`);
+  }
 }

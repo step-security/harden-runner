@@ -84974,6 +84974,7 @@ __nccwpck_require__.r(__webpack_exports__);
 
 // EXPORTS
 __nccwpck_require__.d(__webpack_exports__, {
+  installAgentForSelfHosted: () => (/* binding */ installAgentForSelfHosted),
   sleep: () => (/* binding */ setup_sleep)
 });
 
@@ -85030,6 +85031,9 @@ function isAgentInstalled(platform) {
         default:
             return false;
     }
+}
+function shouldDeployAgentOnSelfHosted(deployOnSelfHostedVm, isContainer, agentAlreadyInstalled) {
+    return deployOnSelfHostedVm && !isContainer && !agentAlreadyInstalled;
 }
 function utils_getAnnotationLogs(platform) {
     switch (platform) {
@@ -85260,48 +85264,6 @@ function fetchPolicy(owner, policyName, idToken) {
         else {
             return response.result;
         }
-    });
-}
-function fetchPolicyFromStore(owner, repo, apiKey, workflow, runId, correlationId) {
-    return policy_utils_awaiter(this, void 0, void 0, function* () {
-        if (apiKey === "") {
-            throw new Error("[PolicyStoreFetch]: api-key is empty");
-        }
-        let policyEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/policies/workflow-policy?workflow=${encodeURIComponent(workflow)}&run_id=${encodeURIComponent(runId)}&correlationId=${encodeURIComponent(correlationId)}`;
-        let httpClient = new lib.HttpClient();
-        let headers = {};
-        headers["Authorization"] = `vm-api-key ${apiKey}`;
-        headers["Source"] = "github-actions";
-        let response = undefined;
-        let err = undefined;
-        let retry = 0;
-        while (retry < 3) {
-            try {
-                console.log(`Attempt: ${retry + 1}`);
-                response = yield httpClient.getJson(policyEndpoint, headers);
-                break;
-            }
-            catch (e) {
-                err = e;
-            }
-            retry += 1;
-            yield sleep(1000);
-        }
-        if (response === undefined && err !== undefined) {
-            const error = new Error(`[Policy Store Fetch] ${err}`);
-            if (err.statusCode !== undefined) {
-                error.statusCode = err.statusCode;
-            }
-            throw error;
-        }
-        if (response.statusCode === 404) {
-            return null;
-        }
-        const result = response.result;
-        if (!result || (!result.egress_policy && (!result.allowed_endpoints || result.allowed_endpoints.length === 0))) {
-            return null;
-        }
-        return result;
     });
 }
 function mergeConfigs(localConfig, remoteConfig) {
@@ -85666,17 +85628,6 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __rest = (undefined && undefined.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 
 
 
@@ -85736,47 +85687,10 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
             is_github_hosted: isGithubHosted(),
             is_debug: lib_core.isDebug(),
             one_time_key: "",
-            api_key: lib_core.getInput("api-key"),
-            use_policy_store: lib_core.getBooleanInput("use-policy-store"),
+            deploy_on_self_hosted_vm: lib_core.getBooleanInput("deploy-on-self-hosted-vm"),
         };
-        if (confg.api_key !== "") {
-            lib_core.setSecret(confg.api_key);
-        }
         let policyName = lib_core.getInput("policy");
-        if (confg.use_policy_store) {
-            console.log(`Fetching policy from policy store`);
-            if (confg.api_key === "") {
-                lib_core.setFailed("api-key is required when use-policy-store is set to true");
-            }
-            else {
-                try {
-                    const repoName = (process.env["GITHUB_REPOSITORY"] || "").split("/")[1] || "";
-                    const workflowRef = process.env["GITHUB_WORKFLOW_REF"] || "";
-                    const workflow = workflowRef.replace(/.*\.github\/workflows\//, "").replace(/@.*/, "");
-                    let result = yield fetchPolicyFromStore(github.context.repo.owner, repoName, confg.api_key, workflow, confg.run_id, confg.correlation_id);
-                    if (result !== null) {
-                        lib_core.info(`Policy found: ${result.policy_name || "unnamed"}`);
-                        confg = mergeConfigs(confg, result);
-                    }
-                    else {
-                        lib_core.info("No policy found in policy store. Defaulting to audit mode.");
-                        confg.egress_policy = "audit";
-                    }
-                }
-                catch (err) {
-                    lib_core.info(`[!] ${err}`);
-                    if (err.statusCode >= 400 && err.statusCode < 500) {
-                        lib_core.info("Policy not found in policy store. Defaulting to audit mode.");
-                        confg.egress_policy = "audit";
-                    }
-                    else {
-                        lib_core.error(`Unexpected error fetching from policy store: ${err}. Falling back to audit mode.`);
-                        confg.egress_policy = "audit";
-                    }
-                }
-            }
-        }
-        else if (policyName !== "") {
+        if (policyName !== "") {
             console.log(`Fetching policy from API with name: ${policyName}`);
             try {
                 let idToken = yield lib_core.getIDToken();
@@ -85893,6 +85807,23 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
                 encoding: "utf8",
             });
             lib_core.info(SELF_HOSTED_RUNNER_MESSAGE);
+            if (shouldDeployAgentOnSelfHosted(confg.deploy_on_self_hosted_vm, isDocker(), isAgentInstalled(process.platform))) {
+                if (process.platform !== "linux") {
+                    lib_core.info("deploy-on-self-hosted-vm is only supported on Linux. Skipping agent deployment.");
+                }
+                else {
+                    lib_core.info("deploy-on-self-hosted-vm is enabled. Installing agent on self-hosted runner.");
+                    yield installAgentForSelfHosted(github.context.repo.owner, confg);
+                }
+            }
+            else {
+                if (confg.deploy_on_self_hosted_vm && isDocker()) {
+                    lib_core.info("Skipping agent deployment: running inside a container.");
+                }
+                if (confg.deploy_on_self_hosted_vm && isAgentInstalled(process.platform)) {
+                    lib_core.info("Agent already installed on self-hosted runner, skipping installation.");
+                }
+            }
             if (confg.egress_policy === "block") {
                 sendAllowedEndpoints(confg.allowed_endpoints);
                 yield setup_sleep(5000);
@@ -85949,8 +85880,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
             return;
         }
-        const { api_key, use_policy_store } = confg, agentConfig = __rest(confg, ["api_key", "use_policy_store"]);
-        const configStr = JSON.stringify(agentConfig);
+        const configStr = JSON.stringify(confg);
         // platform specific
         let statusFile = "";
         let logFile = "";
@@ -86013,6 +85943,61 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 function setup_sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
+    });
+}
+function installAgentForSelfHosted(owner, confg) {
+    return setup_awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log("Installing Harden Runner agent for self-hosted runner");
+            let isTLS = yield isTLSEnabled(owner);
+            if (!isTLS) {
+                console.log("TLS is not enabled for this organization. Agent installation skipped for self-hosted runner.");
+                return;
+            }
+            const selfHostedConfig = {
+                customer: owner,
+                working_directory: confg.working_directory,
+                api_url: confg.api_url,
+                allowed_endpoints: confg.allowed_endpoints,
+                egress_policy: confg.egress_policy,
+                disable_telemetry: confg.disable_telemetry,
+                disable_sudo: confg.disable_sudo,
+                disable_sudo_and_containers: confg.disable_sudo_and_containers,
+                disable_file_monitoring: confg.disable_file_monitoring,
+                is_github_hosted: false,
+            };
+            const selfHostedConfigStr = JSON.stringify(selfHostedConfig);
+            external_child_process_.execSync("sudo mkdir -p /home/agent");
+            chownForFolder(process.env.USER, "/home/agent");
+            const agentInstalled = yield installAgent(isTLS, selfHostedConfigStr);
+            if (agentInstalled) {
+                const statusFile = "/home/agent/agent.status";
+                const logFile = "/home/agent/agent.log";
+                let counter = 0;
+                while (true) {
+                    if (!external_fs_.existsSync(statusFile)) {
+                        counter++;
+                        if (counter > 30) {
+                            console.log("timed out");
+                            if (external_fs_.existsSync(logFile)) {
+                                const content = external_fs_.readFileSync(logFile, "utf-8");
+                                console.log(content);
+                            }
+                            break;
+                        }
+                        yield setup_sleep(300);
+                    }
+                    else {
+                        const content = external_fs_.readFileSync(statusFile, "utf-8");
+                        console.log(content);
+                        break;
+                    }
+                }
+            }
+        }
+        catch (error) {
+            console.log(`Failed to install agent for self-hosted runner: ${error.message}`);
+        }
     });
 }
 
