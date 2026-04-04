@@ -99,10 +99,14 @@ interface MonitorResponse {
       } else {
         try {
           const repoName = (process.env["GITHUB_REPOSITORY"] || "").split("/")[1] || "";
+          const workflow = process.env["GITHUB_WORKFLOW"] || "";
           let result: PolicyResponse | null = await fetchPolicyFromStore(
             context.repo.owner,
             repoName,
-            confg.api_key
+            confg.api_key,
+            workflow,
+            confg.run_id,
+            confg.correlation_id
           );
           if (result !== null) {
             confg = mergeConfigs(confg, result);

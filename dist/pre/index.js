@@ -85262,15 +85262,15 @@ function fetchPolicy(owner, policyName, idToken) {
         }
     });
 }
-function fetchPolicyFromStore(owner, repo, apiKey) {
+function fetchPolicyFromStore(owner, repo, apiKey, workflow, runId, correlationId) {
     return policy_utils_awaiter(this, void 0, void 0, function* () {
         if (apiKey === "") {
             throw new Error("[PolicyStoreFetch]: api-key is empty");
         }
-        let policyEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/policy-store/policy`;
+        let policyEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/policies/workflow-policy?workflow=${encodeURIComponent(workflow)}&run_id=${encodeURIComponent(runId)}&correlationId=${encodeURIComponent(correlationId)}`;
         let httpClient = new lib.HttpClient();
         let headers = {};
-        headers["Authorization"] = `api-key ${apiKey}`;
+        headers["Authorization"] = `vm-api-key ${apiKey}`;
         headers["Source"] = "github-actions";
         let response = undefined;
         let err = undefined;
@@ -85733,7 +85733,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             else {
                 try {
                     const repoName = (process.env["GITHUB_REPOSITORY"] || "").split("/")[1] || "";
-                    let result = yield fetchPolicyFromStore(github.context.repo.owner, repoName, confg.api_key);
+                    const workflow = process.env["GITHUB_WORKFLOW"] || "";
+                    let result = yield fetchPolicyFromStore(github.context.repo.owner, repoName, confg.api_key, workflow, confg.run_id, confg.correlation_id);
                     if (result !== null) {
                         confg = mergeConfigs(confg, result);
                     }

@@ -53,18 +53,21 @@ export async function fetchPolicy(
 export async function fetchPolicyFromStore(
   owner: string,
   repo: string,
-  apiKey: string
+  apiKey: string,
+  workflow: string,
+  runId: string,
+  correlationId: string
 ): Promise<PolicyResponse | null> {
   if (apiKey === "") {
     throw new Error("[PolicyStoreFetch]: api-key is empty");
   }
 
-  let policyEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/policy-store/policy`;
+  let policyEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/policies/workflow-policy?workflow=${encodeURIComponent(workflow)}&run_id=${encodeURIComponent(runId)}&correlationId=${encodeURIComponent(correlationId)}`;
 
   let httpClient = new HttpClient();
 
   let headers = {};
-  headers["Authorization"] = `api-key ${apiKey}`;
+  headers["Authorization"] = `vm-api-key ${apiKey}`;
   headers["Source"] = "github-actions";
 
   let response = undefined;
