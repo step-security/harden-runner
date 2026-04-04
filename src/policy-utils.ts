@@ -101,7 +101,12 @@ export async function fetchPolicyFromStore(
     return null;
   }
 
-  return response.result;
+  const result = response.result;
+  if (!result || (!result.egress_policy && (!result.allowed_endpoints || result.allowed_endpoints.length === 0))) {
+    return null;
+  }
+
+  return result;
 }
 
 export function mergeConfigs(

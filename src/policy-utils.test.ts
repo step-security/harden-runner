@@ -191,6 +191,21 @@ test("fetchPolicyFromStore returns null when policy not found (404)", async () =
   expect(result).toBeNull();
 });
 
+test("fetchPolicyFromStore returns null when API returns empty policy", async () => {
+  const owner = "test-owner";
+  const repo = "nonexistent-repo";
+  const workflow = "ci.yml";
+  const runId = "12345";
+  const correlationId = "abc-def";
+
+  nock(`${STEPSECURITY_API_URL}`)
+    .get(`/github/${owner}/${repo}/actions/policies/workflow-policy?${policyStoreQueryString(workflow, runId, correlationId)}`)
+    .reply(200, { allowed_endpoints: [], egress_policy: "", policy_name: "" });
+
+  const result = await fetchPolicyFromStore(owner, repo, "my-api-key", workflow, runId, correlationId);
+  expect(result).toBeNull();
+});
+
 test("fetchPolicyFromStore retries on failure and succeeds", async () => {
   const owner = "test-owner";
   const repo = "test-repo";

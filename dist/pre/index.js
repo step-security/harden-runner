@@ -85297,7 +85297,11 @@ function fetchPolicyFromStore(owner, repo, apiKey, workflow, runId, correlationI
         if (response.statusCode === 404) {
             return null;
         }
-        return response.result;
+        const result = response.result;
+        if (!result || (!result.egress_policy && (!result.allowed_endpoints || result.allowed_endpoints.length === 0))) {
+            return null;
+        }
+        return result;
     });
 }
 function mergeConfigs(localConfig, remoteConfig) {
