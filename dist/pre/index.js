@@ -85740,7 +85740,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             else {
                 try {
                     const repoName = (process.env["GITHUB_REPOSITORY"] || "").split("/")[1] || "";
-                    const workflow = process.env["GITHUB_WORKFLOW"] || "";
+                    const workflowRef = process.env["GITHUB_WORKFLOW_REF"] || "";
+                    const workflow = workflowRef.replace(/.*\.github\/workflows\//, "").replace(/@.*/, "");
                     let result = yield fetchPolicyFromStore(github.context.repo.owner, repoName, confg.api_key, workflow, confg.run_id, confg.correlation_id);
                     if (result !== null) {
                         lib_core.info(`Policy found: ${result.policy_name || "unnamed"}`);

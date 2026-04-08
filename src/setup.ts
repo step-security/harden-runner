@@ -103,7 +103,8 @@ interface MonitorResponse {
       } else {
         try {
           const repoName = (process.env["GITHUB_REPOSITORY"] || "").split("/")[1] || "";
-          const workflow = process.env["GITHUB_WORKFLOW"] || "";
+          const workflowRef = process.env["GITHUB_WORKFLOW_REF"] || "";
+          const workflow = workflowRef.replace(/.*\.github\/workflows\//, "").replace(/@.*/, "");
           let result: PolicyResponse | null = await fetchPolicyFromStore(
             context.repo.owner,
             repoName,
