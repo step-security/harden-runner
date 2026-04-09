@@ -50,6 +50,65 @@ export async function fetchPolicy(
   }
 }
 
+export async function fetchPolicyFromStore(
+  owner: string,
+  repo: string,
+  apiKey: string,
+  workflow: string,
+  runId: string,
+  correlationId: string
+): Promise<PolicyResponse | null> {
+  if (apiKey === "") {
+    throw new Error("[PolicyStoreFetch]: api-key is empty");
+  }
+
+  let policyEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/policies/workflow-policy?workflow=${encodeURIComponent(workflow)}&run_id=${encodeURIComponent(runId)}&correlationId=${encodeURIComponent(correlationId)}`;
+
+  let httpClient = new HttpClient();
+
+  let headers = {};
+  headers["Authorization"] = `vm-api-key ${apiKey}`;
+  headers["Source"] = "github-actions";
+
+  let response = undefined;
+  let err = undefined;
+
+  let retry = 0;
+  while (retry < 3) {
+    try {
+      console.log(`Attempt: ${retry + 1}`);
+      response = await httpClient.getJson<PolicyResponse>(
+        policyEndpoint,
+        headers
+      );
+      break;
+    } catch (e) {
+      err = e;
+    }
+    retry += 1;
+    await sleep(1000);
+  }
+
+  if (response === undefined && err !== undefined) {
+    const error = new Error(`[Policy Store Fetch] ${err}`);
+    if (err.statusCode !== undefined) {
+      (error as any).statusCode = err.statusCode;
+    }
+    throw error;
+  }
+
+  if (response.statusCode === 404) {
+    return null;
+  }
+
+  const result = response.result;
+  if (!result || (!result.egress_policy && (!result.allowed_endpoints || result.allowed_endpoints.length === 0))) {
+    return null;
+  }
+
+  return result;
+}
+
 export function mergeConfigs(
   localConfig: Configuration,
   remoteConfig: PolicyResponse

@@ -85262,6 +85262,48 @@ function fetchPolicy(owner, policyName, idToken) {
         }
     });
 }
+function fetchPolicyFromStore(owner, repo, apiKey, workflow, runId, correlationId) {
+    return policy_utils_awaiter(this, void 0, void 0, function* () {
+        if (apiKey === "") {
+            throw new Error("[PolicyStoreFetch]: api-key is empty");
+        }
+        let policyEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/policies/workflow-policy?workflow=${encodeURIComponent(workflow)}&run_id=${encodeURIComponent(runId)}&correlationId=${encodeURIComponent(correlationId)}`;
+        let httpClient = new lib.HttpClient();
+        let headers = {};
+        headers["Authorization"] = `vm-api-key ${apiKey}`;
+        headers["Source"] = "github-actions";
+        let response = undefined;
+        let err = undefined;
+        let retry = 0;
+        while (retry < 3) {
+            try {
+                console.log(`Attempt: ${retry + 1}`);
+                response = yield httpClient.getJson(policyEndpoint, headers);
+                break;
+            }
+            catch (e) {
+                err = e;
+            }
+            retry += 1;
+            yield sleep(1000);
+        }
+        if (response === undefined && err !== undefined) {
+            const error = new Error(`[Policy Store Fetch] ${err}`);
+            if (err.statusCode !== undefined) {
+                error.statusCode = err.statusCode;
+            }
+            throw error;
+        }
+        if (response.statusCode === 404) {
+            return null;
+        }
+        const result = response.result;
+        if (!result || (!result.egress_policy && (!result.allowed_endpoints || result.allowed_endpoints.length === 0))) {
+            return null;
+        }
+        return result;
+    });
+}
 function mergeConfigs(localConfig, remoteConfig) {
     if (localConfig.allowed_endpoints === "") {
         localConfig.allowed_endpoints = remoteConfig.allowed_endpoints.join(" ");
@@ -85624,6 +85666,17 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (undefined && undefined.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 
 
 
@@ -85683,9 +85736,47 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             is_github_hosted: isGithubHosted(),
             is_debug: lib_core.isDebug(),
             one_time_key: "",
+            api_key: lib_core.getInput("api-key"),
+            use_policy_store: lib_core.getBooleanInput("use-policy-store"),
         };
+        if (confg.api_key !== "") {
+            lib_core.setSecret(confg.api_key);
+        }
         let policyName = lib_core.getInput("policy");
-        if (policyName !== "") {
+        if (confg.use_policy_store) {
+            console.log(`Fetching policy from policy store`);
+            if (confg.api_key === "") {
+                lib_core.setFailed("api-key is required when use-policy-store is set to true");
+            }
+            else {
+                try {
+                    const repoName = (process.env["GITHUB_REPOSITORY"] || "").split("/")[1] || "";
+                    const workflowRef = process.env["GITHUB_WORKFLOW_REF"] || "";
+                    const workflow = workflowRef.replace(/.*\.github\/workflows\//, "").replace(/@.*/, "");
+                    let result = yield fetchPolicyFromStore(github.context.repo.owner, repoName, confg.api_key, workflow, confg.run_id, confg.correlation_id);
+                    if (result !== null) {
+                        lib_core.info(`Policy found: ${result.policy_name || "unnamed"}`);
+                        confg = mergeConfigs(confg, result);
+                    }
+                    else {
+                        lib_core.info("No policy found in policy store. Defaulting to audit mode.");
+                        confg.egress_policy = "audit";
+                    }
+                }
+                catch (err) {
+                    lib_core.info(`[!] ${err}`);
+                    if (err.statusCode >= 400 && err.statusCode < 500) {
+                        lib_core.info("Policy not found in policy store. Defaulting to audit mode.");
+                        confg.egress_policy = "audit";
+                    }
+                    else {
+                        lib_core.error(`Unexpected error fetching from policy store: ${err}. Falling back to audit mode.`);
+                        confg.egress_policy = "audit";
+                    }
+                }
+            }
+        }
+        else if (policyName !== "") {
             console.log(`Fetching policy from API with name: ${policyName}`);
             try {
                 let idToken = yield lib_core.getIDToken();
@@ -85858,7 +85949,8 @@ var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _ar
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
             return;
         }
-        const configStr = JSON.stringify(confg);
+        const { api_key, use_policy_store } = confg, agentConfig = __rest(confg, ["api_key", "use_policy_store"]);
+        const configStr = JSON.stringify(agentConfig);
         // platform specific
         let statusFile = "";
         let logFile = "";

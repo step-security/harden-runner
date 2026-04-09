@@ -16,7 +16,7 @@ import {
   isValidEvent,
 } from "./cache";
 import { Configuration, PolicyResponse } from "./interfaces";
-import { fetchPolicy, mergeConfigs } from "./policy-utils";
+import { fetchPolicy, fetchPolicyFromStore, mergeConfigs } from "./policy-utils";
 import * as cache from "@actions/cache";
 import { getCacheEntry } from "@actions/cache/lib/internal/cacheHttpClient";
 import * as cacheTwirpClient from "@actions/cache/lib/internal/shared/cacheTwirpClient";
@@ -87,10 +87,51 @@ interface MonitorResponse {
       is_github_hosted: isGithubHosted(),
       is_debug: core.isDebug(),
       one_time_key: "",
+      api_key: core.getInput("api-key"),
+      use_policy_store: core.getBooleanInput("use-policy-store"),
     };
 
+    if (confg.api_key !== "") {
+      core.setSecret(confg.api_key);
+    }
+
     let policyName = core.getInput("policy");
-    if (policyName !== "") {
+    if (confg.use_policy_store) {
+      console.log(`Fetching policy from policy store`);
+      if (confg.api_key === "") {
+        core.setFailed("api-key is required when use-policy-store is set to true");
+      } else {
+        try {
+          const repoName = (process.env["GITHUB_REPOSITORY"] || "").split("/")[1] || "";
+          const workflowRef = process.env["GITHUB_WORKFLOW_REF"] || "";
+          const workflow = workflowRef.replace(/.*\.github\/workflows\//, "").replace(/@.*/, "");
+          let result: PolicyResponse | null = await fetchPolicyFromStore(
+            context.repo.owner,
+            repoName,
+            confg.api_key,
+            workflow,
+            confg.run_id,
+            confg.correlation_id
+          );
+          if (result !== null) {
+            core.info(`Policy found: ${result.policy_name || "unnamed"}`);
+            confg = mergeConfigs(confg, result);
+          } else {
+            core.info("No policy found in policy store. Defaulting to audit mode.");
+            confg.egress_policy = "audit";
+          }
+        } catch (err) {
+          core.info(`[!] ${err}`);
+          if (err.statusCode >= 400 && err.statusCode < 500) {
+            core.info("Policy not found in policy store. Defaulting to audit mode.");
+            confg.egress_policy = "audit";
+          } else {
+            core.error(`Unexpected error fetching from policy store: ${err}. Falling back to audit mode.`);
+            confg.egress_policy = "audit";
+          }
+        }
+      }
+    } else if (policyName !== "") {
       console.log(`Fetching policy from API with name: ${policyName}`);
       try {
         let idToken: string = await core.getIDToken();
@@ -332,7 +373,8 @@ interface MonitorResponse {
       return;
     }
 
-    const configStr = JSON.stringify(confg);
+    const { api_key, use_policy_store, ...agentConfig } = confg;
+    const configStr = JSON.stringify(agentConfig);
 
     // platform specific
     let statusFile = "";

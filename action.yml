@@ -29,9 +29,17 @@ inputs:
     required: false
     default: "false"
   policy:
-    description: "Policy name to be used from the policy store"
+    description: "Policy name to be used from the policy store. Requires id-token: write permission."
     required: false
     default: ""
+  api-key:
+    description: "StepSecurity API key for authenticating with the policy store. Required when use-policy-store is set to true."
+    required: false
+    default: ""
+  use-policy-store:
+    description: "Set to true to fetch policy from the policy store using the API key. This is the preferred method over the policy input which requires id-token: write permission. Policies can be defined and attached at workflow, repo, org, or cluster (for ARC) level in the policy store. The most granular policy will apply."
+    required: false
+    default: "false"
 
 branding:
   icon: "check-square"
