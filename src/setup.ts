@@ -373,7 +373,8 @@ interface MonitorResponse {
       return;
     }
 
-    const configStr = JSON.stringify(confg);
+    const { api_key, use_policy_store, ...agentConfig } = confg;
+    const configStr = JSON.stringify(agentConfig);
 
     // platform specific
     let statusFile = "";
