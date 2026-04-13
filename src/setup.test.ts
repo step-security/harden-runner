@@ -1,4 +1,12 @@
 import { shouldDeployAgentOnSelfHosted, isAgentInstalled, isPlatformSupported, getAnnotationLogs } from "./utils";
+import * as fs from "fs";
+
+jest.mock("fs", () => ({
+  ...jest.requireActual("fs"),
+  existsSync: jest.fn(),
+}));
+
+const mockedExistsSync = fs.existsSync as jest.MockedFunction<typeof fs.existsSync>;
 
 describe("shouldDeployAgentOnSelfHosted", () => {
   test("returns true when deploy flag is true, not container, agent not installed", () => {
@@ -27,16 +35,31 @@ describe("shouldDeployAgentOnSelfHosted", () => {
 });
 
 describe("isAgentInstalled", () => {
+  afterEach(() => {
+    mockedExistsSync.mockReset();
+  });
+
   test("returns false for linux when status file does not exist", () => {
+    mockedExistsSync.mockReturnValue(false);
     expect(isAgentInstalled("linux")).toBe(false);
+    expect(mockedExistsSync).toHaveBeenCalledWith("/home/agent/agent.status");
+  });
+
+  test("returns true for linux when status file exists", () => {
+    mockedExistsSync.mockReturnValue(true);
+    expect(isAgentInstalled("linux")).toBe(true);
   });
 
   test("returns false for win32 when status file does not exist", () => {
+    mockedExistsSync.mockReturnValue(false);
     expect(isAgentInstalled("win32")).toBe(false);
+    expect(mockedExistsSync).toHaveBeenCalledWith("C:\\agent\\agent.status");
   });
 
   test("returns false for darwin when status file does not exist", () => {
+    mockedExistsSync.mockReturnValue(false);
     expect(isAgentInstalled("darwin")).toBe(false);
+    expect(mockedExistsSync).toHaveBeenCalledWith("/opt/step-security/agent.status");
   });
 
   test("returns false for unsupported platform", () => {
