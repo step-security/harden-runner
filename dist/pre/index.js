@@ -85900,7 +85900,9 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
                 encoding: "utf8",
             });
             lib_core.info(SELF_HOSTED_RUNNER_MESSAGE);
-            if (shouldDeployAgentOnSelfHosted(confg.deploy_on_self_hosted_vm, isDocker(), isAgentInstalled(process.platform))) {
+            const inContainer = isDocker();
+            const alreadyInstalled = isAgentInstalled(process.platform);
+            if (shouldDeployAgentOnSelfHosted(confg.deploy_on_self_hosted_vm, inContainer, alreadyInstalled)) {
                 if (process.platform !== "linux") {
                     lib_core.info("deploy-on-self-hosted-vm is only supported on Linux. Skipping agent deployment.");
                 }
@@ -85910,10 +85912,10 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
                 }
             }
             else {
-                if (confg.deploy_on_self_hosted_vm && isDocker()) {
+                if (confg.deploy_on_self_hosted_vm && inContainer) {
                     lib_core.info("Skipping agent deployment: running inside a container.");
                 }
-                if (confg.deploy_on_self_hosted_vm && isAgentInstalled(process.platform)) {
+                if (confg.deploy_on_self_hosted_vm && alreadyInstalled) {
                     lib_core.info("Agent already installed on self-hosted runner, skipping installation.");
                 }
             }

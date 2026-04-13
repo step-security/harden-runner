@@ -295,7 +295,10 @@ interface MonitorResponse {
 
       core.info(common.SELF_HOSTED_RUNNER_MESSAGE);
 
-      if (shouldDeployAgentOnSelfHosted(confg.deploy_on_self_hosted_vm, isDocker(), isAgentInstalled(process.platform))) {
+      const inContainer = isDocker();
+      const alreadyInstalled = isAgentInstalled(process.platform);
+
+      if (shouldDeployAgentOnSelfHosted(confg.deploy_on_self_hosted_vm, inContainer, alreadyInstalled)) {
         if (process.platform !== "linux") {
           core.info("deploy-on-self-hosted-vm is only supported on Linux. Skipping agent deployment.");
         } else {
@@ -303,10 +306,10 @@ interface MonitorResponse {
           await installAgentForSelfHosted(context.repo.owner, confg);
         }
       } else {
-        if (confg.deploy_on_self_hosted_vm && isDocker()) {
+        if (confg.deploy_on_self_hosted_vm && inContainer) {
           core.info("Skipping agent deployment: running inside a container.");
         }
-        if (confg.deploy_on_self_hosted_vm && isAgentInstalled(process.platform)) {
+        if (confg.deploy_on_self_hosted_vm && alreadyInstalled) {
           core.info("Agent already installed on self-hosted runner, skipping installation.");
         }
       }
