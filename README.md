@@ -22,6 +22,8 @@ Traditional security monitoring and EDR solutions are ineffective for CI/CD runn
 StepSecurity Harden-Runner addresses this gap by providing security monitoring tailored for CI/CD runners, with support for Linux, Windows, and macOS runners. This approach brings CI/CD runners under the same level of security scrutiny as other critical systems, addressing a significant gap in the software supply chain.
 ### Harden-Runner: Security Incidents Detected
 
+- [Harden-Runner Detected the Compromised axios npm Package Dropping a Remote Access Trojan](https://www.stepsecurity.io/blog/axios-compromised-on-npm-malicious-versions-drop-remote-access-trojan) ([backstage/backstage#33693](https://github.com/backstage/backstage/issues/33693), [block/elasticgraph#1103](https://github.com/block/elasticgraph/issues/1103))
+- [Harden-Runner Detected the Trivy Compromise with Malicious v0.69.4 Release](https://www.stepsecurity.io/blog/trivy-compromised-a-second-time---malicious-v0-69-4-release) ([k8gb-io/k8gb#2294](https://github.com/k8gb-io/k8gb/issues/2294))
 - [Harden-Runner Detected the tj-actions/changed-files compromise](https://www.stepsecurity.io/blog/harden-runner-detection-tj-actions-changed-files-action-is-compromised) ([CVE-2025-30066](https://github.com/advisories/GHSA-mrrh-fwg8-r2c3))
 - [Harden Runner Detected the Sha1-Hulud Supply Chain Attack in CNCF’s Backstage Repository](https://www.stepsecurity.io/blog/how-harden-runner-detected-the-sha1-hulud-supply-chain-attack-in-cncfs-backstage-repository)
 - [Harden-Runner Detected the NX Build System compromise](https://www.stepsecurity.io/blog/supply-chain-security-alert-popular-nx-build-system-package-compromised-with-data-stealing-malware)
@@ -32,7 +34,7 @@ StepSecurity Harden-Runner addresses this gap by providing security monitoring t
 - [Harden-Runner Flagged an Anomalous Outbound Call, Leading to a Docker Documentation Update](https://www.stepsecurity.io/blog/harden-runner-flags-anomalous-outbound-call-leading-to-docker-documentation-update)
 
 ### See It in Action
-Harden-Runner secures over **18 million CI/CD workflow runs every week**, protecting thousands of pipelines, including those from popular open-source projects by **Microsoft, Google, and CISA**. See how top projects are using Harden-Runner and explore the insights:  
+Harden-Runner secures over **25 million CI/CD workflow runs every week**, protecting thousands of pipelines, including those from popular open-source projects by **Microsoft, Google, and CISA**. See how top projects are using Harden-Runner and explore the insights:  
 ➡️ [Who's using Harden-Runner?](https://docs.stepsecurity.io/whos-using-harden-runner)
 
 ## Quick Links
@@ -70,7 +72,7 @@ To integrate Harden-Runner, follow these steps:
    ```yaml
    steps:
      - name: Harden Runner
-       uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+       uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
        with:
          egress-policy: audit
 
@@ -149,11 +151,11 @@ Harden-Runner is trusted by over 11,000 leading open-source projects and enterpr
 
 ### Enterprise Case Studies
 
+- [How Mercari Secures GitHub Actions with StepSecurity](https://www.stepsecurity.io/case-studies/mercari)
+- [How Omnissa Secures GitHub Actions with StepSecurity](https://www.stepsecurity.io/case-studies/omnissa)
+- [Chainguard Secures GitHub Actions with StepSecurity](https://www.stepsecurity.io/case-studies/chainguard)
 - [How Coveo Strengthened GitHub Actions Security with StepSecurity](https://www.stepsecurity.io/case-studies/coveo)
 - [Hashgraph Achieves Comprehensive CI/CD Security Without Compromising Development Speed](https://www.stepsecurity.io/case-studies/hashgraph)
-- [Chainguard Secures GitHub Actions with StepSecurity](https://www.stepsecurity.io/case-studies/chainguard)
-- [Kapiche secures their GitHub Actions software supply chain with Harden-Runner](https://www.stepsecurity.io/case-studies/kapiche)
-- [Arcjet Enhances CI/CD Security with Harden-Runner](https://www.stepsecurity.io/case-studies/arcjet)
 
 ---
 
@@ -161,7 +163,7 @@ Harden-Runner is trusted by over 11,000 leading open-source projects and enterpr
 
 Harden-Runner is designed to work seamlessly across a variety of runner environments, providing consistent security insights and protections regardless of where your workflows execute. For self-hosted runners, audit mode is deployed directly to the runner infrastructure without requiring any changes to your existing workflows. For more details, refer to the [official documentation](https://docs.stepsecurity.io/harden-runner).
 
-| Environment Type | Compatibility | Audit Mode Deployment | Workflow Changes for Audit Mode |
+| Environment Type | Compatibility | Audit Mode Deployment | Workflow Changes for Audit/Block Mode |
 |------------------|---------------|--------------------------|-------------------|
 | GitHub-hosted runners (Linux) | ✅ Full support | Add Harden-Runner Action to workflow | Yes |
 | GitHub-hosted runners (Windows, macOS) | ✅ Audit mode only | Add Harden-Runner Action to workflow | Yes |
