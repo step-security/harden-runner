@@ -85556,7 +85556,7 @@ function installAgent(isTLS, configStr) {
                 console.log(ARM64_RUNNER_MESSAGE);
                 return false;
             }
-            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.14.2/agent_0.14.2_linux_amd64.tar.gz", undefined, auth);
+            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.15.0/agent_0.15.0_linux_amd64.tar.gz", undefined, auth);
         }
         verifyChecksum(downloadPath, isTLS, variant);
         const extractPath = yield tool_cache.extractTar(downloadPath);
