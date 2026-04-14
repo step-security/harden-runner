@@ -35,7 +35,7 @@ export async function installAgent(
       return false;
     }
     downloadPath = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.15.0/agent_0.15.0_linux_amd64.tar.gz",
+      "https://github.com/step-security/agent/releases/download/v0.15.1/agent_0.15.1_linux_amd64.tar.gz",
       undefined,
       auth
     );
