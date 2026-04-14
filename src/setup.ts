@@ -485,6 +485,7 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
       customer: owner,
       working_directory: confg.working_directory,
       api_url: confg.api_url,
+      api_key: uuidv4(),
       allowed_endpoints: confg.allowed_endpoints,
       egress_policy: confg.egress_policy,
       disable_telemetry: confg.disable_telemetry,
