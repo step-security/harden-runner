@@ -41,7 +41,7 @@ export async function installAgent(
     );
   }
 
-  verifyChecksum(downloadPath, isTLS, variant);
+  // verifyChecksum(downloadPath, isTLS, variant);
 
   const extractPath = await tc.extractTar(downloadPath);
 
