@@ -85919,7 +85919,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
                     lib_core.info("Agent already installed on self-hosted runner, skipping installation.");
                 }
             }
-            if (confg.egress_policy === "block") {
+            if (confg.egress_policy === "block" && !confg.deploy_on_self_hosted_vm) {
                 sendAllowedEndpoints(confg.allowed_endpoints);
                 yield setup_sleep(5000);
             }

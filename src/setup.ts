@@ -314,7 +314,7 @@ interface MonitorResponse {
         }
       }
 
-      if (confg.egress_policy === "block") {
+      if (confg.egress_policy === "block" && !confg.deploy_on_self_hosted_vm) {
         sendAllowedEndpoints(confg.allowed_endpoints);
         await sleep(5000);
       }
