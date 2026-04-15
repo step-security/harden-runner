@@ -45,6 +45,7 @@ test("merge configs", async () => {
     one_time_key: "",
     api_key: "",
     use_policy_store: false,
+    deploy_on_self_hosted_vm: false,
   };
   let policyResponse: PolicyResponse = {
     owner: "h0x0er",
@@ -75,6 +76,7 @@ test("merge configs", async () => {
     one_time_key: "",
     api_key: "",
     use_policy_store: false,
+    deploy_on_self_hosted_vm: false,
   };
 
   localConfig = mergeConfigs(localConfig, policyResponse);
@@ -314,6 +316,7 @@ test("mergeConfigs does not override local allowed_endpoints if not empty", () =
     one_time_key: "",
     api_key: "",
     use_policy_store: false,
+    deploy_on_self_hosted_vm: false,
   };
   let policyResponse: PolicyResponse = {
     allowed_endpoints: ["remote.endpoint:443"],
@@ -345,6 +348,7 @@ test("mergeConfigs overrides disable_sudo_and_containers from remote", () => {
     one_time_key: "",
     api_key: "",
     use_policy_store: false,
+    deploy_on_self_hosted_vm: false,
   };
   let policyResponse: PolicyResponse = {
     allowed_endpoints: [],
@@ -375,6 +379,7 @@ test("mergeConfigs does not override fields when remote values are undefined", (
     one_time_key: "",
     api_key: "",
     use_policy_store: false,
+    deploy_on_self_hosted_vm: false,
   };
   let policyResponse: PolicyResponse = {
     allowed_endpoints: [],
