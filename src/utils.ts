@@ -40,6 +40,17 @@ export function shouldDeployAgentOnSelfHosted(
   return deployOnSelfHostedVm && !isContainer && !agentAlreadyInstalled;
 }
 
+export type ThirdPartyRunnerProvider = "depot" | "namespace" | "warp" | "blacksmith";
+
+export function detectThirdPartyRunnerProvider(): ThirdPartyRunnerProvider | null {
+  if (process.env["DEPOT_RUNNER"] === "1") return "depot";
+  if (process.env["NAMESPACE_GITHUB_RUNTIME"]) return "namespace";
+  const runnerName = process.env["RUNNER_NAME"] ?? "";
+  if (runnerName.startsWith("warp-")) return "warp";
+  if (runnerName.startsWith("blacksmith-")) return "blacksmith";
+  return null;
+}
+
 export function getAnnotationLogs(platform: NodeJS.Platform) {
   switch (platform) {
     case "linux":

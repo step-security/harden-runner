@@ -31913,6 +31913,19 @@ function isAgentInstalled(platform) {
 function shouldDeployAgentOnSelfHosted(deployOnSelfHostedVm, isContainer, agentAlreadyInstalled) {
     return deployOnSelfHostedVm && !isContainer && !agentAlreadyInstalled;
 }
+function detectThirdPartyRunnerProvider() {
+    var _a;
+    if (process.env["DEPOT_RUNNER"] === "1")
+        return "depot";
+    if (process.env["NAMESPACE_GITHUB_RUNTIME"])
+        return "namespace";
+    const runnerName = (_a = process.env["RUNNER_NAME"]) !== null && _a !== void 0 ? _a : "";
+    if (runnerName.startsWith("warp-"))
+        return "warp";
+    if (runnerName.startsWith("blacksmith-"))
+        return "blacksmith";
+    return null;
+}
 function utils_getAnnotationLogs(platform) {
     switch (platform) {
         case "linux":
@@ -32068,9 +32081,9 @@ function isDocker() {
 }
 
 ;// CONCATENATED MODULE: ./src/configs.ts
-const STEPSECURITY_ENV = "agent"; // agent or int
+const STEPSECURITY_ENV = "int"; // agent or int
 const configs_STEPSECURITY_API_URL = (/* unused pure expression or super */ null && (`https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`));
-const STEPSECURITY_TELEMETRY_URL = "https://prod.app-api.stepsecurity.io/v1";
+const STEPSECURITY_TELEMETRY_URL = "https://int.app-api.stepsecurity.io/v1";
 const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
 
 // EXTERNAL MODULE: ./node_modules/@actions/http-client/lib/index.js
