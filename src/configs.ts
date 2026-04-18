@@ -1,4 +1,4 @@
-export const STEPSECURITY_ENV = "prod"; // agent or int
+export const STEPSECURITY_ENV = "agent"; // agent or int
 
 export const STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
 
