@@ -1,4 +1,4 @@
-import { shouldDeployAgentOnSelfHosted, isAgentInstalled, isPlatformSupported, getAnnotationLogs } from "./utils";
+import { shouldDeployAgentOnSelfHosted, isAgentInstalled, isPlatformSupported, getAnnotationLogs, detectThirdPartyRunnerProvider } from "./utils";
 import * as fs from "fs";
 
 jest.mock("fs", () => ({
@@ -88,5 +88,71 @@ describe("isPlatformSupported", () => {
 describe("getAnnotationLogs", () => {
   test("throws for unsupported platform", () => {
     expect(() => getAnnotationLogs("freebsd" as NodeJS.Platform)).toThrow("platform not supported");
+  });
+});
+
+describe("detectThirdPartyRunnerProvider", () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    delete process.env.DEPOT_RUNNER;
+    delete process.env.NAMESPACE_GITHUB_RUNTIME;
+    delete process.env.RUNNER_NAME;
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  test("returns depot when DEPOT_RUNNER=1", () => {
+    process.env.DEPOT_RUNNER = "1";
+    expect(detectThirdPartyRunnerProvider()).toBe("depot");
+  });
+
+  test("returns null when DEPOT_RUNNER=0", () => {
+    process.env.DEPOT_RUNNER = "0";
+    expect(detectThirdPartyRunnerProvider()).toBeNull();
+  });
+
+  test("returns namespace when NAMESPACE_GITHUB_RUNTIME is set", () => {
+    process.env.NAMESPACE_GITHUB_RUNTIME = "something";
+    expect(detectThirdPartyRunnerProvider()).toBe("namespace");
+  });
+
+  test("returns warp for RUNNER_NAME prefix warp-", () => {
+    process.env.RUNNER_NAME = "warp-4x-x64-abc";
+    expect(detectThirdPartyRunnerProvider()).toBe("warp");
+  });
+
+  test("returns blacksmith for RUNNER_NAME prefix blacksmith-", () => {
+    process.env.RUNNER_NAME = "blacksmith-01kpj-4vcpu";
+    expect(detectThirdPartyRunnerProvider()).toBe("blacksmith");
+  });
+
+  test("returns null when no env vars match", () => {
+    expect(detectThirdPartyRunnerProvider()).toBeNull();
+  });
+
+  test("returns null for a non-matching RUNNER_NAME", () => {
+    process.env.RUNNER_NAME = "GitHub Actions 1";
+    expect(detectThirdPartyRunnerProvider()).toBeNull();
+  });
+
+  test("depot takes precedence over namespace", () => {
+    process.env.DEPOT_RUNNER = "1";
+    process.env.NAMESPACE_GITHUB_RUNTIME = "something";
+    expect(detectThirdPartyRunnerProvider()).toBe("depot");
+  });
+
+  test("namespace takes precedence over warp runner name prefix", () => {
+    process.env.NAMESPACE_GITHUB_RUNTIME = "something";
+    process.env.RUNNER_NAME = "warp-x";
+    expect(detectThirdPartyRunnerProvider()).toBe("namespace");
+  });
+
+  test("warp takes precedence over blacksmith when both prefixes seen (warp wins on name check order)", () => {
+    process.env.RUNNER_NAME = "warp-x";
+    expect(detectThirdPartyRunnerProvider()).toBe("warp");
   });
 });

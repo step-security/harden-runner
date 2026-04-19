@@ -85730,6 +85730,27 @@ function installWindowsAgent(configStr) {
     });
 }
 
+;// CONCATENATED MODULE: ./src/bravo-config.ts
+function buildBravoConfig(confg) {
+    return {
+        repo: confg.repo,
+        run_id: confg.run_id,
+        correlation_id: confg.correlation_id,
+        working_directory: confg.working_directory,
+        api_url: confg.api_url,
+        telemetry_url: confg.telemetry_url,
+        one_time_key: confg.one_time_key,
+        allowed_endpoints: confg.allowed_endpoints,
+        egress_policy: confg.egress_policy,
+        disable_telemetry: confg.disable_telemetry,
+        disable_sudo: confg.disable_sudo,
+        disable_sudo_and_containers: confg.disable_sudo_and_containers,
+        disable_file_monitoring: confg.disable_file_monitoring,
+        private: confg.private,
+        is_github_hosted: true,
+    };
+}
+
 ;// CONCATENATED MODULE: ./src/setup.ts
 var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -85751,6 +85772,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
         }
     return t;
 };
+
 
 
 
@@ -85966,7 +85988,8 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
         if (!isGithubHosted()) {
             const thirdPartyProvider = detectThirdPartyRunnerProvider();
             if (thirdPartyProvider) {
-                lib_core.info(`Detected ${thirdPartyProvider} runner environment. Installing agent-bravo.`);
+                const providerLabel = thirdPartyProvider.charAt(0).toUpperCase() + thirdPartyProvider.slice(1);
+                lib_core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
                 confg.correlation_id = runnerName || confg.correlation_id;
                 yield callMonitorEndpoint(api_url, confg);
                 yield installAgentForBravo(github.context.repo.owner, confg);
@@ -86202,24 +86225,7 @@ function installAgentForBravo(owner, confg) {
                 console.log("TLS is not enabled for this organization. Bravo agent installation skipped.");
                 return;
             }
-            const bravoConfig = {
-                repo: confg.repo,
-                run_id: confg.run_id,
-                correlation_id: confg.correlation_id,
-                working_directory: confg.working_directory,
-                api_url: confg.api_url,
-                telemetry_url: confg.telemetry_url,
-                one_time_key: confg.one_time_key,
-                allowed_endpoints: confg.allowed_endpoints,
-                egress_policy: confg.egress_policy,
-                disable_telemetry: confg.disable_telemetry,
-                disable_sudo: confg.disable_sudo,
-                disable_sudo_and_containers: confg.disable_sudo_and_containers,
-                disable_file_monitoring: confg.disable_file_monitoring,
-                private: confg.private,
-                is_github_hosted: true,
-            };
-            const bravoConfigStr = JSON.stringify(bravoConfig);
+            const bravoConfigStr = JSON.stringify(buildBravoConfig(confg));
             external_child_process_.execSync("sudo mkdir -p /home/agent");
             chownForFolder(process.env.USER, "/home/agent");
             yield installAgentBravo(bravoConfigStr);

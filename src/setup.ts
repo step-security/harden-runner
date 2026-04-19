@@ -39,6 +39,7 @@ import {
 } from "./install-agent";
 
 import { chownForFolder, detectThirdPartyRunnerProvider, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted } from "./utils";
+import { buildBravoConfig } from "./bravo-config";
 
 interface MonitorResponse {
   runner_ip_address?: string;
@@ -292,7 +293,8 @@ interface MonitorResponse {
     if (!isGithubHosted()) {
       const thirdPartyProvider = detectThirdPartyRunnerProvider();
       if (thirdPartyProvider) {
-        core.info(`Detected ${thirdPartyProvider} runner environment. Installing agent-bravo.`);
+        const providerLabel = thirdPartyProvider.charAt(0).toUpperCase() + thirdPartyProvider.slice(1);
+        core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
         confg.correlation_id = runnerName || confg.correlation_id;
         await callMonitorEndpoint(api_url, confg);
         await installAgentForBravo(context.repo.owner, confg);
@@ -571,24 +573,7 @@ export async function installAgentForBravo(owner: string, confg: Configuration) 
       return;
     }
 
-    const bravoConfig = {
-      repo: confg.repo,
-      run_id: confg.run_id,
-      correlation_id: confg.correlation_id,
-      working_directory: confg.working_directory,
-      api_url: confg.api_url,
-      telemetry_url: confg.telemetry_url,
-      one_time_key: confg.one_time_key,
-      allowed_endpoints: confg.allowed_endpoints,
-      egress_policy: confg.egress_policy,
-      disable_telemetry: confg.disable_telemetry,
-      disable_sudo: confg.disable_sudo,
-      disable_sudo_and_containers: confg.disable_sudo_and_containers,
-      disable_file_monitoring: confg.disable_file_monitoring,
-      private: confg.private,
-      is_github_hosted: true,
-    };
-    const bravoConfigStr = JSON.stringify(bravoConfig);
+    const bravoConfigStr = JSON.stringify(buildBravoConfig(confg));
 
     cp.execSync("sudo mkdir -p /home/agent");
     chownForFolder(process.env.USER, "/home/agent");
