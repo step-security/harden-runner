@@ -550,6 +550,8 @@ export async function installAgentForBravo(owner: string, confg: Configuration) 
 
     const bravoConfig = {
       customer: owner,
+      repo: confg.repo,
+      run_id: confg.run_id,
       correlation_id: process.env["RUNNER_NAME"] ?? uuidv4(),
       working_directory: confg.working_directory,
       api_url: confg.api_url,
@@ -560,6 +562,7 @@ export async function installAgentForBravo(owner: string, confg: Configuration) 
       disable_sudo: confg.disable_sudo,
       disable_sudo_and_containers: confg.disable_sudo_and_containers,
       disable_file_monitoring: confg.disable_file_monitoring,
+      private: confg.private,
       is_github_hosted: true,
     };
     const bravoConfigStr = JSON.stringify(bravoConfig);

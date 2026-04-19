@@ -86183,6 +86183,8 @@ function installAgentForBravo(owner, confg) {
             }
             const bravoConfig = {
                 customer: owner,
+                repo: confg.repo,
+                run_id: confg.run_id,
                 correlation_id: (_a = process.env["RUNNER_NAME"]) !== null && _a !== void 0 ? _a : v4(),
                 working_directory: confg.working_directory,
                 api_url: confg.api_url,
@@ -86193,6 +86195,7 @@ function installAgentForBravo(owner, confg) {
                 disable_sudo: confg.disable_sudo,
                 disable_sudo_and_containers: confg.disable_sudo_and_containers,
                 disable_file_monitoring: confg.disable_file_monitoring,
+                private: confg.private,
                 is_github_hosted: true,
             };
             const bravoConfigStr = JSON.stringify(bravoConfig);
