@@ -85967,6 +85967,8 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
             const thirdPartyProvider = detectThirdPartyRunnerProvider();
             if (thirdPartyProvider) {
                 lib_core.info(`Detected ${thirdPartyProvider} runner environment. Installing agent-bravo.`);
+                confg.correlation_id = runnerName || confg.correlation_id;
+                yield callMonitorEndpoint(api_url, confg);
                 yield installAgentForBravo(github.context.repo.owner, confg);
                 return;
             }
@@ -86115,6 +86117,26 @@ function setup_sleep(ms) {
         setTimeout(resolve, ms);
     });
 }
+function callMonitorEndpoint(api_url, confg) {
+    return setup_awaiter(this, void 0, void 0, function* () {
+        const _http = new lib.HttpClient();
+        _http.requestOptions = { socketTimeout: 3 * 1000 };
+        try {
+            const monitorRequestData = {
+                correlation_id: confg.correlation_id,
+                job: process.env["GITHUB_JOB"],
+            };
+            const resp = yield _http.postJson(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`, monitorRequestData);
+            if (resp.statusCode === 200 && resp.result) {
+                console.log(`Runner IP Address: ${resp.result.runner_ip_address}`);
+                confg.one_time_key = resp.result.one_time_key;
+            }
+        }
+        catch (e) {
+            console.log(`error in connecting to ${api_url}: ${e}`);
+        }
+    });
+}
 function installAgentForSelfHosted(owner, confg) {
     return setup_awaiter(this, void 0, void 0, function* () {
         try {
@@ -86172,7 +86194,6 @@ function installAgentForSelfHosted(owner, confg) {
     });
 }
 function installAgentForBravo(owner, confg) {
-    var _a;
     return setup_awaiter(this, void 0, void 0, function* () {
         try {
             console.log("Installing Harden Runner bravo agent for third-party runner");
@@ -86182,13 +86203,12 @@ function installAgentForBravo(owner, confg) {
                 return;
             }
             const bravoConfig = {
-                customer: owner,
                 repo: confg.repo,
                 run_id: confg.run_id,
-                correlation_id: (_a = process.env["RUNNER_NAME"]) !== null && _a !== void 0 ? _a : v4(),
+                correlation_id: confg.correlation_id,
                 working_directory: confg.working_directory,
                 api_url: confg.api_url,
-                api_key: v4(),
+                one_time_key: confg.one_time_key,
                 allowed_endpoints: confg.allowed_endpoints,
                 egress_policy: confg.egress_policy,
                 disable_telemetry: confg.disable_telemetry,

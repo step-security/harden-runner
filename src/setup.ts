@@ -293,6 +293,8 @@ interface MonitorResponse {
       const thirdPartyProvider = detectThirdPartyRunnerProvider();
       if (thirdPartyProvider) {
         core.info(`Detected ${thirdPartyProvider} runner environment. Installing agent-bravo.`);
+        confg.correlation_id = runnerName || confg.correlation_id;
+        await callMonitorEndpoint(api_url, confg);
         await installAgentForBravo(context.repo.owner, confg);
         return;
       }
@@ -478,6 +480,27 @@ export function sleep(ms: number) {
   });
 }
 
+async function callMonitorEndpoint(api_url: string, confg: Configuration) {
+  const _http = new httpm.HttpClient();
+  _http.requestOptions = { socketTimeout: 3 * 1000 };
+  try {
+    const monitorRequestData = {
+      correlation_id: confg.correlation_id,
+      job: process.env["GITHUB_JOB"],
+    };
+    const resp = await _http.postJson<MonitorResponse>(
+      `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`,
+      monitorRequestData
+    );
+    if (resp.statusCode === 200 && resp.result) {
+      console.log(`Runner IP Address: ${resp.result.runner_ip_address}`);
+      confg.one_time_key = resp.result.one_time_key;
+    }
+  } catch (e) {
+    console.log(`error in connecting to ${api_url}: ${e}`);
+  }
+}
+
 export async function installAgentForSelfHosted(owner: string, confg: Configuration) {
   try {
     console.log("Installing Harden Runner agent for self-hosted runner");
@@ -549,13 +572,12 @@ export async function installAgentForBravo(owner: string, confg: Configuration) 
     }
 
     const bravoConfig = {
-      customer: owner,
       repo: confg.repo,
       run_id: confg.run_id,
-      correlation_id: process.env["RUNNER_NAME"] ?? uuidv4(),
+      correlation_id: confg.correlation_id,
       working_directory: confg.working_directory,
       api_url: confg.api_url,
-      api_key: uuidv4(),
+      one_time_key: confg.one_time_key,
       allowed_endpoints: confg.allowed_endpoints,
       egress_policy: confg.egress_policy,
       disable_telemetry: confg.disable_telemetry,
