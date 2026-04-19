@@ -301,6 +301,7 @@ interface MonitorResponse {
       fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
         encoding: "utf8",
       });
+
       core.info(common.SELF_HOSTED_RUNNER_MESSAGE);
 
       const inContainer = isDocker();
@@ -404,10 +405,21 @@ interface MonitorResponse {
 
     if (thirdPartyProvider) {
       core.info(`Detected ${thirdPartyProvider} runner environment. Installing agent-bravo.`);
+
+
+      let isTLS = await isTLSEnabled(context.repo.owner);
+      if (!isTLS) {
+        console.log(`TLS is not enabled for this organization. Agent installation skipped for ${thirdPartyProvider} runner.`);
+        return;
+      }
+
       cp.execSync("sudo mkdir -p /home/agent");
       chownForFolder(process.env.USER ?? "", "/home/agent");
       const { use_policy_store, api_key, ...bravoAgentConfig } = confg;
-      await installAgentBravo(JSON.stringify({ ...bravoAgentConfig, is_github_hosted: true }));
+      const bravoSuccess = await installAgentBravo(JSON.stringify({ ...bravoAgentConfig, is_github_hosted: true }));
+      if (!bravoSuccess) {
+        core.warning("Agent installation failed for third-party runner.");
+      }
       return;
     }
 

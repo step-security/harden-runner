@@ -86045,10 +86045,18 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
         }
         if (thirdPartyProvider) {
             lib_core.info(`Detected ${thirdPartyProvider} runner environment. Installing agent-bravo.`);
+            let isTLS = yield isTLSEnabled(github.context.repo.owner);
+            if (!isTLS) {
+                console.log(`TLS is not enabled for this organization. Agent installation skipped for ${thirdPartyProvider} runner.`);
+                return;
+            }
             external_child_process_.execSync("sudo mkdir -p /home/agent");
             chownForFolder((_f = process.env.USER) !== null && _f !== void 0 ? _f : "", "/home/agent");
             const { use_policy_store, api_key } = confg, bravoAgentConfig = __rest(confg, ["use_policy_store", "api_key"]);
-            yield installAgentBravo(JSON.stringify(Object.assign(Object.assign({}, bravoAgentConfig), { is_github_hosted: true })));
+            const bravoSuccess = yield installAgentBravo(JSON.stringify(Object.assign(Object.assign({}, bravoAgentConfig), { is_github_hosted: true })));
+            if (!bravoSuccess) {
+                lib_core.warning("Agent installation failed for third-party runner.");
+            }
             return;
         }
         const { api_key, use_policy_store } = confg, agentConfig = __rest(confg, ["api_key", "use_policy_store"]);
