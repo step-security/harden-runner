@@ -86208,6 +86208,7 @@ function installAgentForBravo(owner, confg) {
                 correlation_id: confg.correlation_id,
                 working_directory: confg.working_directory,
                 api_url: confg.api_url,
+                telemetry_url: confg.telemetry_url,
                 one_time_key: confg.one_time_key,
                 allowed_endpoints: confg.allowed_endpoints,
                 egress_policy: confg.egress_policy,
