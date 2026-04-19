@@ -85989,6 +85989,10 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
             const thirdPartyProvider = detectThirdPartyRunnerProvider();
             if (thirdPartyProvider) {
                 const providerLabel = thirdPartyProvider.charAt(0).toUpperCase() + thirdPartyProvider.slice(1);
+                if (process.platform !== "linux") {
+                    lib_core.info(`Detected ${providerLabel} runner on ${process.platform}. Bravo agent is Linux-only, skipping install.`);
+                    return;
+                }
                 lib_core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
                 confg.correlation_id = runnerName || confg.correlation_id;
                 yield callMonitorEndpoint(api_url, confg);
