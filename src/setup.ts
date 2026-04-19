@@ -296,6 +296,59 @@ interface MonitorResponse {
     const runnerName = process.env.RUNNER_NAME || "";
     core.info(`RUNNER_NAME: ${runnerName}`);
 
+    if (!isGithubHosted() && !thirdPartyProvider) {
+
+      fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
+        encoding: "utf8",
+      });
+      core.info(common.SELF_HOSTED_RUNNER_MESSAGE);
+
+      const inContainer = isDocker();
+      const alreadyInstalled = isAgentInstalled(process.platform);
+
+      if (shouldDeployAgentOnSelfHosted(confg.deploy_on_self_hosted_vm, inContainer, alreadyInstalled)) {
+        if (process.platform !== "linux") {
+          core.info("deploy-on-self-hosted-vm is only supported on Linux. Skipping agent deployment.");
+        } else {
+          core.info("deploy-on-self-hosted-vm is enabled. Installing agent on self-hosted runner.");
+          await installAgentForSelfHosted(context.repo.owner, confg);
+        }
+      } else {
+        if (confg.deploy_on_self_hosted_vm && inContainer) {
+          core.info("Skipping agent deployment: running inside a container.");
+        }
+        if (confg.deploy_on_self_hosted_vm && alreadyInstalled) {
+          core.info("Agent already installed on self-hosted runner, skipping installation.");
+        }
+      }
+
+      if (confg.egress_policy === "block" && !confg.deploy_on_self_hosted_vm) {
+        sendAllowedEndpoints(confg.allowed_endpoints);
+        await sleep(5000);
+      }
+      return;
+    }
+
+    if (isGithubHosted() && process.env.STEP_SECURITY_HARDEN_RUNNER === "true") {
+      fs.appendFileSync(process.env.GITHUB_STATE, `customVMImage=true${EOL}`, {
+        encoding: "utf8",
+      });
+
+      core.info("This job is running on a custom VM image with Harden Runner installed.");
+
+      if (confg.egress_policy === "block") {
+        sendAllowedEndpoints(confg.allowed_endpoints);
+        await sleep(5000);
+      }
+      return;
+    }
+
+    if (isGithubHosted() && isAgentInstalled(process.platform)) {
+      console.log("Agent already installed, skipping installation");
+      return;
+    }
+
+
     let _http = new httpm.HttpClient();
     let statusCode: number | undefined;
     _http.requestOptions = { socketTimeout: 3 * 1000 };
@@ -348,67 +401,15 @@ interface MonitorResponse {
       return;
     }
 
-    if (!isGithubHosted()) {
 
-      if (thirdPartyProvider) {
-        core.info(`Detected ${thirdPartyProvider} runner environment. Installing agent-bravo.`);
-        cp.execSync("sudo mkdir -p /home/agent");
-        chownForFolder(process.env.USER ?? "", "/home/agent");
-        const { use_policy_store, api_key, ...bravoAgentConfig } = confg;
-        await installAgentBravo(JSON.stringify({ ...bravoAgentConfig, is_github_hosted: true }));
-        return;
-      }
-
-      fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
-        encoding: "utf8",
-      });
-      core.info(common.SELF_HOSTED_RUNNER_MESSAGE);
-
-      const inContainer = isDocker();
-      const alreadyInstalled = isAgentInstalled(process.platform);
-
-      if (shouldDeployAgentOnSelfHosted(confg.deploy_on_self_hosted_vm, inContainer, alreadyInstalled)) {
-        if (process.platform !== "linux") {
-          core.info("deploy-on-self-hosted-vm is only supported on Linux. Skipping agent deployment.");
-        } else {
-          core.info("deploy-on-self-hosted-vm is enabled. Installing agent on self-hosted runner.");
-          await installAgentForSelfHosted(context.repo.owner, confg);
-        }
-      } else {
-        if (confg.deploy_on_self_hosted_vm && inContainer) {
-          core.info("Skipping agent deployment: running inside a container.");
-        }
-        if (confg.deploy_on_self_hosted_vm && alreadyInstalled) {
-          core.info("Agent already installed on self-hosted runner, skipping installation.");
-        }
-      }
-
-      if (confg.egress_policy === "block" && !confg.deploy_on_self_hosted_vm) {
-        sendAllowedEndpoints(confg.allowed_endpoints);
-        await sleep(5000);
-      }
+    if (thirdPartyProvider) {
+      core.info(`Detected ${thirdPartyProvider} runner environment. Installing agent-bravo.`);
+      cp.execSync("sudo mkdir -p /home/agent");
+      chownForFolder(process.env.USER ?? "", "/home/agent");
+      const { use_policy_store, api_key, ...bravoAgentConfig } = confg;
+      await installAgentBravo(JSON.stringify({ ...bravoAgentConfig, is_github_hosted: true }));
       return;
     }
-
-    if (isGithubHosted() && process.env.STEP_SECURITY_HARDEN_RUNNER === "true") {
-      fs.appendFileSync(process.env.GITHUB_STATE, `customVMImage=true${EOL}`, {
-        encoding: "utf8",
-      });
-
-      core.info("This job is running on a custom VM image with Harden Runner installed.");
-
-      if (confg.egress_policy === "block") {
-        sendAllowedEndpoints(confg.allowed_endpoints);
-        await sleep(5000);
-      }
-      return;
-    }
-
-    if (isGithubHosted() && isAgentInstalled(process.platform)) {
-      console.log("Agent already installed, skipping installation");
-      return;
-    }
-
 
 
     const { api_key, use_policy_store, ...agentConfig } = confg;

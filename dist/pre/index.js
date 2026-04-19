@@ -85964,49 +85964,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
         }
         const runnerName = process.env.RUNNER_NAME || "";
         lib_core.info(`RUNNER_NAME: ${runnerName}`);
-        let _http = new lib.HttpClient();
-        let statusCode;
-        _http.requestOptions = { socketTimeout: 3 * 1000 };
-        let addSummary = "false";
-        try {
-            const monitorRequestData = {
-                correlation_id: correlation_id,
-                job: process.env["GITHUB_JOB"],
-            };
-            const resp = yield _http.postJson(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`, monitorRequestData);
-            const responseData = resp.result;
-            statusCode = resp.statusCode; // adding error code to check whether agent is getting installed or not.
-            external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${external_os_.EOL}`, {
-                encoding: "utf8",
-            });
-            if (statusCode === 200 && responseData) {
-                console.log(`Runner IP Address: ${responseData.runner_ip_address}`);
-                confg.one_time_key = responseData.one_time_key;
-                addSummary = responseData.monitoring_started ? "true" : "false";
-            }
-        }
-        catch (e) {
-            console.log(`error in connecting to ${api_url}: ${e}`);
-        }
-        external_fs_.appendFileSync(process.env.GITHUB_STATE, `addSummary=${addSummary}${external_os_.EOL}`, {
-            encoding: "utf8",
-        });
-        external_fs_.appendFileSync(process.env.GITHUB_STATE, `correlation_id=${correlation_id}${external_os_.EOL}`, {
-            encoding: "utf8",
-        });
-        if (String(statusCode) === STATUS_HARDEN_RUNNER_UNAVAILABLE) {
-            console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
-            return;
-        }
-        if (!isGithubHosted()) {
-            if (thirdPartyProvider) {
-                lib_core.info(`Detected ${thirdPartyProvider} runner environment. Installing agent-bravo.`);
-                external_child_process_.execSync("sudo mkdir -p /home/agent");
-                chownForFolder((_f = process.env.USER) !== null && _f !== void 0 ? _f : "", "/home/agent");
-                const { use_policy_store, api_key } = confg, bravoAgentConfig = __rest(confg, ["use_policy_store", "api_key"]);
-                yield installAgentBravo(JSON.stringify(Object.assign(Object.assign({}, bravoAgentConfig), { is_github_hosted: true })));
-                return;
-            }
+        if (!isGithubHosted() && !thirdPartyProvider) {
             external_fs_.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${external_os_.EOL}`, {
                 encoding: "utf8",
             });
@@ -86049,6 +86007,48 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
         }
         if (isGithubHosted() && isAgentInstalled(process.platform)) {
             console.log("Agent already installed, skipping installation");
+            return;
+        }
+        let _http = new lib.HttpClient();
+        let statusCode;
+        _http.requestOptions = { socketTimeout: 3 * 1000 };
+        let addSummary = "false";
+        try {
+            const monitorRequestData = {
+                correlation_id: correlation_id,
+                job: process.env["GITHUB_JOB"],
+            };
+            const resp = yield _http.postJson(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`, monitorRequestData);
+            const responseData = resp.result;
+            statusCode = resp.statusCode; // adding error code to check whether agent is getting installed or not.
+            external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${external_os_.EOL}`, {
+                encoding: "utf8",
+            });
+            if (statusCode === 200 && responseData) {
+                console.log(`Runner IP Address: ${responseData.runner_ip_address}`);
+                confg.one_time_key = responseData.one_time_key;
+                addSummary = responseData.monitoring_started ? "true" : "false";
+            }
+        }
+        catch (e) {
+            console.log(`error in connecting to ${api_url}: ${e}`);
+        }
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `addSummary=${addSummary}${external_os_.EOL}`, {
+            encoding: "utf8",
+        });
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `correlation_id=${correlation_id}${external_os_.EOL}`, {
+            encoding: "utf8",
+        });
+        if (String(statusCode) === STATUS_HARDEN_RUNNER_UNAVAILABLE) {
+            console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
+            return;
+        }
+        if (thirdPartyProvider) {
+            lib_core.info(`Detected ${thirdPartyProvider} runner environment. Installing agent-bravo.`);
+            external_child_process_.execSync("sudo mkdir -p /home/agent");
+            chownForFolder((_f = process.env.USER) !== null && _f !== void 0 ? _f : "", "/home/agent");
+            const { use_policy_store, api_key } = confg, bravoAgentConfig = __rest(confg, ["use_policy_store", "api_key"]);
+            yield installAgentBravo(JSON.stringify(Object.assign(Object.assign({}, bravoAgentConfig), { is_github_hosted: true })));
             return;
         }
         const { api_key, use_policy_store } = confg, agentConfig = __rest(confg, ["api_key", "use_policy_store"]);
