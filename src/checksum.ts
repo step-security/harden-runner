@@ -2,21 +2,21 @@ import * as core from "@actions/core";
 import * as crypto from "crypto";
 import * as fs from "fs";
 
-const CHECKSUMS = {
+export const CHECKSUMS = {
   tls: {
-    amd64: "6105000c6c61f4a3ca27ed3a2796baa206bdb1eb83f0463adb0ec7e565af6e1c", // v1.8.1
-    arm64: "0992da262be06580335725263ba6ee5c009dfd0448a948b7768ec077fdb9d3d8",
+    amd64: "713c91e921292027dacf446db44bafbc8e36a3f7f51dff664ba681c6e4398a05", // v1.8.2
+    arm64: "2c1eb365d6d9ae4cd4b6632a5f833bcdb7e75d0d9604de3391ff22e4e28e8d42",
   },
   non_tls: {
-    amd64: "4aaaeebbe10e619d8ce13e8cc4a1acbafc8f891e8cdd319984480b9ec08407b8", // v0.15.0
+    amd64: "e38de61e1afd98dd339bb9acce4996183875d482be1638fb198ab02b3e25bbef", // v0.16.0
   },
   bravo: {
-    amd64: "2eeaa1b3cfb05adea0a4e2a36e342ccaf95b41aeb82a6a6e217d2971c15f5553", // v1.8.1
-    arm64: "8d7035ffbda165ad86de8bd00bf861c038e4a9e6d501adadc53a265945882533",
+    amd64: "8d002af0c1c4bb73eaef0f2b641f7aa353cc3f4da36a4e418b69895a2baa922c", // v1.8.2
+    arm64: "1ce74a30d704c2e994246fc809d65af83e3f354aae7b9080b2c2eaee715cf005",
   },
   darwin: "fe26a1f6af4afe9f1a854d8633832f5d18ab542827003cae445b3a64021d612c", // v0.0.5
   windows: {
-    amd64: "e98f8b9cf9ecf6566f1e16a470fbe4aef01610a644fd8203a1bab3ff142186c8", // v1.0.0
+    amd64: "93f1e5d87c6647e6eca7963d5f4b4bd73107029430f8e6945ffece93007a89f5", // v1.0.2
   },
 };
 
