@@ -84976,6 +84976,7 @@ __nccwpck_require__.r(__webpack_exports__);
 
 // EXPORTS
 __nccwpck_require__.d(__webpack_exports__, {
+  installAgentForBravo: () => (/* binding */ installAgentForBravo),
   installAgentForSelfHosted: () => (/* binding */ installAgentForSelfHosted),
   sleep: () => (/* binding */ setup_sleep)
 });
@@ -85036,6 +85037,19 @@ function isAgentInstalled(platform) {
 }
 function shouldDeployAgentOnSelfHosted(deployOnSelfHostedVm, isContainer, agentAlreadyInstalled) {
     return deployOnSelfHostedVm && !isContainer && !agentAlreadyInstalled;
+}
+function detectThirdPartyRunnerProvider() {
+    var _a;
+    if (process.env["DEPOT_RUNNER"] === "1")
+        return "depot";
+    if (process.env["NAMESPACE_GITHUB_RUNTIME"])
+        return "namespace";
+    const runnerName = (_a = process.env["RUNNER_NAME"]) !== null && _a !== void 0 ? _a : "";
+    if (runnerName.startsWith("warp-"))
+        return "warp";
+    if (runnerName.startsWith("blacksmith-"))
+        return "blacksmith";
+    return null;
 }
 function utils_getAnnotationLogs(platform) {
     switch (platform) {
@@ -85441,19 +85455,23 @@ var external_crypto_ = __nccwpck_require__(6982);
 
 const CHECKSUMS = {
     tls: {
-        amd64: "86d042adcdc03eb1ea50d35d265da47622a6d0aedef9657f84ce1eb7f04d6057",
-        arm64: "ea1074a2358d50db9a9fe18ae3971b87305cda63f262c494a5f43b25f4e524ce",
+        amd64: "6105000c6c61f4a3ca27ed3a2796baa206bdb1eb83f0463adb0ec7e565af6e1c",
+        arm64: "0992da262be06580335725263ba6ee5c009dfd0448a948b7768ec077fdb9d3d8",
     },
     non_tls: {
         amd64: "4aaaeebbe10e619d8ce13e8cc4a1acbafc8f891e8cdd319984480b9ec08407b8", // v0.15.0
     },
-    darwin: "797399a3a3f6f9c4c000a02e0d8c7b16499129c9bdc2ad9cf2a10072c10654fb",
+    bravo: {
+        amd64: "2eeaa1b3cfb05adea0a4e2a36e342ccaf95b41aeb82a6a6e217d2971c15f5553",
+        arm64: "8d7035ffbda165ad86de8bd00bf861c038e4a9e6d501adadc53a265945882533",
+    },
+    darwin: "fe26a1f6af4afe9f1a854d8633832f5d18ab542827003cae445b3a64021d612c",
     windows: {
         amd64: "e98f8b9cf9ecf6566f1e16a470fbe4aef01610a644fd8203a1bab3ff142186c8", // v1.0.0
     },
 };
 // verifyChecksum returns true if checksum is valid
-function verifyChecksum(downloadPath, isTLS, variant, platform) {
+function verifyChecksum(downloadPath, isTLS, variant, platform, agentType = "default") {
     const fileBuffer = external_fs_.readFileSync(downloadPath);
     const checksum = external_crypto_.createHash("sha256")
         .update(fileBuffer)
@@ -85461,9 +85479,14 @@ function verifyChecksum(downloadPath, isTLS, variant, platform) {
     let expectedChecksum = "";
     switch (platform) {
         case "linux":
-            expectedChecksum = isTLS
-                ? CHECKSUMS["tls"][variant]
-                : CHECKSUMS["non_tls"][variant];
+            if (agentType === "bravo") {
+                expectedChecksum = CHECKSUMS["bravo"][variant];
+            }
+            else {
+                expectedChecksum = isTLS
+                    ? CHECKSUMS["tls"][variant]
+                    : CHECKSUMS["non_tls"][variant];
+            }
             break;
         case "darwin":
             expectedChecksum = CHECKSUMS["darwin"];
@@ -85513,7 +85536,7 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.8.0/harden-runner_1.8.0_linux_${variant}.tar.gz`, undefined, auth);
+            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.8.1/harden-runner_1.8.1_linux_${variant}.tar.gz`, undefined, auth);
         }
         else {
             if (variant === "arm64") {
@@ -85542,6 +85565,51 @@ function installAgent(isTLS, configStr) {
         return true;
     });
 }
+function installAgentBravo(configStr) {
+    return install_agent_awaiter(this, void 0, void 0, function* () {
+        // Note: to avoid github rate limiting
+        const token = lib_core.getInput("token", { required: true });
+        const auth = `token ${token}`;
+        const variant = process.arch === "x64" ? "amd64" : "arm64";
+        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.8.1/harden-runner-bravo_1.8.1_linux_${variant}.tar.gz`, undefined, auth);
+        if (!verifyChecksum(downloadPath, true, variant, "linux", "bravo")) {
+            return false;
+        }
+        const extractPath = yield tool_cache.extractTar(downloadPath);
+        external_child_process_.execFileSync("cp", [external_path_.join(extractPath, "agent"), "/home/agent/agent"]);
+        external_child_process_.execSync("chmod +x /home/agent/agent");
+        external_fs_.writeFileSync("/home/agent/agent.json", configStr);
+        const logStream = external_fs_.openSync("/home/agent/agent.stdout", "a");
+        const agentProcess = external_child_process_.spawn("sudo", ["/home/agent/agent"], {
+            cwd: "/home/agent",
+            detached: true,
+            stdio: ["ignore", logStream, logStream],
+        });
+        agentProcess.unref();
+        const agentStatus = "/home/agent/agent.status";
+        const deadline = Date.now() + 10000;
+        while (true) {
+            if (!external_fs_.existsSync(agentStatus)) {
+                if (Date.now() >= deadline) {
+                    console.log("timed out waiting for bravo agent");
+                    if (external_fs_.existsSync("/home/agent/agent.stdout")) {
+                        console.log(external_fs_.readFileSync("/home/agent/agent.stdout", "utf-8"));
+                    }
+                    if (external_fs_.existsSync("/home/agent/agent.log")) {
+                        console.log(external_fs_.readFileSync("/home/agent/agent.log", "utf-8"));
+                    }
+                    break;
+                }
+                yield new Promise((resolve) => setTimeout(resolve, 300));
+            }
+            else {
+                console.log(external_fs_.readFileSync(agentStatus, "utf-8"));
+                break;
+            }
+        }
+        return true;
+    });
+}
 function installMacosAgent(configStr) {
     return install_agent_awaiter(this, void 0, void 0, function* () {
         const token = lib_core.getInput("token", { required: true });
@@ -85557,7 +85625,7 @@ function installMacosAgent(configStr) {
             external_fs_.writeFileSync("/opt/step-security/agent.json", configStr);
             lib_core.info("✓ Successfully created agent.json at /opt/step-security/agent.json");
             // Download installer package
-            const downloadUrl = "https://github.com/step-security/agent-releases/releases/download/v0.0.4-mac/macos-installer-0.0.4.tar.gz";
+            const downloadUrl = "https://github.com/step-security/agent-releases/releases/download/v0.0.5-mac/macos-installer-0.0.5.tar.gz";
             lib_core.info(`Downloading macOS installer.. : ${downloadUrl}`);
             const downloadPath = yield tool_cache.downloadTool(downloadUrl, undefined, auth);
             lib_core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
@@ -85896,6 +85964,12 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
         const runnerName = process.env.RUNNER_NAME || "";
         lib_core.info(`RUNNER_NAME: ${runnerName}`);
         if (!isGithubHosted()) {
+            const thirdPartyProvider = detectThirdPartyRunnerProvider();
+            if (thirdPartyProvider) {
+                lib_core.info(`Detected ${thirdPartyProvider} runner environment. Installing agent-bravo.`);
+                yield installAgentForBravo(github.context.repo.owner, confg);
+                return;
+            }
             external_fs_.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${external_os_.EOL}`, {
                 encoding: "utf8",
             });
@@ -86094,6 +86168,40 @@ function installAgentForSelfHosted(owner, confg) {
         }
         catch (error) {
             console.log(`Failed to install agent for self-hosted runner: ${error.message}`);
+        }
+    });
+}
+function installAgentForBravo(owner, confg) {
+    var _a;
+    return setup_awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log("Installing Harden Runner bravo agent for third-party runner");
+            let isTLS = yield isTLSEnabled(owner);
+            if (!isTLS) {
+                console.log("TLS is not enabled for this organization. Bravo agent installation skipped.");
+                return;
+            }
+            const bravoConfig = {
+                customer: owner,
+                correlation_id: (_a = process.env["RUNNER_NAME"]) !== null && _a !== void 0 ? _a : v4(),
+                working_directory: confg.working_directory,
+                api_url: confg.api_url,
+                api_key: v4(),
+                allowed_endpoints: confg.allowed_endpoints,
+                egress_policy: confg.egress_policy,
+                disable_telemetry: confg.disable_telemetry,
+                disable_sudo: confg.disable_sudo,
+                disable_sudo_and_containers: confg.disable_sudo_and_containers,
+                disable_file_monitoring: confg.disable_file_monitoring,
+                is_github_hosted: true,
+            };
+            const bravoConfigStr = JSON.stringify(bravoConfig);
+            external_child_process_.execSync("sudo mkdir -p /home/agent");
+            chownForFolder(process.env.USER, "/home/agent");
+            yield installAgentBravo(bravoConfigStr);
+        }
+        catch (error) {
+            console.log(`Failed to install bravo agent: ${error.message}`);
         }
     });
 }

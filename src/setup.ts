@@ -33,11 +33,12 @@ import {
 import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
 import {
   installAgent,
+  installAgentBravo,
   installMacosAgent,
   installWindowsAgent,
 } from "./install-agent";
 
-import { chownForFolder, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted } from "./utils";
+import { chownForFolder, detectThirdPartyRunnerProvider, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted } from "./utils";
 
 interface MonitorResponse {
   runner_ip_address?: string;
@@ -289,6 +290,13 @@ interface MonitorResponse {
     const runnerName = process.env.RUNNER_NAME || "";
     core.info(`RUNNER_NAME: ${runnerName}`);
     if (!isGithubHosted()) {
+      const thirdPartyProvider = detectThirdPartyRunnerProvider();
+      if (thirdPartyProvider) {
+        core.info(`Detected ${thirdPartyProvider} runner environment. Installing agent-bravo.`);
+        await installAgentForBravo(context.repo.owner, confg);
+        return;
+      }
+
       fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
         encoding: "utf8",
       });
@@ -526,5 +534,41 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
     }
   } catch (error) {
     console.log(`Failed to install agent for self-hosted runner: ${error.message}`);
+  }
+}
+
+export async function installAgentForBravo(owner: string, confg: Configuration) {
+  try {
+    console.log("Installing Harden Runner bravo agent for third-party runner");
+
+    let isTLS = await isTLSEnabled(owner);
+
+    if (!isTLS) {
+      console.log("TLS is not enabled for this organization. Bravo agent installation skipped.");
+      return;
+    }
+
+    const bravoConfig = {
+      customer: owner,
+      correlation_id: process.env["RUNNER_NAME"] ?? uuidv4(),
+      working_directory: confg.working_directory,
+      api_url: confg.api_url,
+      api_key: uuidv4(),
+      allowed_endpoints: confg.allowed_endpoints,
+      egress_policy: confg.egress_policy,
+      disable_telemetry: confg.disable_telemetry,
+      disable_sudo: confg.disable_sudo,
+      disable_sudo_and_containers: confg.disable_sudo_and_containers,
+      disable_file_monitoring: confg.disable_file_monitoring,
+      is_github_hosted: true,
+    };
+    const bravoConfigStr = JSON.stringify(bravoConfig);
+
+    cp.execSync("sudo mkdir -p /home/agent");
+    chownForFolder(process.env.USER, "/home/agent");
+
+    await installAgentBravo(bravoConfigStr);
+  } catch (error) {
+    console.log(`Failed to install bravo agent: ${error.message}`);
   }
 }
