@@ -86148,20 +86148,27 @@ function callMonitorEndpoint(api_url, confg) {
     return setup_awaiter(this, void 0, void 0, function* () {
         const _http = new lib.HttpClient();
         _http.requestOptions = { socketTimeout: 3 * 1000 };
+        let statusCode;
+        let addSummary = "false";
         try {
             const monitorRequestData = {
                 correlation_id: confg.correlation_id,
                 job: process.env["GITHUB_JOB"],
             };
             const resp = yield _http.postJson(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`, monitorRequestData);
+            statusCode = resp.statusCode;
             if (resp.statusCode === 200 && resp.result) {
                 console.log(`Runner IP Address: ${resp.result.runner_ip_address}`);
                 confg.one_time_key = resp.result.one_time_key;
+                addSummary = resp.result.monitoring_started ? "true" : "false";
             }
         }
         catch (e) {
             console.log(`error in connecting to ${api_url}: ${e}`);
         }
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${external_os_.EOL}`, { encoding: "utf8" });
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `addSummary=${addSummary}${external_os_.EOL}`, { encoding: "utf8" });
+        external_fs_.appendFileSync(process.env.GITHUB_STATE, `correlation_id=${confg.correlation_id}${external_os_.EOL}`, { encoding: "utf8" });
     });
 }
 function installAgentForSelfHosted(owner, confg) {

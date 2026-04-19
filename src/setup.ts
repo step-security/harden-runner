@@ -489,6 +489,8 @@ export function sleep(ms: number) {
 async function callMonitorEndpoint(api_url: string, confg: Configuration) {
   const _http = new httpm.HttpClient();
   _http.requestOptions = { socketTimeout: 3 * 1000 };
+  let statusCode: number | undefined;
+  let addSummary = "false";
   try {
     const monitorRequestData = {
       correlation_id: confg.correlation_id,
@@ -498,13 +500,18 @@ async function callMonitorEndpoint(api_url: string, confg: Configuration) {
       `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`,
       monitorRequestData
     );
+    statusCode = resp.statusCode;
     if (resp.statusCode === 200 && resp.result) {
       console.log(`Runner IP Address: ${resp.result.runner_ip_address}`);
       confg.one_time_key = resp.result.one_time_key;
+      addSummary = resp.result.monitoring_started ? "true" : "false";
     }
   } catch (e) {
     console.log(`error in connecting to ${api_url}: ${e}`);
   }
+  fs.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${EOL}`, { encoding: "utf8" });
+  fs.appendFileSync(process.env.GITHUB_STATE, `addSummary=${addSummary}${EOL}`, { encoding: "utf8" });
+  fs.appendFileSync(process.env.GITHUB_STATE, `correlation_id=${confg.correlation_id}${EOL}`, { encoding: "utf8" });
 }
 
 export async function installAgentForSelfHosted(owner: string, confg: Configuration) {
