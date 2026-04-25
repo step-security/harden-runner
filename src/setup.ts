@@ -33,11 +33,13 @@ import {
 import { isGithubHosted, isTLSEnabled } from "./tls-inspect";
 import {
   installAgent,
+  installAgentBravo,
   installMacosAgent,
   installWindowsAgent,
 } from "./install-agent";
 
-import { chownForFolder, isAgentInstalled, isPlatformSupported } from "./utils";
+import { chownForFolder, detectThirdPartyRunnerProvider, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted } from "./utils";
+import { buildBravoConfig } from "./bravo-config";
 
 interface MonitorResponse {
   runner_ip_address?: string;
@@ -94,6 +96,7 @@ interface MonitorResponse {
       one_time_key: "",
       api_key: core.getInput("api-key"),
       use_policy_store: core.getBooleanInput("use-policy-store"),
+      deploy_on_self_hosted_vm: core.getBooleanInput("deploy-on-self-hosted-vm"),
     };
 
     if (confg.api_key !== "") {
@@ -293,13 +296,46 @@ interface MonitorResponse {
     const runnerName = process.env.RUNNER_NAME || "";
     core.info(`RUNNER_NAME: ${runnerName}`);
     if (!isGithubHosted()) {
+      const thirdPartyProvider = detectThirdPartyRunnerProvider();
+      if (thirdPartyProvider) {
+        const providerLabel = thirdPartyProvider.charAt(0).toUpperCase() + thirdPartyProvider.slice(1);
+        if (process.platform !== "linux") {
+          core.info(`Detected ${providerLabel} runner on ${process.platform}. Bravo agent is Linux-only, skipping install.`);
+          return;
+        }
+        core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
+        confg.correlation_id = runnerName || confg.correlation_id;
+        await callMonitorEndpoint(api_url, confg);
+        await installAgentForBravo(context.repo.owner, confg);
+        return;
+      }
+
       fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
         encoding: "utf8",
       });
 
       core.info(common.SELF_HOSTED_RUNNER_MESSAGE);
 
-      if (confg.egress_policy === "block") {
+      const inContainer = isDocker();
+      const alreadyInstalled = isAgentInstalled(process.platform);
+
+      if (shouldDeployAgentOnSelfHosted(confg.deploy_on_self_hosted_vm, inContainer, alreadyInstalled)) {
+        if (process.platform !== "linux") {
+          core.info("deploy-on-self-hosted-vm is only supported on Linux. Skipping agent deployment.");
+        } else {
+          core.info("deploy-on-self-hosted-vm is enabled. Installing agent on self-hosted runner.");
+          await installAgentForSelfHosted(context.repo.owner, confg);
+        }
+      } else {
+        if (confg.deploy_on_self_hosted_vm && inContainer) {
+          core.info("Skipping agent deployment: running inside a container.");
+        }
+        if (confg.deploy_on_self_hosted_vm && alreadyInstalled) {
+          core.info("Agent already installed on self-hosted runner, skipping installation.");
+        }
+      }
+
+      if (confg.egress_policy === "block" && !confg.deploy_on_self_hosted_vm) {
         sendAllowedEndpoints(confg.allowed_endpoints);
         await sleep(5000);
       }
@@ -453,4 +489,113 @@ export function sleep(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+async function callMonitorEndpoint(api_url: string, confg: Configuration) {
+  const _http = new httpm.HttpClient();
+  _http.requestOptions = { socketTimeout: 3 * 1000 };
+  let statusCode: number | undefined;
+  let addSummary = "false";
+  try {
+    const monitorRequestData = {
+      correlation_id: confg.correlation_id,
+      job: process.env["GITHUB_JOB"],
+    };
+    const resp = await _http.postJson<MonitorResponse>(
+      `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`,
+      monitorRequestData
+    );
+    statusCode = resp.statusCode;
+    if (resp.statusCode === 200 && resp.result) {
+      console.log(`Runner IP Address: ${resp.result.runner_ip_address}`);
+      confg.one_time_key = resp.result.one_time_key;
+      addSummary = resp.result.monitoring_started ? "true" : "false";
+    }
+  } catch (e) {
+    console.log(`error in connecting to ${api_url}: ${e}`);
+  }
+  fs.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${EOL}`, { encoding: "utf8" });
+  fs.appendFileSync(process.env.GITHUB_STATE, `addSummary=${addSummary}${EOL}`, { encoding: "utf8" });
+  fs.appendFileSync(process.env.GITHUB_STATE, `correlation_id=${confg.correlation_id}${EOL}`, { encoding: "utf8" });
+}
+
+export async function installAgentForSelfHosted(owner: string, confg: Configuration) {
+  try {
+    console.log("Installing Harden Runner agent for self-hosted runner");
+
+    let isTLS = await isTLSEnabled(owner);
+
+    if (!isTLS) {
+      console.log("TLS is not enabled for this organization. Agent installation skipped for self-hosted runner.");
+      return;
+    }
+
+    const selfHostedConfig = {
+      customer: owner,
+      working_directory: confg.working_directory,
+      api_url: confg.api_url,
+      api_key: uuidv4(),
+      allowed_endpoints: confg.allowed_endpoints,
+      egress_policy: confg.egress_policy,
+      disable_telemetry: confg.disable_telemetry,
+      disable_sudo: confg.disable_sudo,
+      disable_sudo_and_containers: confg.disable_sudo_and_containers,
+      disable_file_monitoring: confg.disable_file_monitoring,
+      is_github_hosted: false,
+    };
+    const selfHostedConfigStr = JSON.stringify(selfHostedConfig);
+
+    cp.execSync("sudo mkdir -p /home/agent");
+    chownForFolder(process.env.USER, "/home/agent");
+
+    const agentInstalled = await installAgent(isTLS, selfHostedConfigStr);
+
+    if (agentInstalled) {
+      const statusFile = "/home/agent/agent.status";
+      const logFile = "/home/agent/agent.log";
+      let counter = 0;
+      while (true) {
+        if (!fs.existsSync(statusFile)) {
+          counter++;
+          if (counter > 30) {
+            console.log("timed out");
+            if (fs.existsSync(logFile)) {
+              const content = fs.readFileSync(logFile, "utf-8");
+              console.log(content);
+            }
+            break;
+          }
+          await sleep(300);
+        } else {
+          const content = fs.readFileSync(statusFile, "utf-8");
+          console.log(content);
+          break;
+        }
+      }
+    }
+  } catch (error) {
+    console.log(`Failed to install agent for self-hosted runner: ${error.message}`);
+  }
+}
+
+export async function installAgentForBravo(owner: string, confg: Configuration) {
+  try {
+    console.log("Installing Harden Runner bravo agent for third-party runner");
+
+    let isTLS = await isTLSEnabled(owner);
+
+    if (!isTLS) {
+      console.log("TLS is not enabled for this organization. Bravo agent installation skipped.");
+      return;
+    }
+
+    const bravoConfigStr = JSON.stringify(buildBravoConfig(confg));
+
+    cp.execSync("sudo mkdir -p /home/agent");
+    chownForFolder(process.env.USER, "/home/agent");
+
+    await installAgentBravo(bravoConfigStr);
+  } catch (error) {
+    console.log(`Failed to install bravo agent: ${error.message}`);
+  }
 }

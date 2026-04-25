@@ -17,6 +17,7 @@ export interface Configuration {
   one_time_key: string;
   api_key: string;
   use_policy_store: boolean;
+  deploy_on_self_hosted_vm: boolean;
 }
 
 export interface PolicyResponse {

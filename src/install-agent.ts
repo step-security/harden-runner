@@ -26,7 +26,7 @@ export async function installAgent(
 
   if (isTLS) {
     downloadPath = await tc.downloadTool(
-      `https://github.com/step-security/agent-ebpf/releases/download/v1.7.15/harden-runner_1.7.15_linux_${variant}.tar.gz`,
+      `https://github.com/step-security/agent-ebpf/releases/download/v1.8.2/harden-runner_1.8.2_linux_${variant}.tar.gz`,
       undefined,
       auth
     );
@@ -36,7 +36,7 @@ export async function installAgent(
       return false;
     }
     downloadPath = await tc.downloadTool(
-      "https://github.com/step-security/agent/releases/download/v0.15.0/agent_0.15.0_linux_amd64.tar.gz",
+      "https://github.com/step-security/agent/releases/download/v0.16.0/agent_0.16.0_linux_amd64.tar.gz",
       undefined,
       auth
     );
@@ -69,6 +69,60 @@ export async function installAgent(
   return true;
 }
 
+export async function installAgentBravo(configStr: string): Promise<boolean> {
+  // Note: to avoid github rate limiting
+  const token = core.getInput("token", { required: true });
+  const auth = `token ${token}`;
+
+  const variant = process.arch === "x64" ? "amd64" : "arm64";
+  const downloadPath = await tc.downloadTool(
+    `https://github.com/step-security/agent-ebpf/releases/download/v1.8.2/harden-runner-bravo_1.8.2_linux_${variant}.tar.gz`,
+    undefined,
+    auth
+  );
+
+  if (!verifyChecksum(downloadPath, true, variant, "linux", "bravo")) {
+    return false;
+  }
+
+  const extractPath = await tc.extractTar(downloadPath);
+  cp.execFileSync("cp", [path.join(extractPath, "agent"), "/home/agent/agent"]);
+
+  cp.execSync("chmod +x /home/agent/agent");
+
+  fs.writeFileSync("/home/agent/agent.json", configStr);
+
+  const logStream = fs.openSync("/home/agent/agent.stdout", "a");
+  const agentProcess = cp.spawn("sudo", ["/home/agent/agent"], {
+    cwd: "/home/agent",
+    detached: true,
+    stdio: ["ignore", logStream, logStream],
+  });
+  agentProcess.unref();
+
+  const agentStatus = "/home/agent/agent.status";
+  const deadline = Date.now() + 10000;
+  while (true) {
+    if (!fs.existsSync(agentStatus)) {
+      if (Date.now() >= deadline) {
+        console.log("timed out waiting for bravo agent");
+        if (fs.existsSync("/home/agent/agent.stdout")) {
+          console.log(fs.readFileSync("/home/agent/agent.stdout", "utf-8"));
+        }
+        if (fs.existsSync("/home/agent/agent.log")) {
+          console.log(fs.readFileSync("/home/agent/agent.log", "utf-8"));
+        }
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    } else {
+      console.log(fs.readFileSync(agentStatus, "utf-8"));
+      break;
+    }
+  }
+  return true;
+}
+
 export async function installMacosAgent(configStr: string): Promise<boolean> {
   const token = core.getInput("token", { required: true });
   const auth = `token ${token}`;
@@ -89,7 +143,7 @@ export async function installMacosAgent(configStr: string): Promise<boolean> {
 
     // Download installer package
     const downloadUrl =
-      "https://github.com/step-security/agent-releases/releases/download/v0.0.4-mac/macos-installer-0.0.4.tar.gz";
+      "https://github.com/step-security/agent-releases/releases/download/v0.0.5-mac/macos-installer-0.0.5.tar.gz";
     core.info(`Downloading macOS installer.. : ${downloadUrl}`);
     const downloadPath = await tc.downloadTool(downloadUrl, undefined, auth);
     core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
@@ -172,7 +226,7 @@ export async function installWindowsAgent(configStr: string): Promise<boolean> {
   const agentExePath = path.join(agentDir, "agent.exe");
 
   const downloadPath = await tc.downloadTool(
-    `https://github.com/step-security/agent-releases/releases/download/v1.0.0-win/harden-runner-agent-windows_1.0.0_windows_amd64.tar.gz`,
+    `https://github.com/step-security/agent-releases/releases/download/v1.0.2-win/harden-runner-agent-windows_1.0.2_windows_amd64.tar.gz`,
     undefined,
     auth
   );
