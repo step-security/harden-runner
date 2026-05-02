@@ -32052,6 +32052,7 @@ const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing 
 const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner.";
 const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner community tier.";
 const ARM64_WINDOWS_RUNNER_MESSAGE = "Windows ARM runners are not yet supported by Harden-Runner.";
+const UBUNTU_SLIM_MESSAGE = "This job is running on an ubuntu-slim runner. Harden Runner is not supported on ubuntu-slim runners. This job will not be monitored.";
 
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(6928);
@@ -32212,6 +32213,10 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
     }
     if (isGithubHosted() && isDocker()) {
         console.log(CONTAINER_MESSAGE);
+        return;
+    }
+    if (isGithubHosted() && process.platform === "linux" && !process.env.USER) {
+        console.log(UBUNTU_SLIM_MESSAGE);
         return;
     }
     if (isARCRunner()) {

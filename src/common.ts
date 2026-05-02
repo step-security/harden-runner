@@ -150,4 +150,4 @@ export const ARM64_WINDOWS_RUNNER_MESSAGE =
   "Windows ARM runners are not yet supported by Harden-Runner.";
 
 export const UBUNTU_SLIM_MESSAGE =
-  "This job is running on an ubuntu-slim runner (GitHub-hosted Linux container without a standard USER environment variable). Harden Runner is not supported on ubuntu-slim runners. This job will not be monitored.";
+  "This job is running on an ubuntu-slim runner. Harden Runner is not supported on ubuntu-slim runners. This job will not be monitored.";

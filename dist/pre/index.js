@@ -85171,6 +85171,7 @@ const HARDEN_RUNNER_UNAVAILABLE_MESSAGE = "Sorry, we are currently experiencing 
 const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based runner.";
 const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner community tier.";
 const ARM64_WINDOWS_RUNNER_MESSAGE = "Windows ARM runners are not yet supported by Harden-Runner.";
+const UBUNTU_SLIM_MESSAGE = "This job is running on an ubuntu-slim runner. Harden Runner is not supported on ubuntu-slim runners. This job will not be monitored.";
 
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = require("node:fs");
@@ -85810,6 +85811,10 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
         }
         if (isGithubHosted() && isDocker()) {
             console.log(CONTAINER_MESSAGE);
+            return;
+        }
+        if (isGithubHosted() && process.platform === "linux" && !process.env.USER) {
+            console.log(UBUNTU_SLIM_MESSAGE);
             return;
         }
         var correlation_id = v4();
