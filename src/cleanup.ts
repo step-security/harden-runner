@@ -26,6 +26,11 @@ import { isPlatformSupported, isAgentInstalled, detectThirdPartyRunnerProvider }
     return;
   }
 
+  if (isGithubHosted() && process.platform === "linux" && !process.env.USER) {
+    console.log(common.UBUNTU_SLIM_MESSAGE);
+    return;
+  }
+
   if (isARCRunner()) {
     console.log(`[!] ${common.ARC_RUNNER_MESSAGE}`);
     return;

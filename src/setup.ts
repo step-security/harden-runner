@@ -66,6 +66,11 @@ interface MonitorResponse {
       return;
     }
 
+    if (isGithubHosted() && process.platform === "linux" && !process.env.USER) {
+      console.log(common.UBUNTU_SLIM_MESSAGE);
+      return;
+    }
+
     var correlation_id = uuidv4();
     var api_url = STEPSECURITY_API_URL;
     var web_url = STEPSECURITY_WEB_URL;
