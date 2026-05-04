@@ -26,7 +26,7 @@ export async function installAgent(
 
   if (isTLS) {
     downloadPath = await tc.downloadTool(
-      `https://github.com/step-security/agent-ebpf/releases/download/v1.8.2/harden-runner_1.8.2_linux_${variant}.tar.gz`,
+      `https://github.com/step-security/agent-ebpf/releases/download/v1.8.4/harden-runner_1.8.4_linux_${variant}.tar.gz`,
       undefined,
       auth
     );
@@ -76,7 +76,7 @@ export async function installAgentBravo(configStr: string): Promise<boolean> {
 
   const variant = process.arch === "x64" ? "amd64" : "arm64";
   const downloadPath = await tc.downloadTool(
-    `https://github.com/step-security/agent-ebpf/releases/download/v1.8.2/harden-runner-bravo_1.8.2_linux_${variant}.tar.gz`,
+    `https://github.com/step-security/agent-ebpf/releases/download/v1.8.4/harden-runner-bravo_1.8.4_linux_${variant}.tar.gz`,
     undefined,
     auth
   );
