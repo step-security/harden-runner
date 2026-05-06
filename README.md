@@ -80,6 +80,10 @@ To integrate Harden-Runner, follow these steps:
 <details>
 <summary>Click to view the full Getting Started Guide</summary>
 
+### **Recommended Rollout**
+
+Start with `egress-policy: audit` for new workflows so the team can review normal network destinations, file writes, and process activity before blocking traffic. After the baseline is understood, move high-sensitivity workflows such as releases, publishing jobs, and cloud deployment pipelines to an allowlist-based blocking policy. Revisit the baseline after major dependency, runner image, or build-tool changes so policy updates are intentional rather than reactive.
+
 ### **Step 2: Access Security Insights**
 
 Run your workflow. Once completed:
