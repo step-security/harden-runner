@@ -6,14 +6,22 @@ import isDocker from "is-docker";
 import { isARCRunner } from "./arc-runner";
 import { isGithubHosted } from "./tls-inspect";
 import { context } from "@actions/github";
-import { isPlatformSupported, isAgentInstalled, detectThirdPartyRunnerProvider } from "./utils";
+import {
+  isPlatformSupported,
+  isAgentInstalled,
+  detectThirdPartyRunnerProvider,
+} from "./utils";
+import * as core from "@actions/core";
 
 (async () => {
   console.log("[harden-runner] post-step");
 
-  const customProperties = context?.payload?.repository?.custom_properties || {};
+  const customProperties =
+    context?.payload?.repository?.custom_properties || {};
   if (customProperties["skip-harden-runner"] === "true") {
-    console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
+    console.log(
+      "Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'",
+    );
     return;
   }
 
@@ -98,8 +106,9 @@ async function handleAgentBravoCleanup() {
 
   const log = "/home/agent/agent.log";
   if (fs.existsSync(log)) {
-    console.log("log:");
+    core.startGroup("[StepSecurity] HardenRunner Agent Log");
     console.log(fs.readFileSync(log, "utf-8"));
+    core.endGroup();
   }
 
   const status = "/home/agent/agent.status";
@@ -143,16 +152,18 @@ async function handleLinuxCleanup() {
 
   const log = "/home/agent/agent.log";
   if (fs.existsSync(log)) {
-    console.log("log:");
+    core.startGroup("[StepSecurity] HardenRunner Agent Log");
     var content = fs.readFileSync(log, "utf-8");
     console.log(content);
+    core.endGroup();
   }
 
   const daemonLog = "/home/agent/daemon.log";
   if (fs.existsSync(daemonLog)) {
-    console.log("daemonLog:");
+    core.startGroup("[StepSecurity] HardenRunner Daemon Log");
     var content = fs.readFileSync(daemonLog, "utf-8");
     console.log(content);
+    core.endGroup();
   }
 
   var status = "/home/agent/agent.status";
@@ -168,18 +179,22 @@ async function handleLinuxCleanup() {
   if (disable_sudo !== "true" && disable_sudo_and_containers !== "true") {
     try {
       var journalLog = cp.execSync(
-        "sudo journalctl -u agent.service --lines=1000",
+        "sudo journalctl -u agent.service --lines=1000 2>&1",
         {
           encoding: "utf8",
           maxBuffer: 1024 * 1024 * 10, // 10MB buffer
-        }
+        },
       );
-      console.log("agent.service log:");
+      core.startGroup("[StepSecurity] HardenRunner Service Log");
       console.log(journalLog);
+      core.endGroup();
     } catch (error) {
       console.log("Warning: Could not fetch service logs:", error.message);
+      if (error.stdout) console.log(error.stdout);
     }
   }
+
+ 
 }
 
 async function handleMacosCleanup() {
@@ -213,9 +228,10 @@ async function handleMacosCleanup() {
 
   let macAgentLog = "/opt/step-security/agent.log";
   if (fs.existsSync(macAgentLog)) {
-    console.log("macAgentLog:");
+    core.startGroup("[StepSecurity] HardenRunner Agent Log");
     var content = fs.readFileSync(macAgentLog, "utf-8");
     console.log(content);
+    core.endGroup();
   } else {
     console.log("😭 macos agent.log file not found");
   }
@@ -260,7 +276,7 @@ async function handleWindowsCleanup() {
       "-Command",
       "query user; exit $LASTEXITCODE",
     ],
-    { stdio: ["ignore", "pipe", "pipe"], shell: false, windowsHide: true }
+    { stdio: ["ignore", "pipe", "pipe"], shell: false, windowsHide: true },
   );
   p.unref();
 
@@ -336,9 +352,10 @@ async function handleWindowsCleanup() {
 
   const log = path.join(agentDir, "agent.log");
   if (fs.existsSync(log)) {
-    console.log("agent log:");
+    core.startGroup("[StepSecurity] HardenRunner Agent Log");
     const content = fs.readFileSync(log, "utf-8");
     console.log(content);
+    core.endGroup();
   }
 }
 

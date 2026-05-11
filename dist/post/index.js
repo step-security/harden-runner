@@ -32199,6 +32199,7 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
 
 
 
+
 (() => cleanup_awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     console.log("[harden-runner] post-step");
@@ -32279,8 +32280,9 @@ function handleAgentBravoCleanup() {
         }
         const log = "/home/agent/agent.log";
         if (external_fs_.existsSync(log)) {
-            console.log("log:");
+            lib_core.startGroup("[StepSecurity] HardenRunner Agent Log");
             console.log(external_fs_.readFileSync(log, "utf-8"));
+            lib_core.endGroup();
         }
         const status = "/home/agent/agent.status";
         if (external_fs_.existsSync(status)) {
@@ -32317,15 +32319,17 @@ function handleLinuxCleanup() {
         }
         const log = "/home/agent/agent.log";
         if (external_fs_.existsSync(log)) {
-            console.log("log:");
+            lib_core.startGroup("[StepSecurity] HardenRunner Agent Log");
             var content = external_fs_.readFileSync(log, "utf-8");
             console.log(content);
+            lib_core.endGroup();
         }
         const daemonLog = "/home/agent/daemon.log";
         if (external_fs_.existsSync(daemonLog)) {
-            console.log("daemonLog:");
+            lib_core.startGroup("[StepSecurity] HardenRunner Daemon Log");
             var content = external_fs_.readFileSync(daemonLog, "utf-8");
             console.log(content);
+            lib_core.endGroup();
         }
         var status = "/home/agent/agent.status";
         if (external_fs_.existsSync(status)) {
@@ -32337,15 +32341,18 @@ function handleLinuxCleanup() {
         var disable_sudo_and_containers = process.env.STATE_disableSudoAndContainers;
         if (disable_sudo !== "true" && disable_sudo_and_containers !== "true") {
             try {
-                var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service --lines=1000", {
+                var journalLog = external_child_process_.execSync("sudo journalctl -u agent.service --lines=1000 2>&1", {
                     encoding: "utf8",
                     maxBuffer: 1024 * 1024 * 10, // 10MB buffer
                 });
-                console.log("agent.service log:");
+                lib_core.startGroup("[StepSecurity] HardenRunner Service Log");
                 console.log(journalLog);
+                lib_core.endGroup();
             }
             catch (error) {
                 console.log("Warning: Could not fetch service logs:", error.message);
+                if (error.stdout)
+                    console.log(error.stdout);
             }
         }
     });
@@ -32379,9 +32386,10 @@ function handleMacosCleanup() {
         }
         let macAgentLog = "/opt/step-security/agent.log";
         if (external_fs_.existsSync(macAgentLog)) {
-            console.log("macAgentLog:");
+            lib_core.startGroup("[StepSecurity] HardenRunner Agent Log");
             var content = external_fs_.readFileSync(macAgentLog, "utf-8");
             console.log(content);
+            lib_core.endGroup();
         }
         else {
             console.log("😭 macos agent.log file not found");
@@ -32486,9 +32494,10 @@ function handleWindowsCleanup() {
         }
         const log = external_path_.join(agentDir, "agent.log");
         if (external_fs_.existsSync(log)) {
-            console.log("agent log:");
+            lib_core.startGroup("[StepSecurity] HardenRunner Agent Log");
             const content = external_fs_.readFileSync(log, "utf-8");
             console.log(content);
+            lib_core.endGroup();
         }
     });
 }
