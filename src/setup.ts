@@ -107,7 +107,10 @@ interface MonitorResponse {
     if (confg.use_policy_store) {
       console.log(`Fetching policy from policy store`);
       if (confg.api_key === "") {
-        core.setFailed("api-key is required when use-policy-store is set to true");
+        core.warning(
+          "api-key is not set while use-policy-store is true. Defaulting to audit mode."
+        );
+        confg.egress_policy = "audit";
       } else {
         try {
           const repoName = (process.env["GITHUB_REPOSITORY"] || "").split("/")[1] || "";
