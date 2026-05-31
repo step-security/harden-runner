@@ -85051,6 +85051,13 @@ function detectThirdPartyRunnerProvider() {
         return "blacksmith";
     return null;
 }
+function stripEndpointComments(input) {
+    return input
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0 && !line.startsWith("#"))
+        .join("\n");
+}
 function utils_getAnnotationLogs(platform) {
     switch (platform) {
         case "linux":
@@ -85827,7 +85834,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
             working_directory: process.env["GITHUB_WORKSPACE"],
             api_url: api_url,
             telemetry_url: STEPSECURITY_TELEMETRY_URL,
-            allowed_endpoints: lib_core.getInput("allowed-endpoints"),
+            allowed_endpoints: stripEndpointComments(lib_core.getInput("allowed-endpoints")),
             egress_policy: lib_core.getInput("egress-policy"),
             disable_telemetry: lib_core.getBooleanInput("disable-telemetry"),
             disable_sudo: lib_core.getBooleanInput("disable-sudo"),

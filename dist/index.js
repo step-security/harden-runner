@@ -31926,6 +31926,13 @@ function detectThirdPartyRunnerProvider() {
         return "blacksmith";
     return null;
 }
+function stripEndpointComments(input) {
+    return input
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0 && !line.startsWith("#"))
+        .join("\n");
+}
 function utils_getAnnotationLogs(platform) {
     switch (platform) {
         case "linux":
