@@ -1,4 +1,4 @@
-import { shouldDeployAgentOnSelfHosted, isAgentInstalled, isPlatformSupported, getAnnotationLogs, detectThirdPartyRunnerProvider } from "./utils";
+import { shouldDeployAgentOnSelfHosted, isAgentInstalled, isPlatformSupported, getAnnotationLogs, detectThirdPartyRunnerProvider, stripEndpointComments } from "./utils";
 import * as fs from "fs";
 
 jest.mock("fs", () => ({
@@ -88,6 +88,27 @@ describe("isPlatformSupported", () => {
 describe("getAnnotationLogs", () => {
   test("throws for unsupported platform", () => {
     expect(() => getAnnotationLogs("freebsd" as NodeJS.Platform)).toThrow("platform not supported");
+  });
+});
+
+describe("stripEndpointComments", () => {
+  test("removes comment lines starting with #", () => {
+    const input = "api.github.com:443\n# needed for npm\nregistry.npmjs.org:443";
+    expect(stripEndpointComments(input)).toBe("api.github.com:443\nregistry.npmjs.org:443");
+  });
+
+  test("removes blank lines", () => {
+    const input = "api.github.com:443\n\nregistry.npmjs.org:443\n";
+    expect(stripEndpointComments(input)).toBe("api.github.com:443\nregistry.npmjs.org:443");
+  });
+
+  test("returns empty string for empty input", () => {
+    expect(stripEndpointComments("")).toBe("");
+  });
+
+  test("returns empty string when input contains only comments", () => {
+    const input = "# comment one\n# comment two";
+    expect(stripEndpointComments(input)).toBe("");
   });
 });
 

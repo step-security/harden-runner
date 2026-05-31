@@ -38,7 +38,7 @@ import {
   installWindowsAgent,
 } from "./install-agent";
 
-import { chownForFolder, detectThirdPartyRunnerProvider, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted } from "./utils";
+import { chownForFolder, detectThirdPartyRunnerProvider, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted, stripEndpointComments } from "./utils";
 import { buildBravoConfig } from "./bravo-config";
 
 interface MonitorResponse {
@@ -82,7 +82,7 @@ interface MonitorResponse {
       working_directory: process.env["GITHUB_WORKSPACE"],
       api_url: api_url,
       telemetry_url: STEPSECURITY_TELEMETRY_URL,
-      allowed_endpoints: core.getInput("allowed-endpoints"),
+      allowed_endpoints: stripEndpointComments(core.getInput("allowed-endpoints")),
       egress_policy: core.getInput("egress-policy"),
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
       disable_sudo: core.getBooleanInput("disable-sudo"),

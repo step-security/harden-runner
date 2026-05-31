@@ -51,6 +51,14 @@ export function detectThirdPartyRunnerProvider(): ThirdPartyRunnerProvider | nul
   return null;
 }
 
+export function stripEndpointComments(input: string): string {
+  return input
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith("#"))
+    .join("\n");
+}
+
 export function getAnnotationLogs(platform: NodeJS.Platform) {
   switch (platform) {
     case "linux":
