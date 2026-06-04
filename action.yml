@@ -33,7 +33,7 @@ inputs:
     required: false
     default: ""
   api-key:
-    description: "StepSecurity API key for authenticating with the policy store. Required when use-policy-store is set to true."
+    description: "StepSecurity API key for authenticating with the policy store. If omitted when use-policy-store is true, Harden-Runner defaults to audit mode."
     required: false
     default: ""
   use-policy-store:
