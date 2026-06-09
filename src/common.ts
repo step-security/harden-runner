@@ -109,7 +109,9 @@ export async function addSummary() {
   const apiUrl = `${STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/runs/${run_id}/correlation/${correlation_id}/job-markdown-summary`;
 
   try {
-    const response = await fetch(apiUrl);
+    const response = await fetch(apiUrl, {
+      signal: AbortSignal.timeout(3000),
+    });
     if (!response.ok) {
       console.error(`Failed to fetch job summary: ${response.status} ${response.statusText}`);
       return;

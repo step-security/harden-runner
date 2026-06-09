@@ -31980,8 +31980,8 @@ const processLogLine = (line, tableEntries) => {
     }
 };
 function addSummary() {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         if (process.env.STATE_addSummary !== "true") {
             return;
         }
@@ -32022,7 +32022,9 @@ function addSummary() {
         // Fetch job summary from API
         const apiUrl = `${STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/runs/${run_id}/correlation/${correlation_id}/job-markdown-summary`;
         try {
-            const response = yield fetch(apiUrl);
+            const response = yield fetch(apiUrl, {
+                signal: AbortSignal.timeout(3000),
+            });
             if (!response.ok) {
                 console.error(`Failed to fetch job summary: ${response.status} ${response.statusText}`);
                 return;
@@ -32087,8 +32089,6 @@ const configs_STEPSECURITY_API_URL = (/* unused pure expression or super */ null
 const STEPSECURITY_TELEMETRY_URL = "https://prod.app-api.stepsecurity.io/v1";
 const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
 
-// EXTERNAL MODULE: ./node_modules/@actions/http-client/lib/index.js
-var lib = __nccwpck_require__(4844);
 ;// CONCATENATED MODULE: ./src/tls-inspect.ts
 var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -32101,28 +32101,25 @@ var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisAr
 };
 
 
-
 function isTLSEnabled(owner) {
     return tls_inspect_awaiter(this, void 0, void 0, function* () {
-        let tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
-        let httpClient = new HttpClient();
-        httpClient.requestOptions = { socketTimeout: 3 * 1000 };
+        const tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
         core.info(`[!] Checking TLS_STATUS: ${owner}`);
-        let isEnabled = false;
         try {
-            let resp = yield httpClient.get(tlsStatusEndpoint);
-            if (resp.message.statusCode === 200) {
-                isEnabled = true;
+            const resp = yield fetch(tlsStatusEndpoint, {
+                signal: AbortSignal.timeout(3000),
+            });
+            if (resp.status === 200) {
                 core.info(`[!] TLS_ENABLED: ${owner}`);
+                return true;
             }
-            else {
-                core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
-            }
+            core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
+            return false;
         }
         catch (e) {
             core.info(`[!] Unable to check TLS_STATUS`);
+            return false;
         }
-        return isEnabled;
     });
 }
 function isGithubHosted() {
