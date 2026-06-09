@@ -1,3 +1,4 @@
+import * as core from "@actions/core";
 import * as fs from "fs";
 import * as common from "./common";
 import * as cp from "child_process";
@@ -7,6 +8,11 @@ import { isARCRunner } from "./arc-runner";
 import { isGithubHosted } from "./tls-inspect";
 import { context } from "@actions/github";
 import { isPlatformSupported, isAgentInstalled, detectThirdPartyRunnerProvider } from "./utils";
+
+// See setup.ts for rationale — Node 22+ kills the process on unhandled rejections.
+process.on("unhandledRejection", (reason) => {
+  core.warning(`Unhandled promise rejection during Post-step: ${reason}`);
+});
 
 (async () => {
   console.log("[harden-runner] post-step");
@@ -241,6 +247,15 @@ async function handleWindowsCleanup() {
   // windows cleanup
   const agentDir = process.env.STATE_agentDir || "C:\\agent";
   const postEventFile = path.join(agentDir, "post_event.json");
+
+  // If Pre-step crashed before installing the agent, agentDir doesn't exist;
+  // bail out instead of throwing ENOENT on the writeFileSync below.
+  if (!fs.existsSync(agentDir)) {
+    console.log(
+      `Windows cleanup: ${agentDir} not found; agent was not installed (Pre-step likely failed). Skipping.`
+    );
+    return;
+  }
 
   if (isGithubHosted() && fs.existsSync(postEventFile)) {
     console.log("Windows post step already executed, skipping");

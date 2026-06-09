@@ -1,26 +1,23 @@
-import { HttpClient } from "@actions/http-client";
 import { STEPSECURITY_API_URL } from "./configs";
 import * as core from "@actions/core";
 
 export async function isTLSEnabled(owner: string): Promise<boolean> {
-  let tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
-  let httpClient = new HttpClient();
-  httpClient.requestOptions = { socketTimeout: 3 * 1000 };
+  const tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
   core.info(`[!] Checking TLS_STATUS: ${owner}`);
-  let isEnabled = false;
   try {
-    let resp = await httpClient.get(tlsStatusEndpoint);
-    if (resp.message.statusCode === 200) {
-      isEnabled = true;
+    const resp = await fetch(tlsStatusEndpoint, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (resp.status === 200) {
       core.info(`[!] TLS_ENABLED: ${owner}`);
-    } else {
-      core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
+      return true;
     }
+    core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
+    return false;
   } catch (e) {
     core.info(`[!] Unable to check TLS_STATUS`);
+    return false;
   }
-
-  return isEnabled;
 }
 
 export function isGithubHosted() {

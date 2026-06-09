@@ -1,7 +1,6 @@
 import * as core from "@actions/core";
 import * as cp from "child_process";
 import * as fs from "fs";
-import * as httpm from "@actions/http-client";
 import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
 import * as common from "./common";
@@ -46,6 +45,15 @@ interface MonitorResponse {
   one_time_key?: string;
   monitoring_started?: boolean;
 }
+
+// Node 22+ terminates the process on unhandled promise rejections by default.
+// Third-party libraries used during Pre-step (notably @actions/cache's tar +
+// upload streams under concurrent matrix runs) can emit background rejections
+// that escape our try/catch, killing Pre-step silently and leaving the runner
+// without an agent installed. Log and continue instead.
+process.on("unhandledRejection", (reason) => {
+  core.warning(`Unhandled promise rejection during Pre-step: ${reason}`);
+});
 
 (async () => {
   try {
@@ -364,22 +372,25 @@ interface MonitorResponse {
       return;
     }
 
-    let _http = new httpm.HttpClient();
     let statusCode: number | undefined;
-    _http.requestOptions = { socketTimeout: 3 * 1000 };
     let addSummary = "false";
     try {
       const monitorRequestData = {
         correlation_id: correlation_id,
         job: process.env["GITHUB_JOB"],
       };
-      const resp = await _http.postJson<MonitorResponse>(
-        `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`,
-        monitorRequestData
-      );
+      const url = `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(monitorRequestData),
+        signal: AbortSignal.timeout(3000),
+      });
 
-      const responseData = resp.result;
-      statusCode = resp.statusCode; // adding error code to check whether agent is getting installed or not.
+      statusCode = resp.status;
+      const responseData = resp.ok
+        ? ((await resp.json()) as MonitorResponse)
+        : undefined;
       fs.appendFileSync(
         process.env.GITHUB_STATE,
         `monitorStatusCode=${statusCode}${EOL}`,
@@ -495,8 +506,6 @@ export function sleep(ms: number) {
 }
 
 async function callMonitorEndpoint(api_url: string, confg: Configuration) {
-  const _http = new httpm.HttpClient();
-  _http.requestOptions = { socketTimeout: 3 * 1000 };
   let statusCode: number | undefined;
   let addSummary = "false";
   try {
@@ -504,15 +513,19 @@ async function callMonitorEndpoint(api_url: string, confg: Configuration) {
       correlation_id: confg.correlation_id,
       job: process.env["GITHUB_JOB"],
     };
-    const resp = await _http.postJson<MonitorResponse>(
-      `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`,
-      monitorRequestData
-    );
-    statusCode = resp.statusCode;
-    if (resp.statusCode === 200 && resp.result) {
-      console.log(`Runner IP Address: ${resp.result.runner_ip_address}`);
-      confg.one_time_key = resp.result.one_time_key;
-      addSummary = resp.result.monitoring_started ? "true" : "false";
+    const url = `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`;
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(monitorRequestData),
+      signal: AbortSignal.timeout(3000),
+    });
+    statusCode = resp.status;
+    if (resp.ok) {
+      const result = (await resp.json()) as MonitorResponse;
+      console.log(`Runner IP Address: ${result.runner_ip_address}`);
+      confg.one_time_key = result.one_time_key;
+      addSummary = result.monitoring_started ? "true" : "false";
     }
   } catch (e) {
     console.log(`error in connecting to ${api_url}: ${e}`);

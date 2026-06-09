@@ -84987,8 +84987,6 @@ var lib_core = __nccwpck_require__(7484);
 var external_child_process_ = __nccwpck_require__(5317);
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __nccwpck_require__(9896);
-// EXTERNAL MODULE: ./node_modules/@actions/http-client/lib/index.js
-var lib = __nccwpck_require__(4844);
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(6928);
 // EXTERNAL MODULE: ./node_modules/uuid/dist/index.js
@@ -85105,8 +85103,8 @@ const processLogLine = (line, tableEntries) => {
     }
 };
 function addSummary() {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         if (process.env.STATE_addSummary !== "true") {
             return;
         }
@@ -85147,7 +85145,9 @@ function addSummary() {
         // Fetch job summary from API
         const apiUrl = `${STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/runs/${run_id}/correlation/${correlation_id}/job-markdown-summary`;
         try {
-            const response = yield fetch(apiUrl);
+            const response = yield fetch(apiUrl, {
+                signal: AbortSignal.timeout(3000),
+            });
             if (!response.ok) {
                 console.error(`Failed to fetch job summary: ${response.status} ${response.statusText}`);
                 return;
@@ -85244,43 +85244,43 @@ var policy_utils_awaiter = (undefined && undefined.__awaiter) || function (thisA
     });
 };
 
-
+class HttpStatusError extends Error {
+    constructor(statusCode, message) {
+        super(message);
+        this.statusCode = statusCode;
+    }
+}
 function fetchPolicy(owner, policyName, idToken) {
     return policy_utils_awaiter(this, void 0, void 0, function* () {
         if (idToken === "") {
             throw new Error("[PolicyFetch]: id-token in empty");
         }
-        let policyEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/actions/policies/${policyName}`;
-        let httpClient = new lib.HttpClient();
-        let headers = {};
-        headers["Authorization"] = `Bearer ${idToken}`;
-        headers["Source"] = "github-actions";
-        let response = undefined;
-        let err = undefined;
-        let retry = 0;
-        while (retry < 3) {
+        const policyEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/actions/policies/${policyName}`;
+        const headers = {
+            Authorization: `Bearer ${idToken}`,
+            Source: "github-actions",
+        };
+        let result;
+        let err;
+        for (let retry = 0; retry < 3; retry++) {
             try {
                 console.log(`Attempt: ${retry + 1}`);
-                response = yield httpClient.getJson(policyEndpoint, headers);
+                result = yield getJsonWithTimeout(policyEndpoint, headers);
                 break;
             }
             catch (e) {
                 err = e;
             }
-            retry += 1;
             yield sleep(1000);
         }
-        if (response === undefined && err !== undefined) {
-            // Preserve the original error's statusCode if it exists
+        if (result === undefined) {
             const error = new Error(`[Policy Fetch] ${err}`);
-            if (err.statusCode !== undefined) {
+            if (err && typeof err === "object" && "statusCode" in err) {
                 error.statusCode = err.statusCode;
             }
             throw error;
         }
-        else {
-            return response.result;
-        }
+        return result;
     });
 }
 function fetchPolicyFromStore(owner, repo, apiKey, workflow, runId, correlationId) {
@@ -85288,41 +85288,52 @@ function fetchPolicyFromStore(owner, repo, apiKey, workflow, runId, correlationI
         if (apiKey === "") {
             throw new Error("[PolicyStoreFetch]: api-key is empty");
         }
-        let policyEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/policies/workflow-policy?workflow=${encodeURIComponent(workflow)}&run_id=${encodeURIComponent(runId)}&correlationId=${encodeURIComponent(correlationId)}`;
-        let httpClient = new lib.HttpClient();
-        let headers = {};
-        headers["Authorization"] = `vm-api-key ${apiKey}`;
-        headers["Source"] = "github-actions";
-        let response = undefined;
-        let err = undefined;
-        let retry = 0;
-        while (retry < 3) {
+        const policyEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/policies/workflow-policy?workflow=${encodeURIComponent(workflow)}&run_id=${encodeURIComponent(runId)}&correlationId=${encodeURIComponent(correlationId)}`;
+        const headers = {
+            Authorization: `vm-api-key ${apiKey}`,
+            Source: "github-actions",
+        };
+        let result;
+        let err;
+        for (let retry = 0; retry < 3; retry++) {
             try {
                 console.log(`Attempt: ${retry + 1}`);
-                response = yield httpClient.getJson(policyEndpoint, headers);
+                result = yield getJsonWithTimeout(policyEndpoint, headers);
                 break;
             }
             catch (e) {
+                // 404 means policy not found — don't retry, return null
+                if (e instanceof HttpStatusError && e.statusCode === 404) {
+                    return null;
+                }
                 err = e;
             }
-            retry += 1;
             yield sleep(1000);
         }
-        if (response === undefined && err !== undefined) {
+        if (result === undefined) {
             const error = new Error(`[Policy Store Fetch] ${err}`);
-            if (err.statusCode !== undefined) {
+            if (err && typeof err === "object" && "statusCode" in err) {
                 error.statusCode = err.statusCode;
             }
             throw error;
         }
-        if (response.statusCode === 404) {
-            return null;
-        }
-        const result = response.result;
         if (!result || (!result.egress_policy && (!result.allowed_endpoints || result.allowed_endpoints.length === 0))) {
             return null;
         }
         return result;
+    });
+}
+function getJsonWithTimeout(url, headers) {
+    return policy_utils_awaiter(this, void 0, void 0, function* () {
+        const resp = yield fetch(url, {
+            method: "GET",
+            headers,
+            signal: AbortSignal.timeout(3000),
+        });
+        if (!resp.ok) {
+            throw new HttpStatusError(resp.status, `HTTP ${resp.status}`);
+        }
+        return (yield resp.json());
     });
 }
 function mergeConfigs(localConfig, remoteConfig) {
@@ -85417,28 +85428,25 @@ var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisAr
 };
 
 
-
 function isTLSEnabled(owner) {
     return tls_inspect_awaiter(this, void 0, void 0, function* () {
-        let tlsStatusEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
-        let httpClient = new lib.HttpClient();
-        httpClient.requestOptions = { socketTimeout: 3 * 1000 };
+        const tlsStatusEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
         lib_core.info(`[!] Checking TLS_STATUS: ${owner}`);
-        let isEnabled = false;
         try {
-            let resp = yield httpClient.get(tlsStatusEndpoint);
-            if (resp.message.statusCode === 200) {
-                isEnabled = true;
+            const resp = yield fetch(tlsStatusEndpoint, {
+                signal: AbortSignal.timeout(3000),
+            });
+            if (resp.status === 200) {
                 lib_core.info(`[!] TLS_ENABLED: ${owner}`);
+                return true;
             }
-            else {
-                lib_core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
-            }
+            lib_core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
+            return false;
         }
         catch (e) {
             lib_core.info(`[!] Unable to check TLS_STATUS`);
+            return false;
         }
-        return isEnabled;
     });
 }
 function isGithubHosted() {
@@ -85456,17 +85464,17 @@ var external_crypto_ = __nccwpck_require__(6982);
 
 const CHECKSUMS = {
     tls: {
-        amd64: "d58a9c1c5245155ce4c71507a61e213a29925a7c39c0d20bfd00bef0d281bdbb",
+        amd64: "d58a9c1c5245155ce4c71507a61e213a29925a7c39c0d20bfd00bef0d281bdbb", // v1.8.6
         arm64: "084fa95e74d17321dd1c37c93abeb8577e53ddf5266410e19f52aa79a02ae33e",
     },
     non_tls: {
         amd64: "e38de61e1afd98dd339bb9acce4996183875d482be1638fb198ab02b3e25bbef", // v0.16.0
     },
     bravo: {
-        amd64: "495f607a891d89f12214849301f247bdca565afe67deb170fe7e5d6d361852ca",
+        amd64: "495f607a891d89f12214849301f247bdca565afe67deb170fe7e5d6d361852ca", // v1.8.6
         arm64: "f96f66ab946097aae1fc887e12fe1cefcc5d510bce179221c7185374e4adf538",
     },
-    darwin: "fe26a1f6af4afe9f1a854d8633832f5d18ab542827003cae445b3a64021d612c",
+    darwin: "fe26a1f6af4afe9f1a854d8633832f5d18ab542827003cae445b3a64021d612c", // v0.0.5
     windows: {
         amd64: "93f1e5d87c6647e6eca7963d5f4b4bd73107029430f8e6945ffece93007a89f5", // v1.0.2
     },
@@ -85795,7 +85803,14 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 
 
 
-
+// Node 22+ terminates the process on unhandled promise rejections by default.
+// Third-party libraries used during Pre-step (notably @actions/cache's tar +
+// upload streams under concurrent matrix runs) can emit background rejections
+// that escape our try/catch, killing Pre-step silently and leaving the runner
+// without an agent installed. Log and continue instead.
+process.on("unhandledRejection", (reason) => {
+    lib_core.warning(`Unhandled promise rejection during Pre-step: ${reason}`);
+});
 (() => setup_awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
     try {
@@ -86049,18 +86064,24 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
             console.log("Agent already installed, skipping installation");
             return;
         }
-        let _http = new lib.HttpClient();
         let statusCode;
-        _http.requestOptions = { socketTimeout: 3 * 1000 };
         let addSummary = "false";
         try {
             const monitorRequestData = {
                 correlation_id: correlation_id,
                 job: process.env["GITHUB_JOB"],
             };
-            const resp = yield _http.postJson(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`, monitorRequestData);
-            const responseData = resp.result;
-            statusCode = resp.statusCode; // adding error code to check whether agent is getting installed or not.
+            const url = `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`;
+            const resp = yield fetch(url, {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify(monitorRequestData),
+                signal: AbortSignal.timeout(3000),
+            });
+            statusCode = resp.status;
+            const responseData = resp.ok
+                ? (yield resp.json())
+                : undefined;
             external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${external_os_.EOL}`, {
                 encoding: "utf8",
             });
@@ -86152,8 +86173,6 @@ function setup_sleep(ms) {
 }
 function callMonitorEndpoint(api_url, confg) {
     return setup_awaiter(this, void 0, void 0, function* () {
-        const _http = new lib.HttpClient();
-        _http.requestOptions = { socketTimeout: 3 * 1000 };
         let statusCode;
         let addSummary = "false";
         try {
@@ -86161,12 +86180,19 @@ function callMonitorEndpoint(api_url, confg) {
                 correlation_id: confg.correlation_id,
                 job: process.env["GITHUB_JOB"],
             };
-            const resp = yield _http.postJson(`${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`, monitorRequestData);
-            statusCode = resp.statusCode;
-            if (resp.statusCode === 200 && resp.result) {
-                console.log(`Runner IP Address: ${resp.result.runner_ip_address}`);
-                confg.one_time_key = resp.result.one_time_key;
-                addSummary = resp.result.monitoring_started ? "true" : "false";
+            const url = `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`;
+            const resp = yield fetch(url, {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify(monitorRequestData),
+                signal: AbortSignal.timeout(3000),
+            });
+            statusCode = resp.status;
+            if (resp.ok) {
+                const result = (yield resp.json());
+                console.log(`Runner IP Address: ${result.runner_ip_address}`);
+                confg.one_time_key = result.one_time_key;
+                addSummary = result.monitoring_started ? "true" : "false";
             }
         }
         catch (e) {
