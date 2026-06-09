@@ -85268,8 +85268,9 @@ function fetchPolicy(owner, policyName, idToken) {
             }
             catch (e) {
                 err = e;
+                if (retry < 2)
+                    yield sleep(1000);
             }
-            yield sleep(1000);
         }
         if (result === undefined) {
             const error = new Error(`[Policy Fetch] ${err}`);
@@ -85305,8 +85306,9 @@ function fetchPolicyFromStore(owner, repo, apiKey, workflow, runId, correlationI
                     return null;
                 }
                 err = e;
+                if (retry < 2)
+                    yield sleep(1000);
             }
-            yield sleep(1000);
         }
         if (result === undefined) {
             const error = new Error(`[Policy Store Fetch] ${err}`);
@@ -85807,7 +85809,9 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 // that escape our try/catch, killing Pre-step silently and leaving the runner
 // without an agent installed. Log and continue instead.
 process.on("unhandledRejection", (reason) => {
-    lib_core.warning(`Unhandled promise rejection during Pre-step: ${reason}`);
+    var _a;
+    const detail = reason instanceof Error ? ((_a = reason.stack) !== null && _a !== void 0 ? _a : reason.message) : String(reason);
+    lib_core.warning(`Unhandled promise rejection during Pre-step: ${detail}`);
 });
 (() => setup_awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
