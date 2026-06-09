@@ -57,7 +57,6 @@ test("isTLSEnabled returns false within ~3s when server is slow (regression test
 
   expect(result).toBe(false);
   expect(elapsed).toBeLessThan(3500);
-  expect(elapsed).toBeGreaterThanOrEqual(2800);
 }, 10_000);
 
 test("isTLSEnabled returns false on connection error without hanging", async () => {

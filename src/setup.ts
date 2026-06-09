@@ -52,7 +52,9 @@ interface MonitorResponse {
 // that escape our try/catch, killing Pre-step silently and leaving the runner
 // without an agent installed. Log and continue instead.
 process.on("unhandledRejection", (reason) => {
-  core.warning(`Unhandled promise rejection during Pre-step: ${reason}`);
+  const detail =
+    reason instanceof Error ? (reason.stack ?? reason.message) : String(reason);
+  core.warning(`Unhandled promise rejection during Pre-step: ${detail}`);
 });
 
 (async () => {

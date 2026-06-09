@@ -35,8 +35,8 @@ export async function fetchPolicy(
       break;
     } catch (e) {
       err = e;
+      if (retry < 2) await sleep(1000);
     }
-    await sleep(1000);
   }
 
   if (result === undefined) {
@@ -82,8 +82,8 @@ export async function fetchPolicyFromStore(
         return null;
       }
       err = e;
+      if (retry < 2) await sleep(1000);
     }
-    await sleep(1000);
   }
 
   if (result === undefined) {
