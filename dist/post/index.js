@@ -32299,6 +32299,12 @@ function handleLinuxCleanup() {
         if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
             return;
         }
+        // If Pre-step crashed before installing the agent, /home/agent doesn't exist;
+        // bail out instead of throwing ENOENT on the writeFileSync below.
+        if (!external_fs_.existsSync("/home/agent")) {
+            console.log("Linux cleanup: /home/agent not found; agent was not installed (Pre-step likely failed). Skipping.");
+            return;
+        }
         if (isGithubHosted() && external_fs_.existsSync("/home/agent/post_event.json")) {
             console.log("Post step already executed, skipping");
             return;
@@ -32363,6 +32369,12 @@ function handleLinuxCleanup() {
 function handleMacosCleanup() {
     return cleanup_awaiter(this, void 0, void 0, function* () {
         const post_event = "/opt/step-security/post_event.json";
+        // If Pre-step crashed before installing the agent, /opt/step-security doesn't
+        // exist; bail out instead of throwing ENOENT on the writeFileSync below.
+        if (!external_fs_.existsSync("/opt/step-security")) {
+            console.log("macOS cleanup: /opt/step-security not found; agent was not installed (Pre-step likely failed). Skipping.");
+            return;
+        }
         if (isGithubHosted() && external_fs_.existsSync(post_event)) {
             console.log("Post step already executed, skipping");
             return;
