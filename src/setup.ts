@@ -303,7 +303,7 @@ interface MonitorResponse {
       if (thirdPartyProvider) {
         const providerLabel = thirdPartyProvider.charAt(0).toUpperCase() + thirdPartyProvider.slice(1);
         if (process.platform !== "linux" && process.platform !== "darwin") {
-          core.info(`Detected ${providerLabel} runner on ${process.platform}. HardenRunner is not supported on this platform, skipping install.`);
+          core.info(`Detected ${providerLabel} runner on ${process.platform}. HardenRunner is not supported on this third-party provider, skipping install.`);
           return;
         }
         core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);

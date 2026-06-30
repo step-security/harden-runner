@@ -85996,7 +85996,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
             if (thirdPartyProvider) {
                 const providerLabel = thirdPartyProvider.charAt(0).toUpperCase() + thirdPartyProvider.slice(1);
                 if (process.platform !== "linux" && process.platform !== "darwin") {
-                    lib_core.info(`Detected ${providerLabel} runner on ${process.platform}. HardenRunner is not supported on this platform, skipping install.`);
+                    lib_core.info(`Detected ${providerLabel} runner on ${process.platform}. HardenRunner is not supported on this third-party provider, skipping install.`);
                     return;
                 }
                 lib_core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
