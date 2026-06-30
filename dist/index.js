@@ -31919,6 +31919,8 @@ function detectThirdPartyRunnerProvider() {
         return "depot";
     if (process.env["NAMESPACE_GITHUB_RUNTIME"])
         return "namespace";
+    if (process.env["BITRISE_IO"])
+        return "bitrise";
     const runnerName = (_a = process.env["RUNNER_NAME"]) !== null && _a !== void 0 ? _a : "";
     if (runnerName.startsWith("warp-"))
         return "warp";

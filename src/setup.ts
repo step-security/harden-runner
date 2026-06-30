@@ -302,15 +302,26 @@ interface MonitorResponse {
       const thirdPartyProvider = detectThirdPartyRunnerProvider();
       if (thirdPartyProvider) {
         const providerLabel = thirdPartyProvider.charAt(0).toUpperCase() + thirdPartyProvider.slice(1);
-        if (process.platform !== "linux") {
-          core.info(`Detected ${providerLabel} runner on ${process.platform}. Bravo agent is Linux-only, skipping install.`);
+        if (process.platform !== "linux" && process.platform !== "darwin") {
+          core.info(`Detected ${providerLabel} runner on ${process.platform}. HardenRunner is not supported on this platform, skipping install.`);
           return;
         }
         core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
         confg.correlation_id = runnerName || confg.correlation_id;
         await callMonitorEndpoint(api_url, confg);
-        await installAgentForBravo(context.repo.owner, confg);
-        return;
+        const bravoConfigStr = JSON.stringify(buildBravoConfig(confg));
+        switch (process.platform) {
+          case "darwin": {
+            const installed = await installMacosAgent(bravoConfigStr);
+            if (!installed) {
+              core.warning("macos bravo agent installation failed");
+            }
+            return;
+          }
+          case "linux":
+            await installAgentForBravo(context.repo.owner, bravoConfigStr);
+            return;
+        }
       }
 
       fs.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${EOL}`, {
@@ -581,7 +592,7 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
   }
 }
 
-export async function installAgentForBravo(owner: string, confg: Configuration) {
+export async function installAgentForBravo(owner: string, bravoConfigStr: string) {
   try {
     console.log("Installing Harden Runner bravo agent for third-party runner");
 
@@ -591,8 +602,6 @@ export async function installAgentForBravo(owner: string, confg: Configuration) 
       console.log("TLS is not enabled for this organization. Bravo agent installation skipped.");
       return;
     }
-
-    const bravoConfigStr = JSON.stringify(buildBravoConfig(confg));
 
     cp.execSync("sudo mkdir -p /home/agent");
     chownForFolder(process.env.USER, "/home/agent");
