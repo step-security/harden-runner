@@ -32117,8 +32117,8 @@ function isTLSEnabled(owner) {
             return false;
         }
         catch (e) {
-            core.info(`[!] Unable to check TLS_STATUS`);
-            return false;
+            core.info(`[!] Unable to check TLS_STATUS. Defaulting to TLS enabled.`);
+            return true;
         }
     });
 }

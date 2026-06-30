@@ -33,7 +33,7 @@ test("tls-inspect not enabled", async () => {
   expect(got).toBe(false);
 });
 
-test("isTLSEnabled returns false within ~3s when server is slow (regression test for AggregateError)", async () => {
+test("isTLSEnabled returns true within ~3s when server is slow (regression test for AggregateError)", async () => {
   const owner = "slow-org";
 
   mockFetch((_url, init) => {
@@ -55,11 +55,11 @@ test("isTLSEnabled returns false within ~3s when server is slow (regression test
   const result = await isTLSEnabled(owner);
   const elapsed = Date.now() - start;
 
-  expect(result).toBe(false);
+  expect(result).toBe(true);
   expect(elapsed).toBeLessThan(3500);
 }, 10_000);
 
-test("isTLSEnabled returns false on connection error without hanging", async () => {
+test("isTLSEnabled returns true on connection error without hanging", async () => {
   const owner = "broken-org";
 
   mockFetch(async () => {
@@ -72,6 +72,6 @@ test("isTLSEnabled returns false on connection error without hanging", async () 
   const result = await isTLSEnabled(owner);
   const elapsed = Date.now() - start;
 
-  expect(result).toBe(false);
+  expect(result).toBe(true);
   expect(elapsed).toBeLessThan(3500);
 });
