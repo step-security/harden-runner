@@ -85446,8 +85446,8 @@ function isTLSEnabled(owner) {
             return false;
         }
         catch (e) {
-            lib_core.info(`[!] Unable to check TLS_STATUS`);
-            return false;
+            lib_core.info(`[!] Unable to check TLS_STATUS. Defaulting to TLS enabled.`);
+            return true;
         }
     });
 }
