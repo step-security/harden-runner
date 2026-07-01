@@ -98,6 +98,7 @@ describe("detectThirdPartyRunnerProvider", () => {
     process.env = { ...originalEnv };
     delete process.env.DEPOT_RUNNER;
     delete process.env.NAMESPACE_GITHUB_RUNTIME;
+    delete process.env.BITRISE_IO;
     delete process.env.RUNNER_NAME;
   });
 
@@ -118,6 +119,11 @@ describe("detectThirdPartyRunnerProvider", () => {
   test("returns namespace when NAMESPACE_GITHUB_RUNTIME is set", () => {
     process.env.NAMESPACE_GITHUB_RUNTIME = "something";
     expect(detectThirdPartyRunnerProvider()).toBe("namespace");
+  });
+
+  test("returns bitrise when BITRISE_IO is set", () => {
+    process.env.BITRISE_IO = "true";
+    expect(detectThirdPartyRunnerProvider()).toBe("bitrise");
   });
 
   test("returns warp for RUNNER_NAME prefix warp-", () => {
