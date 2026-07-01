@@ -85115,6 +85115,8 @@ function detectThirdPartyRunnerProvider() {
         return "depot";
     if (process.env["NAMESPACE_GITHUB_RUNTIME"])
         return "namespace";
+    if (process.env["BITRISE_IO"])
+        return "bitrise";
     const runnerName = (_a = process.env["RUNNER_NAME"]) !== null && _a !== void 0 ? _a : "";
     if (runnerName.startsWith("warp-"))
         return "warp";
@@ -85549,7 +85551,7 @@ const CHECKSUMS = {
         amd64: "c986d0a19637325c9a8d4a331a6c4ed047e4cddb798f56b641d0e66f8bf9b1b2", // v1.8.12
         arm64: "5c3df17f82e317c8b288dfbbcee449c2a24a80deeeb3416dccabd0a61982c676", // v1.8.12
     },
-    darwin: "fe26a1f6af4afe9f1a854d8633832f5d18ab542827003cae445b3a64021d612c", // v0.0.5
+    darwin: "2990f0390d2760fa6262a3830060b6db1233f16a1410ffe1ed2bf13dfda80c38", // v0.0.6
     windows: {
         amd64: "5e3604d08aba65d7bdd1d0684826d5894ffb0c6f56b914c6ecb35c3271e04483", // v1.0.7
     },
@@ -85709,7 +85711,7 @@ function installMacosAgent(configStr) {
             external_fs_.writeFileSync("/opt/step-security/agent.json", configStr);
             lib_core.info("✓ Successfully created agent.json at /opt/step-security/agent.json");
             // Download installer package
-            const downloadUrl = "https://github.com/step-security/agent-releases/releases/download/v0.0.5-mac/macos-installer-0.0.5.tar.gz";
+            const downloadUrl = "https://github.com/step-security/agent-releases/releases/download/v0.0.6-mac/macos-installer-0.0.6.tar.gz";
             lib_core.info(`Downloading macOS installer.. : ${downloadUrl}`);
             const downloadPath = yield tool_cache.downloadTool(downloadUrl, undefined, auth);
             lib_core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
@@ -86087,15 +86089,26 @@ process.on("unhandledRejection", (reason) => {
             const thirdPartyProvider = detectThirdPartyRunnerProvider();
             if (thirdPartyProvider) {
                 const providerLabel = thirdPartyProvider.charAt(0).toUpperCase() + thirdPartyProvider.slice(1);
-                if (process.platform !== "linux") {
-                    lib_core.info(`Detected ${providerLabel} runner on ${process.platform}. Bravo agent is Linux-only, skipping install.`);
+                if (process.platform !== "linux" && process.platform !== "darwin") {
+                    lib_core.info(`Detected ${providerLabel} runner on ${process.platform}. HardenRunner is not supported on this third-party provider, skipping install.`);
                     return;
                 }
                 lib_core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
                 confg.correlation_id = runnerName || confg.correlation_id;
                 yield callMonitorEndpoint(api_url, confg);
-                yield installAgentForBravo(github.context.repo.owner, confg);
-                return;
+                const bravoConfigStr = JSON.stringify(buildBravoConfig(confg));
+                switch (process.platform) {
+                    case "darwin": {
+                        const installed = yield installMacosAgent(bravoConfigStr);
+                        if (!installed) {
+                            lib_core.warning("macos bravo agent installation failed");
+                        }
+                        return;
+                    }
+                    case "linux":
+                        yield installAgentForBravo(github.context.repo.owner, bravoConfigStr);
+                        return;
+                }
             }
             external_fs_.appendFileSync(process.env.GITHUB_STATE, `selfHosted=true${external_os_.EOL}`, {
                 encoding: "utf8",
@@ -86336,7 +86349,7 @@ function installAgentForSelfHosted(owner, confg) {
         }
     });
 }
-function installAgentForBravo(owner, confg) {
+function installAgentForBravo(owner, bravoConfigStr) {
     return setup_awaiter(this, void 0, void 0, function* () {
         try {
             console.log("Installing Harden Runner bravo agent for third-party runner");
@@ -86345,7 +86358,6 @@ function installAgentForBravo(owner, confg) {
                 console.log("TLS is not enabled for this organization. Bravo agent installation skipped.");
                 return;
             }
-            const bravoConfigStr = JSON.stringify(buildBravoConfig(confg));
             external_child_process_.execSync("sudo mkdir -p /home/agent");
             chownForFolder(process.env.USER, "/home/agent");
             yield installAgentBravo(bravoConfigStr);
