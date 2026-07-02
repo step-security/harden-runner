@@ -8,7 +8,7 @@ export const CHECKSUMS = {
     arm64: "3f401d508e1427b9ba205681d5abecde3b4a0f0a18542d198b6dc14cadd93ab5", // v1.8.12
   },
   non_tls: {
-    amd64: "e38de61e1afd98dd339bb9acce4996183875d482be1638fb198ab02b3e25bbef", // v0.16.0
+    amd64: "7de5d6bf494838835a8d4d6f32a473a1bb0b4ae59ff10ec7c23fd336a48404ee", // v0.16.1
   },
   bravo: {
     amd64: "c986d0a19637325c9a8d4a331a6c4ed047e4cddb798f56b641d0e66f8bf9b1b2", // v1.8.12
