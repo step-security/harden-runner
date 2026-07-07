@@ -40,11 +40,12 @@ export function shouldDeployAgentOnSelfHosted(
   return deployOnSelfHostedVm && !isContainer && !agentAlreadyInstalled;
 }
 
-export type ThirdPartyRunnerProvider = "depot" | "namespace" | "warp" | "blacksmith";
+export type ThirdPartyRunnerProvider = "depot" | "namespace" | "warp" | "blacksmith" | "bitrise";
 
 export function detectThirdPartyRunnerProvider(): ThirdPartyRunnerProvider | null {
   if (process.env["DEPOT_RUNNER"] === "1") return "depot";
   if (process.env["NAMESPACE_GITHUB_RUNTIME"]) return "namespace";
+  if (process.env["BITRISE_IO"]) return "bitrise";
   const runnerName = process.env["RUNNER_NAME"] ?? "";
   if (runnerName.startsWith("warp-")) return "warp";
   if (runnerName.startsWith("blacksmith-")) return "blacksmith";

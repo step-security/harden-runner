@@ -31874,10 +31874,10 @@ var __webpack_exports__ = {};
 (() => {
 "use strict";
 
-// EXTERNAL MODULE: external "fs"
-var external_fs_ = __nccwpck_require__(9896);
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var lib_core = __nccwpck_require__(7484);
+// EXTERNAL MODULE: external "fs"
+var external_fs_ = __nccwpck_require__(9896);
 ;// CONCATENATED MODULE: ./src/configs.ts
 const STEPSECURITY_ENV = "agent"; // agent or int
 const configs_STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
@@ -31925,6 +31925,8 @@ function detectThirdPartyRunnerProvider() {
         return "depot";
     if (process.env["NAMESPACE_GITHUB_RUNTIME"])
         return "namespace";
+    if (process.env["BITRISE_IO"])
+        return "bitrise";
     const runnerName = (_a = process.env["RUNNER_NAME"]) !== null && _a !== void 0 ? _a : "";
     if (runnerName.startsWith("warp-"))
         return "warp";
@@ -31986,8 +31988,8 @@ const processLogLine = (line, tableEntries) => {
     }
 };
 function addSummary() {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         if (process.env.STATE_addSummary !== "true") {
             return;
         }
@@ -32028,7 +32030,9 @@ function addSummary() {
         // Fetch job summary from API
         const apiUrl = `${configs_STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/runs/${run_id}/correlation/${correlation_id}/job-markdown-summary`;
         try {
-            const response = yield fetch(apiUrl);
+            const response = yield fetch(apiUrl, {
+                signal: AbortSignal.timeout(3000),
+            });
             if (!response.ok) {
                 console.error(`Failed to fetch job summary: ${response.status} ${response.statusText}`);
                 return;
@@ -32135,8 +32139,6 @@ function echo(content) {
     cp.execFileSync("echo", [content]);
 }
 
-// EXTERNAL MODULE: ./node_modules/@actions/http-client/lib/index.js
-var lib = __nccwpck_require__(4844);
 ;// CONCATENATED MODULE: ./src/tls-inspect.ts
 var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -32149,28 +32151,25 @@ var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisAr
 };
 
 
-
 function isTLSEnabled(owner) {
     return tls_inspect_awaiter(this, void 0, void 0, function* () {
-        let tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
-        let httpClient = new HttpClient();
-        httpClient.requestOptions = { socketTimeout: 3 * 1000 };
+        const tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
         core.info(`[!] Checking TLS_STATUS: ${owner}`);
-        let isEnabled = false;
         try {
-            let resp = yield httpClient.get(tlsStatusEndpoint);
-            if (resp.message.statusCode === 200) {
-                isEnabled = true;
+            const resp = yield fetch(tlsStatusEndpoint, {
+                signal: AbortSignal.timeout(3000),
+            });
+            if (resp.status === 200) {
                 core.info(`[!] TLS_ENABLED: ${owner}`);
+                return true;
             }
-            else {
-                core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
-            }
+            core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
+            return false;
         }
         catch (e) {
-            core.info(`[!] Unable to check TLS_STATUS`);
+            core.info(`[!] Unable to check TLS_STATUS. Defaulting to TLS enabled.`);
+            return true;
         }
-        return isEnabled;
     });
 }
 function isGithubHosted() {
@@ -32199,6 +32198,13 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
 
 
 
+
+// See setup.ts for rationale — Node 22+ kills the process on unhandled rejections.
+process.on("unhandledRejection", (reason) => {
+    var _a;
+    const detail = reason instanceof Error ? ((_a = reason.stack) !== null && _a !== void 0 ? _a : reason.message) : String(reason);
+    lib_core.warning(`Unhandled promise rejection during Post-step: ${detail}`);
+});
 (() => cleanup_awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     console.log("[harden-runner] post-step");
@@ -32294,6 +32300,12 @@ function handleLinuxCleanup() {
         if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
             return;
         }
+        // If Pre-step crashed before installing the agent, /home/agent doesn't exist;
+        // bail out instead of throwing ENOENT on the writeFileSync below.
+        if (!external_fs_.existsSync("/home/agent")) {
+            console.log("Linux cleanup: /home/agent not found; agent was not installed (Pre-step likely failed). Skipping.");
+            return;
+        }
         if (isGithubHosted() && external_fs_.existsSync("/home/agent/post_event.json")) {
             console.log("Post step already executed, skipping");
             return;
@@ -32353,6 +32365,12 @@ function handleLinuxCleanup() {
 function handleMacosCleanup() {
     return cleanup_awaiter(this, void 0, void 0, function* () {
         const post_event = "/opt/step-security/post_event.json";
+        // If Pre-step crashed before installing the agent, /opt/step-security doesn't
+        // exist; bail out instead of throwing ENOENT on the writeFileSync below.
+        if (!external_fs_.existsSync("/opt/step-security")) {
+            console.log("macOS cleanup: /opt/step-security not found; agent was not installed (Pre-step likely failed). Skipping.");
+            return;
+        }
         if (isGithubHosted() && external_fs_.existsSync(post_event)) {
             console.log("Post step already executed, skipping");
             return;
@@ -32391,7 +32409,7 @@ function handleMacosCleanup() {
             console.log("\nSystem log stream for io.stepsecurity.harden-runner:");
             const logStreamOutput = external_child_process_.execSync("log show --predicate 'subsystem == \"io.stepsecurity.harden-runner\"' --info --last 10m", {
                 encoding: "utf8",
-                maxBuffer: 1024 * 1024 * 10,
+                maxBuffer: 1024 * 1024 * 10, // 10MB buffer
                 timeout: 5000, // 5 seconds timeout
             });
             console.log(logStreamOutput);
@@ -32406,6 +32424,12 @@ function handleWindowsCleanup() {
         // windows cleanup
         const agentDir = process.env.STATE_agentDir || "C:\\agent";
         const postEventFile = external_path_.join(agentDir, "post_event.json");
+        // If Pre-step crashed before installing the agent, agentDir doesn't exist;
+        // bail out instead of throwing ENOENT on the writeFileSync below.
+        if (!external_fs_.existsSync(agentDir)) {
+            console.log(`Windows cleanup: ${agentDir} not found; agent was not installed (Pre-step likely failed). Skipping.`);
+            return;
+        }
         if (isGithubHosted() && external_fs_.existsSync(postEventFile)) {
             console.log("Windows post step already executed, skipping");
             return;

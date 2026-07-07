@@ -1,6 +1,13 @@
-import { HttpClient } from "@actions/http-client";
 import { PolicyResponse, Configuration } from "./interfaces";
 import { STEPSECURITY_API_URL } from "./configs";
+
+class HttpStatusError extends Error {
+  statusCode: number;
+  constructor(statusCode: number, message: string) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
 
 export async function fetchPolicy(
   owner: string,
@@ -11,43 +18,35 @@ export async function fetchPolicy(
     throw new Error("[PolicyFetch]: id-token in empty");
   }
 
-  let policyEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/policies/${policyName}`;
+  const policyEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/policies/${policyName}`;
 
-  let httpClient = new HttpClient();
+  const headers = {
+    Authorization: `Bearer ${idToken}`,
+    Source: "github-actions",
+  };
 
-  let headers = {};
-  headers["Authorization"] = `Bearer ${idToken}`;
-  headers["Source"] = "github-actions";
+  let result: PolicyResponse | undefined;
+  let err: unknown;
 
-  let response = undefined;
-  let err = undefined;
-
-  let retry = 0;
-  while (retry < 3) {
+  for (let retry = 0; retry < 3; retry++) {
     try {
       console.log(`Attempt: ${retry + 1}`);
-      response = await httpClient.getJson<PolicyResponse>(
-        policyEndpoint,
-        headers
-      );
+      result = await getJsonWithTimeout<PolicyResponse>(policyEndpoint, headers);
       break;
     } catch (e) {
       err = e;
+      if (retry < 2) await sleep(1000);
     }
-    retry += 1;
-    await sleep(1000);
   }
 
-  if (response === undefined && err !== undefined) {
-    // Preserve the original error's statusCode if it exists
+  if (result === undefined) {
     const error = new Error(`[Policy Fetch] ${err}`);
-    if (err.statusCode !== undefined) {
-      (error as any).statusCode = err.statusCode;
+    if (err && typeof err === "object" && "statusCode" in err) {
+      (error as any).statusCode = (err as { statusCode: unknown }).statusCode;
     }
     throw error;
-  } else {
-    return response.result;
   }
+  return result;
 }
 
 export async function fetchPolicyFromStore(
@@ -62,51 +61,59 @@ export async function fetchPolicyFromStore(
     throw new Error("[PolicyStoreFetch]: api-key is empty");
   }
 
-  let policyEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/policies/workflow-policy?workflow=${encodeURIComponent(workflow)}&run_id=${encodeURIComponent(runId)}&correlationId=${encodeURIComponent(correlationId)}`;
+  const policyEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/policies/workflow-policy?workflow=${encodeURIComponent(workflow)}&run_id=${encodeURIComponent(runId)}&correlationId=${encodeURIComponent(correlationId)}`;
 
-  let httpClient = new HttpClient();
+  const headers = {
+    Authorization: `vm-api-key ${apiKey}`,
+    Source: "github-actions",
+  };
 
-  let headers = {};
-  headers["Authorization"] = `vm-api-key ${apiKey}`;
-  headers["Source"] = "github-actions";
+  let result: PolicyResponse | undefined;
+  let err: unknown;
 
-  let response = undefined;
-  let err = undefined;
-
-  let retry = 0;
-  while (retry < 3) {
+  for (let retry = 0; retry < 3; retry++) {
     try {
       console.log(`Attempt: ${retry + 1}`);
-      response = await httpClient.getJson<PolicyResponse>(
-        policyEndpoint,
-        headers
-      );
+      result = await getJsonWithTimeout<PolicyResponse>(policyEndpoint, headers);
       break;
     } catch (e) {
+      // 404 means policy not found — don't retry, return null
+      if (e instanceof HttpStatusError && e.statusCode === 404) {
+        return null;
+      }
       err = e;
+      if (retry < 2) await sleep(1000);
     }
-    retry += 1;
-    await sleep(1000);
   }
 
-  if (response === undefined && err !== undefined) {
+  if (result === undefined) {
     const error = new Error(`[Policy Store Fetch] ${err}`);
-    if (err.statusCode !== undefined) {
-      (error as any).statusCode = err.statusCode;
+    if (err && typeof err === "object" && "statusCode" in err) {
+      (error as any).statusCode = (err as { statusCode: unknown }).statusCode;
     }
     throw error;
   }
 
-  if (response.statusCode === 404) {
-    return null;
-  }
-
-  const result = response.result;
   if (!result || (!result.egress_policy && (!result.allowed_endpoints || result.allowed_endpoints.length === 0))) {
     return null;
   }
 
   return result;
+}
+
+async function getJsonWithTimeout<T>(
+  url: string,
+  headers: Record<string, string>
+): Promise<T> {
+  const resp = await fetch(url, {
+    method: "GET",
+    headers,
+    signal: AbortSignal.timeout(3000),
+  });
+  if (!resp.ok) {
+    throw new HttpStatusError(resp.status, `HTTP ${resp.status}`);
+  }
+  return (await resp.json()) as T;
 }
 
 export function mergeConfigs(

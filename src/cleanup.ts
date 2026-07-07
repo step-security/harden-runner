@@ -1,3 +1,4 @@
+import * as core from "@actions/core";
 import * as fs from "fs";
 import * as common from "./common";
 import * as cp from "child_process";
@@ -7,6 +8,13 @@ import { isARCRunner } from "./arc-runner";
 import { isGithubHosted } from "./tls-inspect";
 import { context } from "@actions/github";
 import { isPlatformSupported, isAgentInstalled, detectThirdPartyRunnerProvider } from "./utils";
+
+// See setup.ts for rationale — Node 22+ kills the process on unhandled rejections.
+process.on("unhandledRejection", (reason) => {
+  const detail =
+    reason instanceof Error ? (reason.stack ?? reason.message) : String(reason);
+  core.warning(`Unhandled promise rejection during Post-step: ${detail}`);
+});
 
 (async () => {
   console.log("[harden-runner] post-step");
@@ -114,6 +122,15 @@ async function handleLinuxCleanup() {
     return;
   }
 
+  // If Pre-step crashed before installing the agent, /home/agent doesn't exist;
+  // bail out instead of throwing ENOENT on the writeFileSync below.
+  if (!fs.existsSync("/home/agent")) {
+    console.log(
+      "Linux cleanup: /home/agent not found; agent was not installed (Pre-step likely failed). Skipping."
+    );
+    return;
+  }
+
   if (isGithubHosted() && fs.existsSync("/home/agent/post_event.json")) {
     console.log("Post step already executed, skipping");
     return;
@@ -185,6 +202,15 @@ async function handleLinuxCleanup() {
 async function handleMacosCleanup() {
   const post_event = "/opt/step-security/post_event.json";
 
+  // If Pre-step crashed before installing the agent, /opt/step-security doesn't
+  // exist; bail out instead of throwing ENOENT on the writeFileSync below.
+  if (!fs.existsSync("/opt/step-security")) {
+    console.log(
+      "macOS cleanup: /opt/step-security not found; agent was not installed (Pre-step likely failed). Skipping."
+    );
+    return;
+  }
+
   if (isGithubHosted() && fs.existsSync(post_event)) {
     console.log("Post step already executed, skipping");
     return;
@@ -241,6 +267,15 @@ async function handleWindowsCleanup() {
   // windows cleanup
   const agentDir = process.env.STATE_agentDir || "C:\\agent";
   const postEventFile = path.join(agentDir, "post_event.json");
+
+  // If Pre-step crashed before installing the agent, agentDir doesn't exist;
+  // bail out instead of throwing ENOENT on the writeFileSync below.
+  if (!fs.existsSync(agentDir)) {
+    console.log(
+      `Windows cleanup: ${agentDir} not found; agent was not installed (Pre-step likely failed). Skipping.`
+    );
+    return;
+  }
 
   if (isGithubHosted() && fs.existsSync(postEventFile)) {
     console.log("Windows post step already executed, skipping");
