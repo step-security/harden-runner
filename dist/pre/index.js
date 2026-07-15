@@ -86044,11 +86044,16 @@ process.on("unhandledRejection", (reason) => {
                         confg.allowed_endpoints += ` ${url.hostname}:443`;
                     }
                     catch (e) {
-                        lib_core.info(`Unable to fetch cacheURL ${e}`);
-                        if (confg.egress_policy === "block") {
-                            lib_core.info("Switching egress-policy to audit mode");
-                            confg.egress_policy = "audit";
-                        }
+                        // A missing cache entry (a cold cache, or a repo whose bootstrap
+                        // saveCache lost the reserve race) yields no download URL, so
+                        // `new URL(undefined)` throws here. The cache host is only needed
+                        // to allowlist harden-runner's own cache traffic; failing to
+                        // resolve it must NOT silently disable the user's egress policy.
+                        // Keep block (fail closed).
+                        lib_core.warning(`Unable to resolve the cache host for allowlisting (${e}). ` +
+                            `Keeping egress-policy=block; harden-runner's own cache/` +
+                            `telemetry may be limited, but the configured egress policy ` +
+                            `is preserved.`);
                     }
                     break;
                 case "v1":
@@ -86065,12 +86070,14 @@ process.on("unhandledRejection", (reason) => {
                         confg.allowed_endpoints += ` ${url.hostname}:443`;
                     }
                     catch (exception) {
-                        // some exception has occurred.
-                        lib_core.info(`Unable to fetch cacheURL ${exception}`);
-                        if (confg.egress_policy === "block") {
-                            lib_core.info("Switching egress-policy to audit mode");
-                            confg.egress_policy = "audit";
-                        }
+                        // A missing cache entry yields no archive location, so
+                        // `new URL(undefined)` throws here. As in the v2 branch, a
+                        // cache-host resolution miss must NOT silently disable the
+                        // user's egress policy. Keep block (fail closed).
+                        lib_core.warning(`Unable to resolve the cache host for allowlisting ` +
+                            `(${exception}). Keeping egress-policy=block; harden-runner's ` +
+                            `own cache/telemetry may be limited, but the configured ` +
+                            `egress policy is preserved.`);
                     }
             }
         }
