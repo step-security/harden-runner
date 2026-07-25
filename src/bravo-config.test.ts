@@ -14,6 +14,7 @@ const base: Configuration = {
   disable_sudo: false,
   disable_sudo_and_containers: false,
   disable_file_monitoring: false,
+  exempt_files: "",
   is_github_hosted: false,
   private: "true" as unknown as string,
   is_debug: false,
@@ -77,5 +78,13 @@ describe("buildBravoConfig", () => {
     expect(cfg.disable_sudo).toBe(true);
     expect(cfg.disable_sudo_and_containers).toBe(true);
     expect(cfg.disable_file_monitoring).toBe(true);
+  });
+
+  test("forwards exempt_files", () => {
+    const cfg = buildBravoConfig({
+      ...base,
+      exempt_files: "dist/index.js\npackage-lock.json",
+    });
+    expect(cfg.exempt_files).toBe("dist/index.js\npackage-lock.json");
   });
 });

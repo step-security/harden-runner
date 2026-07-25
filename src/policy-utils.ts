@@ -134,6 +134,12 @@ export function mergeConfigs(
   if (remoteConfig.disable_file_monitoring !== undefined) {
     localConfig.disable_file_monitoring = remoteConfig.disable_file_monitoring;
   }
+  if (
+    localConfig.exempt_files === "" &&
+    remoteConfig.exempt_files !== undefined
+  ) {
+    localConfig.exempt_files = remoteConfig.exempt_files.join("\n");
+  }
   if (remoteConfig.egress_policy !== undefined) {
     localConfig.egress_policy = remoteConfig.egress_policy;
   }

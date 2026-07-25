@@ -85081,6 +85081,18 @@ const parse = dist/* parse */.qg;
 ;// CONCATENATED MODULE: ./src/utils.ts
 
 
+// Split the exempt-files input on newlines rather than any whitespace so that
+// file paths containing spaces are kept intact.
+function parseExemptFiles(exemptFiles) {
+    if (!exemptFiles) {
+        return "";
+    }
+    return exemptFiles
+        .split(/[\r\n]+/)
+        .map((file) => file.trim())
+        .filter((file) => file.length > 0)
+        .join("\n");
+}
 function isPlatformSupported(platform) {
     switch (platform) {
         case "linux":
@@ -85427,6 +85439,10 @@ function mergeConfigs(localConfig, remoteConfig) {
     }
     if (remoteConfig.disable_file_monitoring !== undefined) {
         localConfig.disable_file_monitoring = remoteConfig.disable_file_monitoring;
+    }
+    if (localConfig.exempt_files === "" &&
+        remoteConfig.exempt_files !== undefined) {
+        localConfig.exempt_files = remoteConfig.exempt_files.join("\n");
     }
     if (remoteConfig.egress_policy !== undefined) {
         localConfig.egress_policy = remoteConfig.egress_policy;
@@ -85834,6 +85850,7 @@ function buildBravoConfig(confg) {
         disable_sudo: confg.disable_sudo,
         disable_sudo_and_containers: confg.disable_sudo_and_containers,
         disable_file_monitoring: confg.disable_file_monitoring,
+        exempt_files: confg.exempt_files,
         private: confg.private,
         is_github_hosted: true,
     };
@@ -85929,6 +85946,7 @@ process.on("unhandledRejection", (reason) => {
             disable_sudo: lib_core.getBooleanInput("disable-sudo"),
             disable_sudo_and_containers: lib_core.getBooleanInput("disable-sudo-and-containers"),
             disable_file_monitoring: lib_core.getBooleanInput("disable-file-monitoring"),
+            exempt_files: parseExemptFiles(lib_core.getInput("exempt-files")),
             private: ((_d = (_c = github.context === null || github.context === void 0 ? void 0 : github.context.payload) === null || _c === void 0 ? void 0 : _c.repository) === null || _d === void 0 ? void 0 : _d.private) || false,
             is_github_hosted: isGithubHosted(),
             is_debug: lib_core.isDebug(),
@@ -86315,6 +86333,7 @@ function installAgentForSelfHosted(owner, confg) {
                 disable_sudo: confg.disable_sudo,
                 disable_sudo_and_containers: confg.disable_sudo_and_containers,
                 disable_file_monitoring: confg.disable_file_monitoring,
+                exempt_files: confg.exempt_files,
                 is_github_hosted: false,
             };
             const selfHostedConfigStr = JSON.stringify(selfHostedConfig);

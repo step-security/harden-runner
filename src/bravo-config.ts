@@ -15,6 +15,7 @@ export function buildBravoConfig(confg: Configuration) {
     disable_sudo: confg.disable_sudo,
     disable_sudo_and_containers: confg.disable_sudo_and_containers,
     disable_file_monitoring: confg.disable_file_monitoring,
+    exempt_files: confg.exempt_files,
     private: confg.private,
     is_github_hosted: true,
   };

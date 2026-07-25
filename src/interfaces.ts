@@ -11,6 +11,7 @@ export interface Configuration {
   disable_sudo: boolean;
   disable_sudo_and_containers: boolean;
   disable_file_monitoring: boolean;
+  exempt_files: string;
   is_github_hosted: boolean;
   private: string;
   is_debug: boolean;
@@ -27,6 +28,7 @@ export interface PolicyResponse {
   disable_sudo?: boolean;
   disable_sudo_and_containers?: boolean;
   disable_file_monitoring?: boolean;
+  exempt_files?: string[];
   disable_telemetry?: boolean;
   egress_policy?: string;
   policy_name?: string;
