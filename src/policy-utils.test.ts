@@ -154,6 +154,26 @@ test("fetchPolicyFromStore returns null when API returns empty policy", async ()
   expect(result).toBeNull();
 });
 
+test("fetchPolicyFromStore returns policy that only supplies exempt_files", async () => {
+  const response = {
+    allowed_endpoints: [],
+    egress_policy: "",
+    exempt_files: ["dist/index.js", "go.sum"],
+  };
+
+  mockFetch(async () => jsonResponse(200, response));
+
+  const result = await fetchPolicyFromStore(
+    "test-owner",
+    "test-repo",
+    "my-api-key",
+    "ci.yml",
+    "12345",
+    "abc-def"
+  );
+  expect(result).toEqual(response);
+});
+
 test("fetchPolicyFromStore retries on failure and succeeds", async () => {
   const response = {
     allowed_endpoints: ["example.com:443"],
@@ -459,4 +479,36 @@ test("mergeConfigs does not override fields when remote values are undefined", (
   expect(localConfig.disable_sudo_and_containers).toBe(true);
   expect(localConfig.disable_file_monitoring).toBe(true);
   expect(localConfig.egress_policy).toBe("block");
+});
+
+test("mergeConfigs ignores null exempt_files from remote", () => {
+  let localConfig: Configuration = {
+    repo: "test/repo",
+    run_id: "xyx",
+    correlation_id: "aaaaa",
+    working_directory: "/xyz",
+    api_url: "xyz",
+    telemetry_url: "xyz",
+    allowed_endpoints: "",
+    egress_policy: "audit",
+    disable_telemetry: false,
+    disable_sudo: false,
+    disable_sudo_and_containers: false,
+    disable_file_monitoring: false,
+    exempt_files: "",
+    private: "true",
+    is_github_hosted: true,
+    is_debug: false,
+    one_time_key: "",
+    api_key: "",
+    use_policy_store: false,
+    deploy_on_self_hosted_vm: false,
+  };
+  const policyResponse: PolicyResponse = {
+    allowed_endpoints: [],
+    exempt_files: null as unknown as string[],
+  };
+
+  localConfig = mergeConfigs(localConfig, policyResponse);
+  expect(localConfig.exempt_files).toBe("");
 });
