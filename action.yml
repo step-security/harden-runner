@@ -28,6 +28,10 @@ inputs:
     description: "Disable file monitoring"
     required: false
     default: "false"
+  exempt-files:
+    description: "Paths of files to exempt from source code overwrite detection for this workflow. Provide one path per line using a YAML literal block (|)."
+    required: false
+    default: ""
   policy:
     description: "Policy name to be used from the policy store. Requires id-token: write permission."
     required: false

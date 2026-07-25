@@ -1,4 +1,4 @@
-import { shouldDeployAgentOnSelfHosted, isAgentInstalled, isPlatformSupported, getAnnotationLogs, detectThirdPartyRunnerProvider } from "./utils";
+import { shouldDeployAgentOnSelfHosted, isAgentInstalled, isPlatformSupported, getAnnotationLogs, detectThirdPartyRunnerProvider, parseExemptFiles } from "./utils";
 import * as fs from "fs";
 
 jest.mock("fs", () => ({
@@ -160,5 +160,38 @@ describe("detectThirdPartyRunnerProvider", () => {
   test("warp takes precedence over blacksmith when both prefixes seen (warp wins on name check order)", () => {
     process.env.RUNNER_NAME = "warp-x";
     expect(detectThirdPartyRunnerProvider()).toBe("warp");
+  });
+});
+
+describe("parseExemptFiles", () => {
+  test("returns empty string for empty input", () => {
+    expect(parseExemptFiles("")).toBe("");
+  });
+
+  test("normalizes one path per line to a newline-separated list", () => {
+    const input = `dist/index.js
+package-lock.json
+go.sum`;
+    expect(parseExemptFiles(input)).toBe(
+      "dist/index.js\npackage-lock.json\ngo.sum"
+    );
+  });
+
+  test("trims surrounding whitespace and drops blank lines", () => {
+    const input = `  dist/index.js  
+
+   go.sum   `;
+    expect(parseExemptFiles(input)).toBe("dist/index.js\ngo.sum");
+  });
+
+  test("handles CRLF line endings", () => {
+    const input = "dist/index.js\r\npackage-lock.json\r\n";
+    expect(parseExemptFiles(input)).toBe("dist/index.js\npackage-lock.json");
+  });
+
+  test("preserves spaces within a file path", () => {
+    const input = `my dir/file.txt
+other.txt`;
+    expect(parseExemptFiles(input)).toBe("my dir/file.txt\nother.txt");
   });
 });

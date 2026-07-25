@@ -37,7 +37,7 @@ import {
   installWindowsAgent,
 } from "./install-agent";
 
-import { chownForFolder, detectThirdPartyRunnerProvider, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted } from "./utils";
+import { chownForFolder, detectThirdPartyRunnerProvider, isAgentInstalled, isPlatformSupported, parseExemptFiles, shouldDeployAgentOnSelfHosted } from "./utils";
 import { buildBravoConfig } from "./bravo-config";
 
 interface MonitorResponse {
@@ -100,6 +100,7 @@ process.on("unhandledRejection", (reason) => {
         "disable-sudo-and-containers"
       ),
       disable_file_monitoring: core.getBooleanInput("disable-file-monitoring"),
+      exempt_files: parseExemptFiles(core.getInput("exempt-files")),
       private: context?.payload?.repository?.private || false,
       is_github_hosted: isGithubHosted(),
       is_debug: core.isDebug(),
@@ -570,6 +571,7 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
       disable_sudo: confg.disable_sudo,
       disable_sudo_and_containers: confg.disable_sudo_and_containers,
       disable_file_monitoring: confg.disable_file_monitoring,
+      exempt_files: confg.exempt_files,
       is_github_hosted: false,
     };
     const selfHostedConfigStr = JSON.stringify(selfHostedConfig);

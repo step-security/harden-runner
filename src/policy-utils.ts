@@ -94,11 +94,27 @@ export async function fetchPolicyFromStore(
     throw error;
   }
 
-  if (!result || (!result.egress_policy && (!result.allowed_endpoints || result.allowed_endpoints.length === 0))) {
+  if (!result || isEmptyPolicy(result)) {
     return null;
   }
 
   return result;
+}
+
+function isEmptyPolicy(policy: PolicyResponse): boolean {
+  const hasEndpoints =
+    Array.isArray(policy.allowed_endpoints) &&
+    policy.allowed_endpoints.length > 0;
+  const hasEgress = Boolean(policy.egress_policy);
+  const hasExemptFiles =
+    Array.isArray(policy.exempt_files) && policy.exempt_files.length > 0;
+  const hasDisableFlags =
+    policy.disable_sudo !== undefined ||
+    policy.disable_sudo_and_containers !== undefined ||
+    policy.disable_file_monitoring !== undefined ||
+    policy.disable_telemetry !== undefined;
+
+  return !hasEndpoints && !hasEgress && !hasExemptFiles && !hasDisableFlags;
 }
 
 async function getJsonWithTimeout<T>(
@@ -133,6 +149,12 @@ export function mergeConfigs(
 
   if (remoteConfig.disable_file_monitoring !== undefined) {
     localConfig.disable_file_monitoring = remoteConfig.disable_file_monitoring;
+  }
+  if (
+    localConfig.exempt_files === "" &&
+    Array.isArray(remoteConfig.exempt_files)
+  ) {
+    localConfig.exempt_files = remoteConfig.exempt_files.join("\n");
   }
   if (remoteConfig.egress_policy !== undefined) {
     localConfig.egress_policy = remoteConfig.egress_policy;

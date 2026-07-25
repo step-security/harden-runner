@@ -31889,6 +31889,18 @@ var external_child_process_ = __nccwpck_require__(5317);
 ;// CONCATENATED MODULE: ./src/utils.ts
 
 
+// Split the exempt-files input on newlines rather than any whitespace so that
+// file paths containing spaces are kept intact.
+function parseExemptFiles(exemptFiles) {
+    if (!exemptFiles) {
+        return "";
+    }
+    return exemptFiles
+        .split(/[\r\n]+/)
+        .map((file) => file.trim())
+        .filter((file) => file.length > 0)
+        .join("\n");
+}
 function isPlatformSupported(platform) {
     switch (platform) {
         case "linux":

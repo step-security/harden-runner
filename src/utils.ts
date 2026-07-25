@@ -1,6 +1,20 @@
 import * as cp from "child_process";
 import * as fs from "fs";
 
+// Split the exempt-files input on newlines rather than any whitespace so that
+// file paths containing spaces are kept intact.
+export function parseExemptFiles(exemptFiles: string): string {
+  if (!exemptFiles) {
+    return "";
+  }
+
+  return exemptFiles
+    .split(/[\r\n]+/)
+    .map((file) => file.trim())
+    .filter((file) => file.length > 0)
+    .join("\n");
+}
+
 export function isPlatformSupported(platform: NodeJS.Platform) {
   switch (platform) {
     case "linux":
