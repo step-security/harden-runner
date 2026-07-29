@@ -32252,13 +32252,7 @@ process.on("unhandledRejection", (reason) => {
     }
     const thirdPartyProvider = detectThirdPartyRunnerProvider();
     if (process.env.STATE_selfHosted === "true") {
-        // If the Pre-step deployed the agent on this VM (deploy-on-self-hosted-vm),
-        // run the same cleanup as GitHub-hosted so the agent flushes events at job
-        // end — the VM may be ephemeral (e.g. AWS CodeBuild). Persistent runners
-        // with a pre-installed agent keep the early exit.
-        if (process.env.STATE_selfHostedVmAgentInstalled !== "true") {
-            return;
-        }
+        return;
     }
     if (process.env.STATE_customVMImage === "true") {
         return;
