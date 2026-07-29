@@ -85065,6 +85065,8 @@ function detectThirdPartyRunnerProvider() {
         return "namespace";
     if (process.env["BITRISE_IO"])
         return "bitrise";
+    if (process.env["CODEBUILD_RUNNER_TYPE"] === "GITHUB")
+        return "codebuild";
     const runnerName = (_a = process.env["RUNNER_NAME"]) !== null && _a !== void 0 ? _a : "";
     if (runnerName.startsWith("warp-"))
         return "warp";
