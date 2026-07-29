@@ -99,7 +99,6 @@ describe("detectThirdPartyRunnerProvider", () => {
     delete process.env.DEPOT_RUNNER;
     delete process.env.NAMESPACE_GITHUB_RUNTIME;
     delete process.env.BITRISE_IO;
-    delete process.env.CODEBUILD_RUNNER_TYPE;
     delete process.env.RUNNER_NAME;
   });
 
@@ -125,16 +124,6 @@ describe("detectThirdPartyRunnerProvider", () => {
   test("returns bitrise when BITRISE_IO is set", () => {
     process.env.BITRISE_IO = "true";
     expect(detectThirdPartyRunnerProvider()).toBe("bitrise");
-  });
-
-  test("returns codebuild when CODEBUILD_RUNNER_TYPE=GITHUB", () => {
-    process.env.CODEBUILD_RUNNER_TYPE = "GITHUB";
-    expect(detectThirdPartyRunnerProvider()).toBe("codebuild");
-  });
-
-  test("returns null when CODEBUILD_RUNNER_TYPE has a non-GITHUB value", () => {
-    process.env.CODEBUILD_RUNNER_TYPE = "OTHER";
-    expect(detectThirdPartyRunnerProvider()).toBeNull();
   });
 
   test("returns warp for RUNNER_NAME prefix warp-", () => {
