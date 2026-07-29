@@ -32199,12 +32199,6 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
 
 
 
-// See setup.ts for rationale — Node 22+ kills the process on unhandled rejections.
-process.on("unhandledRejection", (reason) => {
-    var _a;
-    const detail = reason instanceof Error ? ((_a = reason.stack) !== null && _a !== void 0 ? _a : reason.message) : String(reason);
-    lib_core.warning(`Unhandled promise rejection during Post-step: ${detail}`);
-});
 (() => cleanup_awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     console.log("[harden-runner] post-step");
