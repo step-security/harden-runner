@@ -1,5 +1,6 @@
 import * as cp from "child_process";
 import * as fs from "fs";
+import * as os from "os";
 
 export function isPlatformSupported(platform: NodeJS.Platform) {
   switch (platform) {
@@ -13,7 +14,25 @@ export function isPlatformSupported(platform: NodeJS.Platform) {
   }
 }
 
-export function chownForFolder(newOwner: string, target: string) {
+// Resolves the user the runner process is executing as. Some runner
+// environments (e.g. AWS CodeBuild-hosted runners) do not set the USER
+// environment variable.
+export function getRunnerUser(): string | undefined {
+  if (process.env.USER) {
+    return process.env.USER;
+  }
+  try {
+    return os.userInfo().username;
+  } catch {
+    return undefined;
+  }
+}
+
+export function chownForFolder(newOwner: string | undefined, target: string) {
+  if (!newOwner) {
+    console.log(`Unable to determine runner user; skipping chown of ${target}`);
+    return;
+  }
   let cmd = "sudo";
   let args = ["chown", "-R", newOwner, target];
   cp.execFileSync(cmd, args);

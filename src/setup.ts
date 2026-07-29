@@ -37,7 +37,7 @@ import {
   installWindowsAgent,
 } from "./install-agent";
 
-import { chownForFolder, detectThirdPartyRunnerProvider, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted } from "./utils";
+import { chownForFolder, getRunnerUser, detectThirdPartyRunnerProvider, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted } from "./utils";
 import { buildBravoConfig } from "./bravo-config";
 
 interface MonitorResponse {
@@ -455,7 +455,7 @@ process.on("unhandledRejection", (reason) => {
         logFile = "/home/agent/agent.log";
 
         cp.execSync("sudo mkdir -p /home/agent");
-        chownForFolder(process.env.USER, "/home/agent");
+        chownForFolder(getRunnerUser(), "/home/agent");
 
         let isTLS = await isTLSEnabled(context.repo.owner);
         agentInstalled = await installAgent(isTLS, configStr);
@@ -575,7 +575,7 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
     const selfHostedConfigStr = JSON.stringify(selfHostedConfig);
 
     cp.execSync("sudo mkdir -p /home/agent");
-    chownForFolder(process.env.USER, "/home/agent");
+    chownForFolder(getRunnerUser(), "/home/agent");
 
     const agentInstalled = await installAgent(isTLS, selfHostedConfigStr);
 
@@ -619,7 +619,7 @@ export async function installAgentForBravo(owner: string, bravoConfigStr: string
     }
 
     cp.execSync("sudo mkdir -p /home/agent");
-    chownForFolder(process.env.USER, "/home/agent");
+    chownForFolder(getRunnerUser(), "/home/agent");
 
     await installAgentBravo(bravoConfigStr);
   } catch (error) {

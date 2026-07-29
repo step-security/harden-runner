@@ -6,7 +6,7 @@ import * as fs from "fs";
 import { verifyChecksum } from "./checksum";
 import { EOL } from "os";
 import { ARM64_RUNNER_MESSAGE, ARM64_WINDOWS_RUNNER_MESSAGE } from "./common";
-import { chownForFolder } from "./utils";
+import { chownForFolder, getRunnerUser } from "./utils";
 
 export async function installAgent(
   isTLS: boolean,
@@ -131,7 +131,7 @@ export async function installMacosAgent(configStr: string): Promise<boolean> {
     // Create working directory
     core.info("Creating /opt/step-security directory...");
     cp.execSync("sudo mkdir -p /opt/step-security");
-    chownForFolder(process.env.USER, "/opt/step-security");
+    chownForFolder(getRunnerUser(), "/opt/step-security");
     core.info("✓ Successfully created /opt/step-security directory");
 
     // Create agent configuration file
