@@ -580,6 +580,12 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
     const agentInstalled = await installAgent(isTLS, selfHostedConfigStr);
 
     if (agentInstalled) {
+      // Post-step uses this to run the full cleanup (job-end flush) instead of
+      // the persistent-runner early exit.
+      fs.appendFileSync(process.env.GITHUB_STATE, `selfHostedVmAgentInstalled=true${EOL}`, {
+        encoding: "utf8",
+      });
+
       const statusFile = "/home/agent/agent.status";
       const logFile = "/home/agent/agent.log";
       let counter = 0;
