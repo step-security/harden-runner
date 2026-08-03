@@ -85489,15 +85489,15 @@ var external_crypto_ = __nccwpck_require__(6982);
 
 const CHECKSUMS = {
     tls: {
-        amd64: "a54c4305b5665ba54bfdc46eb32aee1758699b994550ca3658d698367cc96a3f", // v1.8.12
-        arm64: "3f401d508e1427b9ba205681d5abecde3b4a0f0a18542d198b6dc14cadd93ab5", // v1.8.12
+        amd64: "47c42675bce38c6ab7c4dcba90f009c8567f491bc71ecf492f4ef1876c300700", // v1.8.14
+        arm64: "9aed5e0a4a97ad019f943087dee6b7bd6ace340b06c6faba5615927b9a50a7d4", // v1.8.14
     },
     non_tls: {
         amd64: "4b14d8a3a5fbcef95af55e0c54d3bee6f44da802878c10289a4ca0b79b6d0237", // v0.16.2
     },
     bravo: {
-        amd64: "c986d0a19637325c9a8d4a331a6c4ed047e4cddb798f56b641d0e66f8bf9b1b2", // v1.8.12
-        arm64: "5c3df17f82e317c8b288dfbbcee449c2a24a80deeeb3416dccabd0a61982c676", // v1.8.12
+        amd64: "83d8189320edc26085e3fefc3682db231e778b563d2f22bc7bf7c339a9562aab", // v1.8.14
+        arm64: "1d9813cdf3684339c542f9342805a173c457af1860b98da66b7672918e121434", // v1.8.14
     },
     darwin: "2990f0390d2760fa6262a3830060b6db1233f16a1410ffe1ed2bf13dfda80c38", // v0.0.6
     windows: {
@@ -85570,7 +85570,7 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.8.12/harden-runner_1.8.12_linux_${variant}.tar.gz`, undefined, auth);
+            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.8.14/harden-runner_1.8.14_linux_${variant}.tar.gz`, undefined, auth);
         }
         else {
             if (variant === "arm64") {
@@ -85605,7 +85605,7 @@ function installAgentBravo(configStr) {
         const token = lib_core.getInput("token", { required: true });
         const auth = `token ${token}`;
         const variant = process.arch === "x64" ? "amd64" : "arm64";
-        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.8.12/harden-runner-bravo_1.8.12_linux_${variant}.tar.gz`, undefined, auth);
+        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.8.14/harden-runner-bravo_1.8.14_linux_${variant}.tar.gz`, undefined, auth);
         if (!verifyChecksum(downloadPath, true, variant, "linux", "bravo")) {
             return false;
         }
