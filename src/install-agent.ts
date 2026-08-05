@@ -6,7 +6,7 @@ import * as fs from "fs";
 import { verifyChecksum } from "./checksum";
 import { EOL } from "os";
 import { ARM64_RUNNER_MESSAGE, ARM64_WINDOWS_RUNNER_MESSAGE } from "./common";
-import { chownForFolder } from "./utils";
+import { chownForFolder, getRunnerUser } from "./utils";
 
 export async function installAgent(
   isTLS: boolean,
@@ -26,7 +26,7 @@ export async function installAgent(
 
   if (isTLS) {
     downloadPath = await tc.downloadTool(
-      `https://github.com/step-security/agent-ebpf/releases/download/v1.8.12/harden-runner_1.8.12_linux_${variant}.tar.gz`,
+      `https://github.com/step-security/agent-ebpf/releases/download/v1.8.14/harden-runner_1.8.14_linux_${variant}.tar.gz`,
       undefined,
       auth
     );
@@ -76,7 +76,7 @@ export async function installAgentBravo(configStr: string): Promise<boolean> {
 
   const variant = process.arch === "x64" ? "amd64" : "arm64";
   const downloadPath = await tc.downloadTool(
-    `https://github.com/step-security/agent-ebpf/releases/download/v1.8.12/harden-runner-bravo_1.8.12_linux_${variant}.tar.gz`,
+    `https://github.com/step-security/agent-ebpf/releases/download/v1.8.14/harden-runner-bravo_1.8.14_linux_${variant}.tar.gz`,
     undefined,
     auth
   );
@@ -131,7 +131,7 @@ export async function installMacosAgent(configStr: string): Promise<boolean> {
     // Create working directory
     core.info("Creating /opt/step-security directory...");
     cp.execSync("sudo mkdir -p /opt/step-security");
-    chownForFolder(process.env.USER, "/opt/step-security");
+    chownForFolder(getRunnerUser(), "/opt/step-security");
     core.info("✓ Successfully created /opt/step-security directory");
 
     // Create agent configuration file
