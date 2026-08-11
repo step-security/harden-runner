@@ -118,6 +118,7 @@ Harden-Runner offers a comprehensive suite of features to enhance the security o
 - **Automated Baseline Creation:** Harden-Runner builds a baseline for each job based on past outbound network connections.
 - **Anomaly Detection:** Once the baseline is created, any future outbound calls not in the baseline trigger a detection.
 - **Block Network Egress Traffic with Domain Allowlist:** Optionally use the automatically created baseline to control outbound network traffic by specifying allowed domains, preventing unauthorized data exfiltration.
+- **Global Block List:** Block known-malicious domains and IP addresses tied to active supply chain attacks, maintained by StepSecurity's 24x7 SOC. No configuration required, new indicators apply automatically without an action version bump, and it is enforced even in `egress-policy: audit` mode.
 - **Detect Modification of Source Code:** Monitor and alert on unauthorized changes to your source code during the CI/CD pipeline.
 
 ### Enterprise (Paid)

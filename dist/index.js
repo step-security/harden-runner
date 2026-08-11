@@ -31880,7 +31880,10 @@ var lib_core = __nccwpck_require__(7484);
 var external_child_process_ = __nccwpck_require__(5317);
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __nccwpck_require__(9896);
+// EXTERNAL MODULE: external "os"
+var external_os_ = __nccwpck_require__(857);
 ;// CONCATENATED MODULE: ./src/utils.ts
+
 
 
 function isPlatformSupported(platform) {
@@ -31893,7 +31896,25 @@ function isPlatformSupported(platform) {
             return false;
     }
 }
+// Resolves the user the runner process is executing as. Some runner
+// environments (e.g. AWS CodeBuild-hosted runners) do not set the USER
+// environment variable.
+function getRunnerUser() {
+    if (process.env.USER) {
+        return process.env.USER;
+    }
+    try {
+        return os.userInfo().username;
+    }
+    catch (_a) {
+        return undefined;
+    }
+}
 function chownForFolder(newOwner, target) {
+    if (!newOwner) {
+        console.log(`Unable to determine runner user; skipping chown of ${target}`);
+        return;
+    }
     let cmd = "sudo";
     let args = ["chown", "-R", newOwner, target];
     cp.execFileSync(cmd, args);
@@ -31921,6 +31942,8 @@ function detectThirdPartyRunnerProvider() {
         return "namespace";
     if (process.env["BITRISE_IO"])
         return "bitrise";
+    if (process.env["CODEBUILD_RUNNER_TYPE"] === "GITHUB")
+        return "codebuild";
     const runnerName = (_a = process.env["RUNNER_NAME"]) !== null && _a !== void 0 ? _a : "";
     if (runnerName.startsWith("warp-"))
         return "warp";
