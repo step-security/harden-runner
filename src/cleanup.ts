@@ -21,6 +21,13 @@ process.on("unhandledRejection", (reason) => {
   core.warning(`Unhandled promise rejection during Post-step: ${detail}`);
 });
 
+// See setup.ts for rationale — Node 22+ kills the process on unhandled rejections.
+process.on("unhandledRejection", (reason) => {
+  const detail =
+    reason instanceof Error ? (reason.stack ?? reason.message) : String(reason);
+  core.warning(`Unhandled promise rejection during Post-step: ${detail}`);
+});
+
 (async () => {
   console.log("[harden-runner] post-step");
 
