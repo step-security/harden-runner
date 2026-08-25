@@ -120,8 +120,14 @@ export function mergeConfigs(
   localConfig: Configuration,
   remoteConfig: PolicyResponse
 ) {
+  const getEndpoints = (endpoints?: string[]) =>
+    Array.isArray(endpoints) ? endpoints.join(" ") : "";
+
   if (localConfig.allowed_endpoints === "") {
-    localConfig.allowed_endpoints = remoteConfig.allowed_endpoints.join(" ");
+    localConfig.allowed_endpoints = getEndpoints(remoteConfig.allowed_endpoints);
+  }
+  if (localConfig.denied_endpoints === "") {
+    localConfig.denied_endpoints = getEndpoints(remoteConfig.denied_endpoints);
   }
   if (remoteConfig.disable_sudo !== undefined) {
     localConfig.disable_sudo = remoteConfig.disable_sudo;

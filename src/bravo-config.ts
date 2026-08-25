@@ -10,6 +10,7 @@ export function buildBravoConfig(confg: Configuration) {
     telemetry_url: confg.telemetry_url,
     one_time_key: confg.one_time_key,
     allowed_endpoints: confg.allowed_endpoints,
+    denied_endpoints: confg.denied_endpoints,
     egress_policy: confg.egress_policy,
     disable_telemetry: confg.disable_telemetry,
     disable_sudo: confg.disable_sudo,

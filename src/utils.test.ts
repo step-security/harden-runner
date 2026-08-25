@@ -1,12 +1,19 @@
-import { shouldDeployAgentOnSelfHosted, isAgentInstalled, isPlatformSupported, getAnnotationLogs, detectThirdPartyRunnerProvider } from "./utils";
+import { shouldDeployAgentOnSelfHosted, isAgentInstalled, isPlatformSupported, getAnnotationLogs, detectThirdPartyRunnerProvider, getPrivilegeMode } from "./utils";
 import * as fs from "fs";
+import * as os from "os";
 
 jest.mock("fs", () => ({
   ...jest.requireActual("fs"),
   existsSync: jest.fn(),
 }));
 
+jest.mock("os", () => ({
+  ...jest.requireActual("os"),
+  userInfo: jest.fn(),
+}));
+
 const mockedExistsSync = fs.existsSync as jest.MockedFunction<typeof fs.existsSync>;
+const mockedUserInfo = os.userInfo as jest.MockedFunction<typeof os.userInfo>;
 
 describe("shouldDeployAgentOnSelfHosted", () => {
   test("returns true when deploy flag is true, not container, agent not installed", () => {
@@ -88,6 +95,29 @@ describe("isPlatformSupported", () => {
 describe("getAnnotationLogs", () => {
   test("throws for unsupported platform", () => {
     expect(() => getAnnotationLogs("freebsd" as NodeJS.Platform)).toThrow("platform not supported");
+  });
+});
+
+describe("getPrivilegeMode", () => {
+  afterEach(() => {
+    mockedUserInfo.mockReset();
+  });
+
+  test("returns root when uid is 0", () => {
+    mockedUserInfo.mockReturnValue({ uid: 0 } as os.UserInfo<string>);
+    expect(getPrivilegeMode()).toBe("root");
+  });
+
+  test("returns sudo when uid is non-zero", () => {
+    mockedUserInfo.mockReturnValue({ uid: 1000 } as os.UserInfo<string>);
+    expect(getPrivilegeMode()).toBe("sudo");
+  });
+
+  test("returns sudo when userInfo throws", () => {
+    mockedUserInfo.mockImplementation(() => {
+      throw new Error("no user info");
+    });
+    expect(getPrivilegeMode()).toBe("sudo");
   });
 });
 

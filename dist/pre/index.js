@@ -85106,14 +85106,28 @@ function getRunnerUser() {
         return undefined;
     }
 }
-function chownForFolder(newOwner, target) {
+function getPrivilegeMode() {
+    try {
+        if (external_os_.userInfo().uid === 0) {
+            return "root";
+        }
+    }
+    catch (_a) {
+        // fall through to sudo
+    }
+    return "sudo";
+}
+function chownForFolder(newOwner, target, useDirectPrivileges = false) {
     if (!newOwner) {
         console.log(`Unable to determine runner user; skipping chown of ${target}`);
         return;
     }
-    let cmd = "sudo";
-    let args = ["chown", "-R", newOwner, target];
-    external_child_process_.execFileSync(cmd, args);
+    if (useDirectPrivileges) {
+        external_child_process_.execFileSync("chown", ["-R", newOwner, target]);
+    }
+    else {
+        external_child_process_.execFileSync("sudo", ["chown", "-R", newOwner, target]);
+    }
 }
 function isAgentInstalled(platform) {
     switch (platform) {
@@ -85435,8 +85449,12 @@ function getJsonWithTimeout(url, headers) {
     });
 }
 function mergeConfigs(localConfig, remoteConfig) {
+    const getEndpoints = (endpoints) => Array.isArray(endpoints) ? endpoints.join(" ") : "";
     if (localConfig.allowed_endpoints === "") {
-        localConfig.allowed_endpoints = remoteConfig.allowed_endpoints.join(" ");
+        localConfig.allowed_endpoints = getEndpoints(remoteConfig.allowed_endpoints);
+    }
+    if (localConfig.denied_endpoints === "") {
+        localConfig.denied_endpoints = getEndpoints(remoteConfig.denied_endpoints);
     }
     if (remoteConfig.disable_sudo !== undefined) {
         localConfig.disable_sudo = remoteConfig.disable_sudo;
@@ -85562,15 +85580,15 @@ var external_crypto_ = __nccwpck_require__(6982);
 
 const CHECKSUMS = {
     tls: {
-        amd64: "47c42675bce38c6ab7c4dcba90f009c8567f491bc71ecf492f4ef1876c300700", // v1.8.14
-        arm64: "9aed5e0a4a97ad019f943087dee6b7bd6ace340b06c6faba5615927b9a50a7d4", // v1.8.14
+        amd64: "07703be7dedacfa234e7962289e952d3731d9c5677054ce4f6e4c9dbf79b77ed", // v1.9.0
+        arm64: "6b3c8927928ccc0a9df3097eabd95ec3c00f98b3b25bb6eb6b5e99020584a53c", // v1.9.0
     },
     non_tls: {
         amd64: "4b14d8a3a5fbcef95af55e0c54d3bee6f44da802878c10289a4ca0b79b6d0237", // v0.16.2
     },
     bravo: {
-        amd64: "83d8189320edc26085e3fefc3682db231e778b563d2f22bc7bf7c339a9562aab", // v1.8.14
-        arm64: "1d9813cdf3684339c542f9342805a173c457af1860b98da66b7672918e121434", // v1.8.14
+        amd64: "3733cdd704e8f6455f036ff3534d53f965a0e6028a39c654ae4f1679e6b4c45b", // v1.9.0
+        arm64: "ecf8a50679cac9402795f7434f2edb470bd83fe47512bbc3f52bf9b956c1b62c", // v1.9.0
     },
     darwin: "2990f0390d2760fa6262a3830060b6db1233f16a1410ffe1ed2bf13dfda80c38", // v0.0.6
     windows: {
@@ -85643,7 +85661,7 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.8.14/harden-runner_1.8.14_linux_${variant}.tar.gz`, undefined, auth);
+            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.9.0/harden-runner_1.9.0_linux_${variant}.tar.gz`, undefined, auth);
         }
         else {
             if (variant === "arm64") {
@@ -85672,13 +85690,13 @@ function installAgent(isTLS, configStr) {
         return true;
     });
 }
-function installAgentBravo(configStr) {
-    return install_agent_awaiter(this, void 0, void 0, function* () {
+function installAgentBravo(configStr_1) {
+    return install_agent_awaiter(this, arguments, void 0, function* (configStr, useDirectPrivileges = false) {
         // Note: to avoid github rate limiting
         const token = lib_core.getInput("token", { required: true });
         const auth = `token ${token}`;
         const variant = process.arch === "x64" ? "amd64" : "arm64";
-        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.8.14/harden-runner-bravo_1.8.14_linux_${variant}.tar.gz`, undefined, auth);
+        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.9.0/harden-runner-bravo_1.9.0_linux_${variant}.tar.gz`, undefined, auth);
         if (!verifyChecksum(downloadPath, true, variant, "linux", "bravo")) {
             return false;
         }
@@ -85687,11 +85705,14 @@ function installAgentBravo(configStr) {
         external_child_process_.execSync("chmod +x /home/agent/agent");
         external_fs_.writeFileSync("/home/agent/agent.json", configStr);
         const logStream = external_fs_.openSync("/home/agent/agent.stdout", "a");
-        const agentProcess = external_child_process_.spawn("sudo", ["/home/agent/agent"], {
+        const spawnOptions = {
             cwd: "/home/agent",
             detached: true,
             stdio: ["ignore", logStream, logStream],
-        });
+        };
+        const agentProcess = useDirectPrivileges
+            ? external_child_process_.spawn("/home/agent/agent", [], spawnOptions)
+            : external_child_process_.spawn("sudo", ["/home/agent/agent"], spawnOptions);
         agentProcess.unref();
         const agentStatus = "/home/agent/agent.status";
         const deadline = Date.now() + 10000;
@@ -85848,6 +85869,7 @@ function buildBravoConfig(confg) {
         telemetry_url: confg.telemetry_url,
         one_time_key: confg.one_time_key,
         allowed_endpoints: confg.allowed_endpoints,
+        denied_endpoints: confg.denied_endpoints,
         egress_policy: confg.egress_policy,
         disable_telemetry: confg.disable_telemetry,
         disable_sudo: confg.disable_sudo,
@@ -85911,6 +85933,76 @@ process.on("unhandledRejection", (reason) => {
     const detail = reason instanceof Error ? ((_a = reason.stack) !== null && _a !== void 0 ? _a : reason.message) : String(reason);
     lib_core.warning(`Unhandled promise rejection during Pre-step: ${detail}`);
 });
+// Looks up the Actions cache blob host for the harden-runner cache entry.
+// Returns "<hostname>:443", or undefined when the entry does not exist yet.
+function lookupCacheHost() {
+    return setup_awaiter(this, void 0, void 0, function* () {
+        const cacheFilePath = external_path_.join(__dirname, "cache.txt");
+        const compressionMethod = yield cacheUtils.getCompressionMethod();
+        const cacheServiceVersion = (0,config.getCacheServiceVersion)();
+        if (cacheServiceVersion === "v2") {
+            const twirpClient = cacheTwirpClient.internalCacheTwirpClient();
+            const request = {
+                key: cacheKey,
+                restoreKeys: [],
+                version: cacheUtils.getCacheVersion([cacheFilePath], compressionMethod, false),
+            };
+            const response = yield twirpClient.GetCacheEntryDownloadURL(request);
+            // On a cache miss the twirp response is {ok: false, signedDownloadUrl: ""};
+            // constructing a URL from that empty string would throw.
+            if (!response.ok || !response.signedDownloadUrl) {
+                return undefined;
+            }
+            return `${new URL(response.signedDownloadUrl).hostname}:443`;
+        }
+        if (cacheServiceVersion === "v1") {
+            const cacheEntry = yield (0,cacheHttpClient.getCacheEntry)([cacheKey], [cacheFilePath], { compressionMethod });
+            // On a cache miss getCacheEntry returns null.
+            if (!(cacheEntry === null || cacheEntry === void 0 ? void 0 : cacheEntry.archiveLocation)) {
+                return undefined;
+            }
+            return `${new URL(cacheEntry.archiveLocation).hostname}:443`;
+        }
+        return undefined;
+    });
+}
+// Resolves the Actions cache blob host, seeding the harden-runner cache entry
+// on the first run in a cache scope. Read-first: the constant-key entry can
+// only be reserved once per scope, so an unconditional save would log a
+// misleading reservation failure on every subsequent run. Returns undefined
+// when the host cannot be resolved; callers must not change the egress policy
+// in that case, the agent allows the cache endpoints implicitly and this
+// lookup is defense-in-depth only.
+function resolveCacheHost() {
+    return setup_awaiter(this, void 0, void 0, function* () {
+        lib_core.info(`cache version: ${(0,config.getCacheServiceVersion)()}`);
+        try {
+            const host = yield lookupCacheHost();
+            if (host) {
+                return host;
+            }
+        }
+        catch (e) {
+            lib_core.info(`Unable to fetch cacheURL ${e}`);
+        }
+        // First run in this cache scope: seed the entry, then look up again. If a
+        // concurrent job wins the reservation race, saveCache fails harmlessly and
+        // the second lookup reads the winner's entry.
+        try {
+            yield cache.saveCache([external_path_.join(__dirname, "cache.txt")], cacheKey);
+        }
+        catch (exception) {
+            lib_core.info(`Unable to seed cache entry: ${exception}`);
+        }
+        try {
+            return yield lookupCacheHost();
+        }
+        catch (e) {
+            lib_core.info(`Unable to fetch cacheURL ${e}`);
+            return undefined;
+        }
+    });
+}
 (() => setup_awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
     try {
@@ -85943,6 +86035,7 @@ process.on("unhandledRejection", (reason) => {
             api_url: api_url,
             telemetry_url: STEPSECURITY_TELEMETRY_URL,
             allowed_endpoints: lib_core.getInput("allowed-endpoints"),
+            denied_endpoints: lib_core.getInput("denied-endpoints"),
             egress_policy: lib_core.getInput("egress-policy"),
             disable_telemetry: lib_core.getBooleanInput("disable-telemetry"),
             disable_sudo: lib_core.getBooleanInput("disable-sudo"),
@@ -86029,68 +86122,38 @@ process.on("unhandledRejection", (reason) => {
         if (confg.egress_policy !== "audit" && confg.egress_policy !== "block") {
             lib_core.setFailed("egress-policy must be either audit or block");
         }
-        if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
-            lib_core.warning("egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps.");
+        // Mirrors the agent's isDenyList() decision: the deny list is enforced
+        // only when there are no allowed endpoints. Allowed endpoints always win.
+        let isDenyListMode = confg.denied_endpoints !== "" && confg.allowed_endpoints === "";
+        if (confg.denied_endpoints !== "" && confg.allowed_endpoints !== "") {
+            lib_core.info("Both allowed-endpoints and denied-endpoints are set. Only one of them should be set at a time. allowed-endpoints will be honored and denied-endpoints will be ignored.");
+        }
+        // The deny list is an enterprise (TLS) tier feature. The non-TLS agent
+        // does not understand denied_endpoints and would treat this config as
+        // block with an empty allow list, blocking all egress.
+        if (isDenyListMode && !(yield isTLSEnabled(github.context.repo.owner))) {
+            lib_core.info("denied-endpoints is supported on the enterprise tier only. Ignoring denied-endpoints for this run.");
+            confg.denied_endpoints = "";
+            isDenyListMode = false;
+        }
+        if (confg.egress_policy === "block" &&
+            confg.allowed_endpoints === "" &&
+            !isDenyListMode) {
+            lib_core.warning("egress-policy is set to block (default) and both allowed-endpoints and denied-endpoints are empty. No outbound traffic rules will be configured for job steps.");
         }
         if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
             lib_core.setFailed("disable-telemetry must be a boolean value");
         }
-        if (isValidEvent() && confg.egress_policy === "block") {
-            try {
-                const cacheResult = yield cache.saveCache([external_path_.join(__dirname, "cache.txt")], cacheKey);
-                console.log(cacheResult);
+        if (isValidEvent() &&
+            confg.egress_policy === "block" &&
+            !isDenyListMode) {
+            const cacheHost = yield resolveCacheHost();
+            if (cacheHost) {
+                lib_core.info(`Adding cacheHost: ${cacheHost} to allowed-endpoints`);
+                confg.allowed_endpoints += ` ${cacheHost}`;
             }
-            catch (exception) {
-                console.log(exception);
-            }
-            const cacheServiceVersion = (0,config.getCacheServiceVersion)();
-            switch (cacheServiceVersion) {
-                case "v2":
-                    lib_core.info(`cache version: v2`);
-                    try {
-                        const cacheFilePath = external_path_.join(__dirname, "cache.txt");
-                        lib_core.info(`cacheFilePath ${cacheFilePath}`);
-                        const twirpClient = cacheTwirpClient.internalCacheTwirpClient();
-                        const compressionMethod = yield cacheUtils.getCompressionMethod();
-                        const request = {
-                            key: cacheKey,
-                            restoreKeys: [],
-                            version: cacheUtils.getCacheVersion([cacheFilePath], compressionMethod, false),
-                        };
-                        const response = yield twirpClient.GetCacheEntryDownloadURL(request);
-                        const url = new URL(response.signedDownloadUrl);
-                        lib_core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
-                        confg.allowed_endpoints += ` ${url.hostname}:443`;
-                    }
-                    catch (e) {
-                        lib_core.info(`Unable to fetch cacheURL ${e}`);
-                        if (confg.egress_policy === "block") {
-                            lib_core.info("Switching egress-policy to audit mode");
-                            confg.egress_policy = "audit";
-                        }
-                    }
-                    break;
-                case "v1":
-                    lib_core.info(`cache version: v1`);
-                    try {
-                        const compressionMethod = yield cacheUtils.getCompressionMethod();
-                        const cacheFilePath = external_path_.join(__dirname, "cache.txt");
-                        lib_core.info(`cacheFilePath ${cacheFilePath}`);
-                        const cacheEntry = yield (0,cacheHttpClient.getCacheEntry)([cacheKey], [cacheFilePath], {
-                            compressionMethod: compressionMethod,
-                        });
-                        const url = new URL(cacheEntry.archiveLocation);
-                        lib_core.info(`Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`);
-                        confg.allowed_endpoints += ` ${url.hostname}:443`;
-                    }
-                    catch (exception) {
-                        // some exception has occurred.
-                        lib_core.info(`Unable to fetch cacheURL ${exception}`);
-                        if (confg.egress_policy === "block") {
-                            lib_core.info("Switching egress-policy to audit mode");
-                            confg.egress_policy = "audit";
-                        }
-                    }
+            else {
+                lib_core.info("Unable to resolve the Actions cache host. This should not cause any problems: the agent allows the cache endpoints implicitly, and this lookup is defense-in-depth only. Egress policy remains block.");
             }
         }
         if (!confg.disable_telemetry || confg.egress_policy === "audit") {
@@ -86127,7 +86190,7 @@ process.on("unhandledRejection", (reason) => {
                         return;
                     }
                     case "linux":
-                        yield installAgentForBravo(github.context.repo.owner, bravoConfigStr);
+                        yield installAgentForBravo(github.context.repo.owner, bravoConfigStr, thirdPartyProvider);
                         return;
                 }
             }
@@ -86329,6 +86392,7 @@ function installAgentForSelfHosted(owner, confg) {
                 api_url: confg.api_url,
                 api_key: v4(),
                 allowed_endpoints: confg.allowed_endpoints,
+                denied_endpoints: confg.denied_endpoints,
                 egress_policy: confg.egress_policy,
                 disable_telemetry: confg.disable_telemetry,
                 disable_sudo: confg.disable_sudo,
@@ -86370,7 +86434,7 @@ function installAgentForSelfHosted(owner, confg) {
         }
     });
 }
-function installAgentForBravo(owner, bravoConfigStr) {
+function installAgentForBravo(owner, bravoConfigStr, provider) {
     return setup_awaiter(this, void 0, void 0, function* () {
         try {
             console.log("Installing Harden Runner bravo agent for third-party runner");
@@ -86379,9 +86443,17 @@ function installAgentForBravo(owner, bravoConfigStr) {
                 console.log("TLS is not enabled for this organization. Bravo agent installation skipped.");
                 return;
             }
-            external_child_process_.execSync("sudo mkdir -p /home/agent");
-            chownForFolder(getRunnerUser(), "/home/agent");
-            yield installAgentBravo(bravoConfigStr);
+            const privilegeMode = getPrivilegeMode();
+            if (isDocker() && privilegeMode !== "root") {
+                console.log("Running inside a container without root privileges. Bravo agent installation skipped.");
+                return;
+            }
+            // CodeBuild containers run as root without a sudo binary; other
+            // providers keep the existing sudo-based install.
+            const useDirectPrivileges = provider === "codebuild" && privilegeMode === "root";
+            external_child_process_.execSync(useDirectPrivileges ? "mkdir -p /home/agent" : "sudo mkdir -p /home/agent");
+            chownForFolder(getRunnerUser(), "/home/agent", useDirectPrivileges);
+            yield installAgentBravo(bravoConfigStr, useDirectPrivileges);
         }
         catch (error) {
             console.log(`Failed to install bravo agent: ${error.message}`);

@@ -248,6 +248,7 @@ test("merge configs", async () => {
     api_url: "xyz",
     telemetry_url: "xyz",
     allowed_endpoints: "",
+    denied_endpoints: "",
     egress_policy: "audit",
     disable_telemetry: false,
     disable_sudo: false,
@@ -265,6 +266,7 @@ test("merge configs", async () => {
     owner: "h0x0er",
     policyName: "policy1",
     allowed_endpoints: ["github.com:443", "google.com:443"],
+    denied_endpoints: ["bad.example.com:443", "evil.example.com:443"],
     egress_policy: "audit",
     disable_telemetry: false,
     disable_sudo: false,
@@ -278,6 +280,7 @@ test("merge configs", async () => {
     api_url: "xyz",
     telemetry_url: "xyz",
     allowed_endpoints: "github.com:443 google.com:443",
+    denied_endpoints: "bad.example.com:443 evil.example.com:443",
     egress_policy: "audit",
     disable_telemetry: false,
     disable_sudo: false,
@@ -305,6 +308,7 @@ test("mergeConfigs does not override local allowed_endpoints if not empty", () =
     api_url: "xyz",
     telemetry_url: "xyz",
     allowed_endpoints: "local.endpoint:443",
+    denied_endpoints: "local-denied.endpoint:443",
     egress_policy: "audit",
     disable_telemetry: false,
     disable_sudo: false,
@@ -320,11 +324,13 @@ test("mergeConfigs does not override local allowed_endpoints if not empty", () =
   };
   const policyResponse: PolicyResponse = {
     allowed_endpoints: ["remote.endpoint:443"],
+    denied_endpoints: ["remote-denied.endpoint:443"],
     egress_policy: "block",
   };
 
   localConfig = mergeConfigs(localConfig, policyResponse);
   expect(localConfig.allowed_endpoints).toBe("local.endpoint:443");
+  expect(localConfig.denied_endpoints).toBe("local-denied.endpoint:443");
   expect(localConfig.egress_policy).toBe("block");
 });
 
@@ -337,6 +343,7 @@ test("mergeConfigs overrides disable_sudo_and_containers from remote", () => {
     api_url: "xyz",
     telemetry_url: "xyz",
     allowed_endpoints: "",
+    denied_endpoints: "",
     egress_policy: "audit",
     disable_telemetry: false,
     disable_sudo: false,
@@ -368,6 +375,7 @@ test("mergeConfigs does not override fields when remote values are undefined", (
     api_url: "xyz",
     telemetry_url: "xyz",
     allowed_endpoints: "",
+    denied_endpoints: "",
     egress_policy: "block",
     disable_telemetry: false,
     disable_sudo: true,
@@ -390,4 +398,35 @@ test("mergeConfigs does not override fields when remote values are undefined", (
   expect(localConfig.disable_sudo_and_containers).toBe(true);
   expect(localConfig.disable_file_monitoring).toBe(true);
   expect(localConfig.egress_policy).toBe("block");
+  expect(localConfig.denied_endpoints).toBe("");
+});
+
+test("mergeConfigs handles remote policy without endpoint lists", () => {
+  let localConfig: Configuration = {
+    repo: "test/repo",
+    run_id: "xyx",
+    correlation_id: "aaaaa",
+    working_directory: "/xyz",
+    api_url: "xyz",
+    telemetry_url: "xyz",
+    allowed_endpoints: "",
+    denied_endpoints: "",
+    egress_policy: "audit",
+    disable_telemetry: false,
+    disable_sudo: false,
+    disable_sudo_and_containers: false,
+    disable_file_monitoring: false,
+    private: "true",
+    is_github_hosted: true,
+    is_debug: false,
+    one_time_key: "",
+    api_key: "",
+    use_policy_store: false,
+    deploy_on_self_hosted_vm: false,
+  };
+  const policyResponse: PolicyResponse = {};
+
+  localConfig = mergeConfigs(localConfig, policyResponse);
+  expect(localConfig.allowed_endpoints).toBe("");
+  expect(localConfig.denied_endpoints).toBe("");
 });

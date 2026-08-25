@@ -5,6 +5,10 @@ inputs:
     description: "Only these endpoints will be allowed if egress-policy is set to block"
     required: false
     default: ""
+  denied-endpoints:
+    description: "These endpoints will be denied when endpoint blocking is enabled"
+    required: false
+    default: ""
   egress-policy:
     description: "Policy for outbound traffic, can be either audit or block"
     required: false

@@ -11,7 +11,6 @@ import {
   ArtifactCacheEntry,
   cacheKey,
   cacheFile,
-  CompressionMethod,
   isValidEvent,
 } from "./cache";
 import { Configuration, PolicyResponse } from "./interfaces";
@@ -37,7 +36,7 @@ import {
   installWindowsAgent,
 } from "./install-agent";
 
-import { chownForFolder, getRunnerUser, detectThirdPartyRunnerProvider, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted } from "./utils";
+import { chownForFolder, getRunnerUser, getPrivilegeMode, detectThirdPartyRunnerProvider, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted, ThirdPartyRunnerProvider } from "./utils";
 import { buildBravoConfig } from "./bravo-config";
 
 interface MonitorResponse {
@@ -56,6 +55,81 @@ process.on("unhandledRejection", (reason) => {
     reason instanceof Error ? (reason.stack ?? reason.message) : String(reason);
   core.warning(`Unhandled promise rejection during Pre-step: ${detail}`);
 });
+
+// Looks up the Actions cache blob host for the harden-runner cache entry.
+// Returns "<hostname>:443", or undefined when the entry does not exist yet.
+async function lookupCacheHost(): Promise<string | undefined> {
+  const cacheFilePath = path.join(__dirname, "cache.txt");
+  const compressionMethod = await utils.getCompressionMethod();
+  const cacheServiceVersion = getCacheServiceVersion();
+
+  if (cacheServiceVersion === "v2") {
+    const twirpClient = cacheTwirpClient.internalCacheTwirpClient();
+    const request: GetCacheEntryDownloadURLRequest = {
+      key: cacheKey,
+      restoreKeys: [],
+      version: utils.getCacheVersion([cacheFilePath], compressionMethod, false),
+    };
+    const response = await twirpClient.GetCacheEntryDownloadURL(request);
+    // On a cache miss the twirp response is {ok: false, signedDownloadUrl: ""};
+    // constructing a URL from that empty string would throw.
+    if (!response.ok || !response.signedDownloadUrl) {
+      return undefined;
+    }
+    return `${new URL(response.signedDownloadUrl).hostname}:443`;
+  }
+
+  if (cacheServiceVersion === "v1") {
+    const cacheEntry: ArtifactCacheEntry = await getCacheEntry(
+      [cacheKey],
+      [cacheFilePath],
+      { compressionMethod }
+    );
+    // On a cache miss getCacheEntry returns null.
+    if (!cacheEntry?.archiveLocation) {
+      return undefined;
+    }
+    return `${new URL(cacheEntry.archiveLocation).hostname}:443`;
+  }
+
+  return undefined;
+}
+
+// Resolves the Actions cache blob host, seeding the harden-runner cache entry
+// on the first run in a cache scope. Read-first: the constant-key entry can
+// only be reserved once per scope, so an unconditional save would log a
+// misleading reservation failure on every subsequent run. Returns undefined
+// when the host cannot be resolved; callers must not change the egress policy
+// in that case, the agent allows the cache endpoints implicitly and this
+// lookup is defense-in-depth only.
+async function resolveCacheHost(): Promise<string | undefined> {
+  core.info(`cache version: ${getCacheServiceVersion()}`);
+
+  try {
+    const host = await lookupCacheHost();
+    if (host) {
+      return host;
+    }
+  } catch (e) {
+    core.info(`Unable to fetch cacheURL ${e}`);
+  }
+
+  // First run in this cache scope: seed the entry, then look up again. If a
+  // concurrent job wins the reservation race, saveCache fails harmlessly and
+  // the second lookup reads the winner's entry.
+  try {
+    await cache.saveCache([path.join(__dirname, "cache.txt")], cacheKey);
+  } catch (exception) {
+    core.info(`Unable to seed cache entry: ${exception}`);
+  }
+
+  try {
+    return await lookupCacheHost();
+  } catch (e) {
+    core.info(`Unable to fetch cacheURL ${e}`);
+    return undefined;
+  }
+}
 
 (async () => {
   try {
@@ -93,6 +167,7 @@ process.on("unhandledRejection", (reason) => {
       api_url: api_url,
       telemetry_url: STEPSECURITY_TELEMETRY_URL,
       allowed_endpoints: core.getInput("allowed-endpoints"),
+      denied_endpoints: core.getInput("denied-endpoints"),
       egress_policy: core.getInput("egress-policy"),
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
       disable_sudo: core.getBooleanInput("disable-sudo"),
@@ -198,9 +273,35 @@ process.on("unhandledRejection", (reason) => {
       core.setFailed("egress-policy must be either audit or block");
     }
 
-    if (confg.egress_policy === "block" && confg.allowed_endpoints === "") {
+    // Mirrors the agent's isDenyList() decision: the deny list is enforced
+    // only when there are no allowed endpoints. Allowed endpoints always win.
+    let isDenyListMode =
+      confg.denied_endpoints !== "" && confg.allowed_endpoints === "";
+
+    if (confg.denied_endpoints !== "" && confg.allowed_endpoints !== "") {
+      core.info(
+        "Both allowed-endpoints and denied-endpoints are set. Only one of them should be set at a time. allowed-endpoints will be honored and denied-endpoints will be ignored."
+      );
+    }
+
+    // The deny list is an enterprise (TLS) tier feature. The non-TLS agent
+    // does not understand denied_endpoints and would treat this config as
+    // block with an empty allow list, blocking all egress.
+    if (isDenyListMode && !(await isTLSEnabled(context.repo.owner))) {
+      core.info(
+        "denied-endpoints is supported on the enterprise tier only. Ignoring denied-endpoints for this run."
+      );
+      confg.denied_endpoints = "";
+      isDenyListMode = false;
+    }
+
+    if (
+      confg.egress_policy === "block" &&
+      confg.allowed_endpoints === "" &&
+      !isDenyListMode
+    ) {
       core.warning(
-        "egress-policy is set to block (default) and allowed-endpoints is empty. No outbound traffic will be allowed for job steps."
+        "egress-policy is set to block (default) and both allowed-endpoints and denied-endpoints are empty. No outbound traffic rules will be configured for job steps."
       );
     }
 
@@ -208,88 +309,19 @@ process.on("unhandledRejection", (reason) => {
       core.setFailed("disable-telemetry must be a boolean value");
     }
 
-    if (isValidEvent() && confg.egress_policy === "block") {
-      try {
-        const cacheResult = await cache.saveCache(
-          [path.join(__dirname, "cache.txt")],
-          cacheKey
+    if (
+      isValidEvent() &&
+      confg.egress_policy === "block" &&
+      !isDenyListMode
+    ) {
+      const cacheHost = await resolveCacheHost();
+      if (cacheHost) {
+        core.info(`Adding cacheHost: ${cacheHost} to allowed-endpoints`);
+        confg.allowed_endpoints += ` ${cacheHost}`;
+      } else {
+        core.info(
+          "Unable to resolve the Actions cache host. This should not cause any problems: the agent allows the cache endpoints implicitly, and this lookup is defense-in-depth only. Egress policy remains block."
         );
-        console.log(cacheResult);
-      } catch (exception) {
-        console.log(exception);
-      }
-
-      const cacheServiceVersion: string = getCacheServiceVersion();
-
-      switch (cacheServiceVersion) {
-        case "v2":
-          core.info(`cache version: v2`);
-          try {
-            const cacheFilePath = path.join(__dirname, "cache.txt");
-            core.info(`cacheFilePath ${cacheFilePath}`);
-
-            const twirpClient = cacheTwirpClient.internalCacheTwirpClient();
-            const compressionMethod = await utils.getCompressionMethod();
-
-            const request: GetCacheEntryDownloadURLRequest = {
-              key: cacheKey,
-              restoreKeys: [],
-              version: utils.getCacheVersion(
-                [cacheFilePath],
-                compressionMethod,
-                false
-              ),
-            };
-
-            const response = await twirpClient.GetCacheEntryDownloadURL(
-              request
-            );
-
-            const url = new URL(response.signedDownloadUrl);
-            core.info(
-              `Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`
-            );
-
-            confg.allowed_endpoints += ` ${url.hostname}:443`;
-          } catch (e) {
-            core.info(`Unable to fetch cacheURL ${e}`);
-            if (confg.egress_policy === "block") {
-              core.info("Switching egress-policy to audit mode");
-              confg.egress_policy = "audit";
-            }
-          }
-          break;
-
-        case "v1":
-          core.info(`cache version: v1`);
-
-          try {
-            const compressionMethod: CompressionMethod =
-              await utils.getCompressionMethod();
-            const cacheFilePath = path.join(__dirname, "cache.txt");
-            core.info(`cacheFilePath ${cacheFilePath}`);
-
-            const cacheEntry: ArtifactCacheEntry = await getCacheEntry(
-              [cacheKey],
-              [cacheFilePath],
-              {
-                compressionMethod: compressionMethod,
-              }
-            );
-            const url = new URL(cacheEntry.archiveLocation);
-            core.info(
-              `Adding cacheHost: ${url.hostname}:443 to allowed-endpoints`
-            );
-
-            confg.allowed_endpoints += ` ${url.hostname}:443`;
-          } catch (exception) {
-            // some exception has occurred.
-            core.info(`Unable to fetch cacheURL ${exception}`);
-            if (confg.egress_policy === "block") {
-              core.info("Switching egress-policy to audit mode");
-              confg.egress_policy = "audit";
-            }
-          }
       }
     }
 
@@ -329,7 +361,7 @@ process.on("unhandledRejection", (reason) => {
             return;
           }
           case "linux":
-            await installAgentForBravo(context.repo.owner, bravoConfigStr);
+            await installAgentForBravo(context.repo.owner, bravoConfigStr, thirdPartyProvider);
             return;
         }
       }
@@ -565,6 +597,7 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
       api_url: confg.api_url,
       api_key: uuidv4(),
       allowed_endpoints: confg.allowed_endpoints,
+      denied_endpoints: confg.denied_endpoints,
       egress_policy: confg.egress_policy,
       disable_telemetry: confg.disable_telemetry,
       disable_sudo: confg.disable_sudo,
@@ -607,7 +640,11 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
   }
 }
 
-export async function installAgentForBravo(owner: string, bravoConfigStr: string) {
+export async function installAgentForBravo(
+  owner: string,
+  bravoConfigStr: string,
+  provider: ThirdPartyRunnerProvider
+) {
   try {
     console.log("Installing Harden Runner bravo agent for third-party runner");
 
@@ -618,10 +655,23 @@ export async function installAgentForBravo(owner: string, bravoConfigStr: string
       return;
     }
 
-    cp.execSync("sudo mkdir -p /home/agent");
-    chownForFolder(getRunnerUser(), "/home/agent");
+    const privilegeMode = getPrivilegeMode();
 
-    await installAgentBravo(bravoConfigStr);
+    if (isDocker() && privilegeMode !== "root") {
+      console.log(
+        "Running inside a container without root privileges. Bravo agent installation skipped."
+      );
+      return;
+    }
+
+    // CodeBuild containers run as root without a sudo binary; other
+    // providers keep the existing sudo-based install.
+    const useDirectPrivileges = provider === "codebuild" && privilegeMode === "root";
+
+    cp.execSync(useDirectPrivileges ? "mkdir -p /home/agent" : "sudo mkdir -p /home/agent");
+    chownForFolder(getRunnerUser(), "/home/agent", useDirectPrivileges);
+
+    await installAgentBravo(bravoConfigStr, useDirectPrivileges);
   } catch (error) {
     console.log(`Failed to install bravo agent: ${error.message}`);
   }

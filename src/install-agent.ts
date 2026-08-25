@@ -26,7 +26,7 @@ export async function installAgent(
 
   if (isTLS) {
     downloadPath = await tc.downloadTool(
-      `https://github.com/step-security/agent-ebpf/releases/download/v1.8.14/harden-runner_1.8.14_linux_${variant}.tar.gz`,
+      `https://github.com/step-security/agent-ebpf/releases/download/v1.9.0/harden-runner_1.9.0_linux_${variant}.tar.gz`,
       undefined,
       auth
     );
@@ -69,14 +69,17 @@ export async function installAgent(
   return true;
 }
 
-export async function installAgentBravo(configStr: string): Promise<boolean> {
+export async function installAgentBravo(
+  configStr: string,
+  useDirectPrivileges: boolean = false
+): Promise<boolean> {
   // Note: to avoid github rate limiting
   const token = core.getInput("token", { required: true });
   const auth = `token ${token}`;
 
   const variant = process.arch === "x64" ? "amd64" : "arm64";
   const downloadPath = await tc.downloadTool(
-    `https://github.com/step-security/agent-ebpf/releases/download/v1.8.14/harden-runner-bravo_1.8.14_linux_${variant}.tar.gz`,
+    `https://github.com/step-security/agent-ebpf/releases/download/v1.9.0/harden-runner-bravo_1.9.0_linux_${variant}.tar.gz`,
     undefined,
     auth
   );
@@ -93,11 +96,14 @@ export async function installAgentBravo(configStr: string): Promise<boolean> {
   fs.writeFileSync("/home/agent/agent.json", configStr);
 
   const logStream = fs.openSync("/home/agent/agent.stdout", "a");
-  const agentProcess = cp.spawn("sudo", ["/home/agent/agent"], {
+  const spawnOptions: cp.SpawnOptions = {
     cwd: "/home/agent",
     detached: true,
     stdio: ["ignore", logStream, logStream],
-  });
+  };
+  const agentProcess = useDirectPrivileges
+    ? cp.spawn("/home/agent/agent", [], spawnOptions)
+    : cp.spawn("sudo", ["/home/agent/agent"], spawnOptions);
   agentProcess.unref();
 
   const agentStatus = "/home/agent/agent.status";

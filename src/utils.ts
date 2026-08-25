@@ -28,14 +28,36 @@ export function getRunnerUser(): string | undefined {
   }
 }
 
-export function chownForFolder(newOwner: string | undefined, target: string) {
+// How the current process should obtain root privileges. Some runner
+// environments (e.g. AWS CodeBuild containers) run as root without the
+// sudo binary installed.
+export type PrivilegeMode = "root" | "sudo";
+
+export function getPrivilegeMode(): PrivilegeMode {
+  try {
+    if (os.userInfo().uid === 0) {
+      return "root";
+    }
+  } catch {
+    // fall through to sudo
+  }
+  return "sudo";
+}
+
+export function chownForFolder(
+  newOwner: string | undefined,
+  target: string,
+  useDirectPrivileges: boolean = false
+) {
   if (!newOwner) {
     console.log(`Unable to determine runner user; skipping chown of ${target}`);
     return;
   }
-  let cmd = "sudo";
-  let args = ["chown", "-R", newOwner, target];
-  cp.execFileSync(cmd, args);
+  if (useDirectPrivileges) {
+    cp.execFileSync("chown", ["-R", newOwner, target]);
+  } else {
+    cp.execFileSync("sudo", ["chown", "-R", newOwner, target]);
+  }
 }
 
 export function isAgentInstalled(platform: NodeJS.Platform) {
