@@ -22,7 +22,7 @@ jobs:
           egress-policy: audit
 
       - name: Checking out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Publish
         id: publish
         uses: actions/publish-immutable-action@0.0.4
