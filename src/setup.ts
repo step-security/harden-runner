@@ -540,8 +540,11 @@ async function resolveCacheHost(): Promise<string | undefined> {
   } catch (error) {
     core.setFailed(error.message);
   }
-  // see https://github.com/ruby/setup-ruby/issues/543
-  process.exit(0);
+  // Exit promptly rather than waiting on lingering handles, see
+  // https://github.com/ruby/setup-ruby/issues/543. No argument, so that the
+  // exit code core.setFailed has already set is preserved; passing 0 here
+  // overrides it and the pre-step reports success however it failed.
+  process.exit();
 })();
 
 export function sleep(ms: number) {
