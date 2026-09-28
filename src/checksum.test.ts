@@ -67,6 +67,11 @@ describe("verifyChecksum", () => {
       expect(verifyChecksum("/tmp/f", false, "amd64", "linux")).toBe(true);
     });
 
+    test("uses non_tls arm64 checksum when isTLS=false", () => {
+      stubHash(CHECKSUMS.non_tls.arm64);
+      expect(verifyChecksum("/tmp/f", false, "arm64", "linux")).toBe(true);
+    });
+
     test("TLS mismatch fails", () => {
       stubHash(CHECKSUMS.bravo.amd64);
       expect(verifyChecksum("/tmp/f", true, "amd64", "linux")).toBe(false);
