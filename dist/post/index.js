@@ -32336,9 +32336,6 @@ function handleAgentBravoCleanup() {
 }
 function handleLinuxCleanup() {
     return cleanup_awaiter(this, void 0, void 0, function* () {
-        if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
-            return;
-        }
         // If Pre-step crashed before installing the agent, /home/agent doesn't exist;
         // bail out instead of throwing ENOENT on the writeFileSync below.
         if (!external_fs_.existsSync("/home/agent")) {

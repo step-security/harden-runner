@@ -85586,7 +85586,8 @@ const CHECKSUMS = {
         arm64: "0e93ad693d562448fd62e322c8e165caba3de123c9cd631e2bdc2d4dbb4e091a", // v1.9.1
     },
     non_tls: {
-        amd64: "4fca42590557ad92e50bd99cf81eba527d0699ac05dd11dfb0c795f48ae63e26", // v0.16.3
+        amd64: "e0faa2687554ebd5629595bcd5531360781abe3e2746ef8ce5a030961a3acab0", // v0.17.0
+        arm64: "6b5739247c06179a280f2f9548dd3337d839d3cc83284b75ddbdd593ac1ea0d6", // v0.17.0
     },
     bravo: {
         amd64: "59ea6f0a488514b2d3feaf5b98fb445af9d2875f32acf5878d84c72e835a3425", // v1.9.1
@@ -85666,11 +85667,7 @@ function installAgent(isTLS, configStr) {
             downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.9.1/harden-runner_1.9.1_linux_${variant}.tar.gz`, undefined, auth);
         }
         else {
-            if (variant === "arm64") {
-                console.log(ARM64_RUNNER_MESSAGE);
-                return false;
-            }
-            downloadPath = yield tool_cache.downloadTool("https://github.com/step-security/agent/releases/download/v0.16.3/agent_0.16.3_linux_amd64.tar.gz", undefined, auth);
+            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent/releases/download/v0.17.0/agent_0.17.0_linux_${variant}.tar.gz`, undefined, auth);
         }
         if (!verifyChecksum(downloadPath, isTLS, variant, "linux")) {
             return false;

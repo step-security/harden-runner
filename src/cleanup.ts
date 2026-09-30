@@ -120,9 +120,6 @@ async function handleAgentBravoCleanup() {
 }
 
 async function handleLinuxCleanup() {
-  if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
-    return;
-  }
 
   // If Pre-step crashed before installing the agent, /home/agent doesn't exist;
   // bail out instead of throwing ENOENT on the writeFileSync below.
