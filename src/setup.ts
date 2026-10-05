@@ -635,7 +635,7 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
     if (!confg.is_ghes) {
       delete selfHostedConfig.server_name;
       delete selfHostedConfig.is_ghes;
-      delete confg.correlation_id;
+      delete selfHostedConfig.correlation_id;
 
     } else {
       console.log(

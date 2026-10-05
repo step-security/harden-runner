@@ -86453,7 +86453,7 @@ function installAgentForSelfHosted(owner, confg) {
             if (!confg.is_ghes) {
                 delete selfHostedConfig.server_name;
                 delete selfHostedConfig.is_ghes;
-                delete confg.correlation_id;
+                delete selfHostedConfig.correlation_id;
             }
             else {
                 console.log(`[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`);
