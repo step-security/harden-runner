@@ -355,8 +355,17 @@ async function resolveCacheHost(): Promise<string | undefined> {
         }
         core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
         confg.correlation_id = runnerName || confg.correlation_id;
-        await callMonitorEndpoint(api_url, confg);
-        const bravoConfigStr = JSON.stringify(buildBravoConfig(confg));
+        const ghesSelfHosted = confg.is_ghes && thirdPartyProvider === "codebuild";
+        if (ghesSelfHosted) {
+          if (!common.getGHESInputs(confg)) {
+            return;
+          }
+          fs.appendFileSync(process.env.GITHUB_STATE, `correlation_id=${confg.correlation_id}${EOL}`, { encoding: "utf8" });
+          console.log(`[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`);
+        } else {
+          await callMonitorEndpoint(api_url, confg);
+        }
+        const bravoConfigStr = JSON.stringify(buildBravoConfig(confg, ghesSelfHosted));
         switch (process.platform) {
           case "darwin": {
             const installed = await installMacosAgent(bravoConfigStr);

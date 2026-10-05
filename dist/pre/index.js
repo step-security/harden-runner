@@ -85889,25 +85889,18 @@ function installWindowsAgent(configStr) {
 }
 
 ;// CONCATENATED MODULE: ./src/bravo-config.ts
-function buildBravoConfig(confg) {
-    return {
-        repo: confg.repo,
-        run_id: confg.run_id,
-        correlation_id: confg.correlation_id,
-        working_directory: confg.working_directory,
-        api_url: confg.api_url,
-        telemetry_url: confg.telemetry_url,
-        one_time_key: confg.one_time_key,
-        allowed_endpoints: confg.allowed_endpoints,
-        denied_endpoints: confg.denied_endpoints,
-        egress_policy: confg.egress_policy,
-        disable_telemetry: confg.disable_telemetry,
-        disable_sudo: confg.disable_sudo,
-        disable_sudo_and_containers: confg.disable_sudo_and_containers,
-        disable_file_monitoring: confg.disable_file_monitoring,
-        private: confg.private,
-        is_github_hosted: true,
-    };
+
+// ghesSelfHosted runs the agent in GHES self-hosted mode: with no monitor call
+// there is no one-time key, so the agent registers its own runtime environment
+// and uploads raw events through the customer-scoped self-hosted VM path.
+function buildBravoConfig(confg, ghesSelfHosted = false) {
+    return Object.assign({ repo: confg.repo, run_id: confg.run_id, correlation_id: confg.correlation_id, working_directory: confg.working_directory, api_url: confg.api_url, telemetry_url: confg.telemetry_url, one_time_key: confg.one_time_key, allowed_endpoints: confg.allowed_endpoints, denied_endpoints: confg.denied_endpoints, egress_policy: confg.egress_policy, disable_telemetry: confg.disable_telemetry, disable_sudo: confg.disable_sudo, disable_sudo_and_containers: confg.disable_sudo_and_containers, disable_file_monitoring: confg.disable_file_monitoring, private: confg.private, is_github_hosted: !ghesSelfHosted }, (ghesSelfHosted && {
+        customer: confg.customer,
+        server_name: confg.server_name,
+        is_ghes: true,
+        is_persistent: false,
+        api_key: v4(),
+    }));
 }
 
 ;// CONCATENATED MODULE: ./src/setup.ts
@@ -86214,8 +86207,18 @@ function resolveCacheHost() {
                 }
                 lib_core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
                 confg.correlation_id = runnerName || confg.correlation_id;
-                yield callMonitorEndpoint(api_url, confg);
-                const bravoConfigStr = JSON.stringify(buildBravoConfig(confg));
+                const ghesSelfHosted = confg.is_ghes && thirdPartyProvider === "codebuild";
+                if (ghesSelfHosted) {
+                    if (!getGHESInputs(confg)) {
+                        return;
+                    }
+                    external_fs_.appendFileSync(process.env.GITHUB_STATE, `correlation_id=${confg.correlation_id}${external_os_.EOL}`, { encoding: "utf8" });
+                    console.log(`[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`);
+                }
+                else {
+                    yield callMonitorEndpoint(api_url, confg);
+                }
+                const bravoConfigStr = JSON.stringify(buildBravoConfig(confg, ghesSelfHosted));
                 switch (process.platform) {
                     case "darwin": {
                         const installed = yield installMacosAgent(bravoConfigStr);

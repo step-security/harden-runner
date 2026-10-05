@@ -85,3 +85,31 @@ describe("buildBravoConfig", () => {
     expect(cfg.disable_file_monitoring).toBe(true);
   });
 });
+
+describe("buildBravoConfig in GHES self-hosted mode", () => {
+  const ghes: Configuration = {
+    ...base,
+    is_ghes: true,
+    customer: "example-customer",
+    server_name: "example-server",
+  };
+
+  test("fills GHES identity and runs the agent as self-hosted", () => {
+    const cfg = buildBravoConfig(ghes, true);
+    expect(cfg.customer).toBe("example-customer");
+    expect(cfg.server_name).toBe("example-server");
+    expect(cfg.is_ghes).toBe(true);
+    expect(cfg.is_github_hosted).toBe(false);
+    expect(cfg.is_persistent).toBe(false);
+    expect(cfg.api_key).toBeTruthy();
+    expect(cfg.api_key).not.toBe(base.api_key);
+  });
+
+  test("keeps the github.com shape when not enabled", () => {
+    const cfg = buildBravoConfig(ghes);
+    expect(cfg.is_github_hosted).toBe(true);
+    for (const key of ["customer", "server_name", "is_ghes", "is_persistent", "api_key"]) {
+      expect(cfg).not.toHaveProperty(key);
+    }
+  });
+});
