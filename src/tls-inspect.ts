@@ -1,16 +1,11 @@
 import { STEPSECURITY_API_URL } from "./configs";
 import * as core from "@actions/core";
-import { getGHESInputs, isGHES } from "./common";
+import { getQualifiedOwner } from "./common";
 
 export async function isTLSEnabled(owner: string): Promise<boolean> {
-  let tlsStatusOwner = owner;
-  if (isGHES()) {
-    const inputs = getGHESInputs();
-    if (!inputs) {
-      return false;
-    }
-
-    tlsStatusOwner = `${inputs.customer}::${inputs.server_name}::${owner}`;
+  const tlsStatusOwner = getQualifiedOwner(owner);
+  if (!tlsStatusOwner) {
+    return false;
   }
 
   const tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${tlsStatusOwner}/actions/tls-inspection-status`;

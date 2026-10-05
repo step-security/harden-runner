@@ -631,6 +631,9 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
       console.log(
         `[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`,
       );
+      fs.appendFileSync(process.env.GITHUB_STATE, `correlation_id=${confg.correlation_id}${EOL}`, {
+        encoding: "utf8",
+      });
       selfHostedConfig["repo"] = confg.repo;
       selfHostedConfig["run_id"] = confg.run_id;
     }
@@ -707,14 +710,10 @@ export async function installAgentForBravo(
 }
 
 function getPolicyOwner(owner: string, confg: Configuration): string {
-  if (!confg.is_ghes) {
-    return owner;
-  }
-
-  const inputs = common.getGHESInputs(confg);
-  if (!inputs) {
+  const policyOwner = common.getQualifiedOwner(owner, confg);
+  if (!policyOwner) {
     throw new Error("GHES policy owner requires customer and server-name inputs.");
   }
 
-  return `${inputs.customer}::${inputs.server_name}::${owner}`;
+  return policyOwner;
 }

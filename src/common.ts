@@ -3,13 +3,9 @@ import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
 import { getAnnotationLogs } from "./utils";
 
 export function printInfo(web_url) {
-  let repository = process.env["GITHUB_REPOSITORY"];
-  if (isGHES()) {
-    const inputs = getGHESInputs();
-    if (!inputs) {
-      return;
-    }
-    repository = `${inputs.customer}::${inputs.server_name}::${repository}`;
+  const repository = getQualifiedOwner(process.env["GITHUB_REPOSITORY"]);
+  if (!repository) {
+    return;
   }
 
   console.log(
@@ -64,7 +60,8 @@ export const processLogLine = (
 };
 
 export async function addSummary() {
-  if (process.env.STATE_addSummary !== "true") {
+  const ghesSelfHosted = isGHES() && process.env.STATE_selfHosted === "true";
+  if (!ghesSelfHosted && process.env.STATE_addSummary !== "true") {
     return;
   }
 
@@ -114,8 +111,13 @@ export async function addSummary() {
     return;
   }
 
+  const summaryOwner = getQualifiedOwner(owner);
+  if (!summaryOwner) {
+    return;
+  }
+
   // Fetch job summary from API
-  const apiUrl = `${STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/runs/${run_id}/correlation/${correlation_id}/job-markdown-summary`;
+  const apiUrl = `${STEPSECURITY_API_URL}/github/${summaryOwner}/${repo}/actions/runs/${run_id}/correlation/${correlation_id}/job-markdown-summary`;
 
   try {
     const response = await fetch(apiUrl, {
@@ -180,4 +182,20 @@ export function getGHESInputs(
   }
 
   return { customer, server_name };
+}
+
+export function getQualifiedOwner(
+  owner: string,
+  options?: { is_ghes?: boolean; customer?: string; server_name?: string }
+): string | undefined {
+  if (!(options?.is_ghes ?? isGHES())) {
+    return owner;
+  }
+
+  const inputs = getGHESInputs(options);
+  if (!inputs) {
+    return undefined;
+  }
+
+  return `${inputs.customer}::${inputs.server_name}::${owner}`;
 }

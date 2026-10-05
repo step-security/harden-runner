@@ -85190,13 +85190,9 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 function printInfo(web_url) {
-    let repository = process.env["GITHUB_REPOSITORY"];
-    if (isGHES()) {
-        const inputs = getGHESInputs();
-        if (!inputs) {
-            return;
-        }
-        repository = `${inputs.customer}::${inputs.server_name}::${repository}`;
+    const repository = getQualifiedOwner(process.env["GITHUB_REPOSITORY"]);
+    if (!repository) {
+        return;
     }
     console.log("\x1b[32m%s\x1b[0m", "View security insights and recommended policy at:");
     console.log(`${web_url}/github/${repository}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
@@ -85227,7 +85223,8 @@ const processLogLine = (line, tableEntries) => {
 function addSummary() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
-        if (process.env.STATE_addSummary !== "true") {
+        const ghesSelfHosted = isGHES() && process.env.STATE_selfHosted === "true";
+        if (!ghesSelfHosted && process.env.STATE_addSummary !== "true") {
             return;
         }
         const correlation_id = process.env.STATE_correlation_id;
@@ -85264,8 +85261,12 @@ function addSummary() {
         if (!owner || !repo || !run_id || !correlation_id) {
             return;
         }
+        const summaryOwner = getQualifiedOwner(owner);
+        if (!summaryOwner) {
+            return;
+        }
         // Fetch job summary from API
-        const apiUrl = `${STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/runs/${run_id}/correlation/${correlation_id}/job-markdown-summary`;
+        const apiUrl = `${STEPSECURITY_API_URL}/github/${summaryOwner}/${repo}/actions/runs/${run_id}/correlation/${correlation_id}/job-markdown-summary`;
         try {
             const response = yield fetch(apiUrl, {
                 signal: AbortSignal.timeout(3000),
@@ -85307,6 +85308,17 @@ function getGHESInputs(inputs = {
         return undefined;
     }
     return { customer, server_name };
+}
+function getQualifiedOwner(owner, options) {
+    var _a;
+    if (!((_a = options === null || options === void 0 ? void 0 : options.is_ghes) !== null && _a !== void 0 ? _a : isGHES())) {
+        return owner;
+    }
+    const inputs = getGHESInputs(options);
+    if (!inputs) {
+        return undefined;
+    }
+    return `${inputs.customer}::${inputs.server_name}::${owner}`;
 }
 
 ;// CONCATENATED MODULE: external "node:fs"
@@ -85571,13 +85583,9 @@ var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisAr
 
 function isTLSEnabled(owner) {
     return tls_inspect_awaiter(this, void 0, void 0, function* () {
-        let tlsStatusOwner = owner;
-        if (isGHES()) {
-            const inputs = getGHESInputs();
-            if (!inputs) {
-                return false;
-            }
-            tlsStatusOwner = `${inputs.customer}::${inputs.server_name}::${owner}`;
+        const tlsStatusOwner = getQualifiedOwner(owner);
+        if (!tlsStatusOwner) {
+            return false;
         }
         const tlsStatusEndpoint = `${configs_STEPSECURITY_API_URL}/github/${tlsStatusOwner}/actions/tls-inspection-status`;
         lib_core.info(`[!] Checking TLS_STATUS: ${owner}`);
@@ -86454,6 +86462,9 @@ function installAgentForSelfHosted(owner, confg) {
             }
             else {
                 console.log(`[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`);
+                external_fs_.appendFileSync(process.env.GITHUB_STATE, `correlation_id=${confg.correlation_id}${external_os_.EOL}`, {
+                    encoding: "utf8",
+                });
                 selfHostedConfig["repo"] = confg.repo;
                 selfHostedConfig["run_id"] = confg.run_id;
             }
@@ -86518,14 +86529,11 @@ function installAgentForBravo(owner, bravoConfigStr, provider) {
     });
 }
 function getPolicyOwner(owner, confg) {
-    if (!confg.is_ghes) {
-        return owner;
-    }
-    const inputs = getGHESInputs(confg);
-    if (!inputs) {
+    const policyOwner = getQualifiedOwner(owner, confg);
+    if (!policyOwner) {
         throw new Error("GHES policy owner requires customer and server-name inputs.");
     }
-    return `${inputs.customer}::${inputs.server_name}::${owner}`;
+    return policyOwner;
 }
 
 })();
