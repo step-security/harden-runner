@@ -3,13 +3,22 @@ import { STEPSECURITY_API_URL, STEPSECURITY_WEB_URL } from "./configs";
 import { getAnnotationLogs } from "./utils";
 
 export function printInfo(web_url) {
+  let repository = process.env["GITHUB_REPOSITORY"];
+  if (isGHES()) {
+    const inputs = getGHESInputs();
+    if (!inputs) {
+      return;
+    }
+    repository = `${inputs.customer}::${inputs.server_name}::${repository}`;
+  }
+
   console.log(
     "\x1b[32m%s\x1b[0m",
     "View security insights and recommended policy at:"
   );
 
   console.log(
-    `${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`
+    `${web_url}/github/${repository}/actions/runs/${process.env["GITHUB_RUN_ID"]}`
   );
 }
 
@@ -153,3 +162,22 @@ export const ARM64_WINDOWS_RUNNER_MESSAGE =
 
 export const UBUNTU_SLIM_MESSAGE =
   "This job is running on an ubuntu-slim runner. Harden Runner is not supported on ubuntu-slim runners. This job will not be monitored.";
+
+export function isGHES(serverUrl = process.env.GITHUB_SERVER_URL || "https://github.com") {
+  return serverUrl !== "https://github.com";
+}
+
+export function getGHESInputs(
+  inputs: { customer?: string; server_name?: string } = {
+    customer: core.getInput("customer"),
+    server_name: core.getInput("server-name"),
+  }
+): { customer: string; server_name: string } | undefined {
+  const { customer, server_name } = inputs;
+  if (!customer || !server_name) {
+    core.info("customer and server-name inputs are required in GitHub Enterprise Server (GHES) environments.");
+    return undefined;
+  }
+
+  return { customer, server_name };
+}

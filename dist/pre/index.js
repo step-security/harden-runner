@@ -85190,8 +85190,16 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 function printInfo(web_url) {
+    let repository = process.env["GITHUB_REPOSITORY"];
+    if (isGHES()) {
+        const inputs = getGHESInputs();
+        if (!inputs) {
+            return;
+        }
+        repository = `${inputs.customer}::${inputs.server_name}::${repository}`;
+    }
     console.log("\x1b[32m%s\x1b[0m", "View security insights and recommended policy at:");
-    console.log(`${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
+    console.log(`${web_url}/github/${repository}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
 }
 const processLogLine = (line, tableEntries) => {
     if (line.includes("pid") &&
@@ -85286,6 +85294,20 @@ const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based ru
 const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner community tier.";
 const ARM64_WINDOWS_RUNNER_MESSAGE = "Windows ARM runners are not yet supported by Harden-Runner.";
 const UBUNTU_SLIM_MESSAGE = "This job is running on an ubuntu-slim runner. Harden Runner is not supported on ubuntu-slim runners. This job will not be monitored.";
+function isGHES(serverUrl = process.env.GITHUB_SERVER_URL || "https://github.com") {
+    return serverUrl !== "https://github.com";
+}
+function getGHESInputs(inputs = {
+    customer: lib_core.getInput("customer"),
+    server_name: lib_core.getInput("server-name"),
+}) {
+    const { customer, server_name } = inputs;
+    if (!customer || !server_name) {
+        lib_core.info("customer and server-name inputs are required in GitHub Enterprise Server (GHES) environments.");
+        return undefined;
+    }
+    return { customer, server_name };
+}
 
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = require("node:fs");
@@ -85546,9 +85568,18 @@ var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisAr
 };
 
 
+
 function isTLSEnabled(owner) {
     return tls_inspect_awaiter(this, void 0, void 0, function* () {
-        const tlsStatusEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
+        let tlsStatusOwner = owner;
+        if (isGHES()) {
+            const inputs = getGHESInputs();
+            if (!inputs) {
+                return false;
+            }
+            tlsStatusOwner = `${inputs.customer}::${inputs.server_name}::${owner}`;
+        }
+        const tlsStatusEndpoint = `${configs_STEPSECURITY_API_URL}/github/${tlsStatusOwner}/actions/tls-inspection-status`;
         lib_core.info(`[!] Checking TLS_STATUS: ${owner}`);
         try {
             const resp = yield fetch(tlsStatusEndpoint, {
@@ -85582,16 +85613,16 @@ var external_crypto_ = __nccwpck_require__(6982);
 
 const CHECKSUMS = {
     tls: {
-        amd64: "b4efa8356de128c3daba6a7e334779877faafb08b49f9a4ef4152826c66ff4c2", // v1.9.1
-        arm64: "0e93ad693d562448fd62e322c8e165caba3de123c9cd631e2bdc2d4dbb4e091a", // v1.9.1
+        amd64: "2d052e2373a412b342480019f5cf847f84a2f9f8aca86a15acab2e8c3152beb9", // v1.9.3
+        arm64: "4918db19e07a7b511aea665c7b808c72cd1be9cd9ea4deb41b4d6f41f702e5e7", // v1.9.3
     },
     non_tls: {
         amd64: "e0faa2687554ebd5629595bcd5531360781abe3e2746ef8ce5a030961a3acab0", // v0.17.0
         arm64: "6b5739247c06179a280f2f9548dd3337d839d3cc83284b75ddbdd593ac1ea0d6", // v0.17.0
     },
     bravo: {
-        amd64: "59ea6f0a488514b2d3feaf5b98fb445af9d2875f32acf5878d84c72e835a3425", // v1.9.1
-        arm64: "0b1544370b89adee80f71cc0e9bed6dcc46fe3aa410338f9a305b892a194ebb8", // v1.9.1
+        amd64: "995c1157c2764d2b09ba369fc2583104096cfb9a40c09af4b00b77e32651216b", // v1.9.3
+        arm64: "f52555c8ab659a8a9b870fd3b8e820c064e235e3c34e83adf30db4b46e6a2efb", // v1.9.3
     },
     darwin: "da83f8b446067b9db72aa896f6cec71f1a073015bcf585e63a1d9e0a14c21910", // v0.0.7
     windows: {
@@ -85664,7 +85695,7 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.9.1/harden-runner_1.9.1_linux_${variant}.tar.gz`, undefined, auth);
+            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.9.3/harden-runner_1.9.3_linux_${variant}.tar.gz`, undefined, auth);
         }
         else {
             downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent/releases/download/v0.17.0/agent_0.17.0_linux_${variant}.tar.gz`, undefined, auth);
@@ -85695,7 +85726,7 @@ function installAgentBravo(configStr_1) {
         const token = lib_core.getInput("token", { required: true });
         const auth = `token ${token}`;
         const variant = process.arch === "x64" ? "amd64" : "arm64";
-        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.9.1/harden-runner-bravo_1.9.1_linux_${variant}.tar.gz`, undefined, auth);
+        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.9.3/harden-runner-bravo_1.9.3_linux_${variant}.tar.gz`, undefined, auth);
         if (!verifyChecksum(downloadPath, true, variant, "linux", "bravo")) {
             return false;
         }
@@ -85858,25 +85889,18 @@ function installWindowsAgent(configStr) {
 }
 
 ;// CONCATENATED MODULE: ./src/bravo-config.ts
-function buildBravoConfig(confg) {
-    return {
-        repo: confg.repo,
-        run_id: confg.run_id,
-        correlation_id: confg.correlation_id,
-        working_directory: confg.working_directory,
-        api_url: confg.api_url,
-        telemetry_url: confg.telemetry_url,
-        one_time_key: confg.one_time_key,
-        allowed_endpoints: confg.allowed_endpoints,
-        denied_endpoints: confg.denied_endpoints,
-        egress_policy: confg.egress_policy,
-        disable_telemetry: confg.disable_telemetry,
-        disable_sudo: confg.disable_sudo,
-        disable_sudo_and_containers: confg.disable_sudo_and_containers,
-        disable_file_monitoring: confg.disable_file_monitoring,
-        private: confg.private,
-        is_github_hosted: true,
-    };
+
+// ghesSelfHosted runs the agent in GHES self-hosted mode: with no monitor call
+// there is no one-time key, so the agent registers its own runtime environment
+// and uploads raw events through the customer-scoped self-hosted VM path.
+function buildBravoConfig(confg, ghesSelfHosted = false) {
+    return Object.assign({ repo: confg.repo, run_id: confg.run_id, correlation_id: confg.correlation_id, working_directory: confg.working_directory, api_url: confg.api_url, telemetry_url: confg.telemetry_url, one_time_key: confg.one_time_key, allowed_endpoints: confg.allowed_endpoints, denied_endpoints: confg.denied_endpoints, egress_policy: confg.egress_policy, disable_telemetry: confg.disable_telemetry, disable_sudo: confg.disable_sudo, disable_sudo_and_containers: confg.disable_sudo_and_containers, disable_file_monitoring: confg.disable_file_monitoring, private: confg.private, is_github_hosted: !ghesSelfHosted }, (ghesSelfHosted && {
+        customer: confg.customer,
+        server_name: confg.server_name,
+        is_ghes: true,
+        is_persistent: false,
+        api_key: v4(),
+    }));
 }
 
 ;// CONCATENATED MODULE: ./src/setup.ts
@@ -86047,6 +86071,9 @@ function resolveCacheHost() {
             api_key: lib_core.getInput("api-key"),
             use_policy_store: lib_core.getBooleanInput("use-policy-store"),
             deploy_on_self_hosted_vm: lib_core.getBooleanInput("deploy-on-self-hosted-vm"),
+            customer: lib_core.getInput("customer"),
+            server_name: lib_core.getInput("server-name"),
+            is_ghes: isGHES(),
         };
         if (confg.api_key !== "") {
             lib_core.setSecret(confg.api_key);
@@ -86060,10 +86087,11 @@ function resolveCacheHost() {
             }
             else {
                 try {
+                    const policyOwner = getPolicyOwner(github.context.repo.owner, confg);
                     const repoName = (process.env["GITHUB_REPOSITORY"] || "").split("/")[1] || "";
                     const workflowRef = process.env["GITHUB_WORKFLOW_REF"] || "";
                     const workflow = workflowRef.replace(/.*\.github\/workflows\//, "").replace(/@.*/, "");
-                    let result = yield fetchPolicyFromStore(github.context.repo.owner, repoName, confg.api_key, workflow, confg.run_id, confg.correlation_id);
+                    let result = yield fetchPolicyFromStore(policyOwner, repoName, confg.api_key, workflow, confg.run_id, confg.correlation_id);
                     if (result !== null) {
                         lib_core.info(`Policy found: ${result.policy_name || "unnamed"}`);
                         confg = mergeConfigs(confg, result);
@@ -86089,8 +86117,9 @@ function resolveCacheHost() {
         else if (policyName !== "") {
             console.log(`Fetching policy from API with name: ${policyName}`);
             try {
+                const policyOwner = getPolicyOwner(github.context.repo.owner, confg);
                 let idToken = yield lib_core.getIDToken();
-                let result = yield fetchPolicy(github.context.repo.owner, policyName, idToken);
+                let result = yield fetchPolicy(policyOwner, policyName, idToken);
                 confg = mergeConfigs(confg, result);
             }
             catch (err) {
@@ -86178,8 +86207,18 @@ function resolveCacheHost() {
                 }
                 lib_core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
                 confg.correlation_id = runnerName || confg.correlation_id;
-                yield callMonitorEndpoint(api_url, confg);
-                const bravoConfigStr = JSON.stringify(buildBravoConfig(confg));
+                const ghesSelfHosted = confg.is_ghes && thirdPartyProvider === "codebuild";
+                if (ghesSelfHosted) {
+                    if (!getGHESInputs(confg)) {
+                        return;
+                    }
+                    external_fs_.appendFileSync(process.env.GITHUB_STATE, `correlation_id=${confg.correlation_id}${external_os_.EOL}`, { encoding: "utf8" });
+                    console.log(`[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`);
+                }
+                else {
+                    yield callMonitorEndpoint(api_url, confg);
+                }
+                const bravoConfigStr = JSON.stringify(buildBravoConfig(confg, ghesSelfHosted));
                 switch (process.platform) {
                     case "darwin": {
                         const installed = yield installMacosAgent(bravoConfigStr);
@@ -86279,6 +86318,11 @@ function resolveCacheHost() {
             return;
         }
         const { api_key, use_policy_store } = confg, agentConfig = __rest(confg, ["api_key", "use_policy_store"]);
+        if (!confg.is_ghes) {
+            delete agentConfig.customer;
+            delete agentConfig.server_name;
+            delete agentConfig.is_ghes;
+        }
         const configStr = JSON.stringify(agentConfig);
         // platform specific
         let statusFile = "";
@@ -86380,6 +86424,9 @@ function installAgentForSelfHosted(owner, confg) {
     return setup_awaiter(this, void 0, void 0, function* () {
         try {
             console.log("Installing Harden Runner agent for self-hosted runner");
+            if (confg.is_ghes && !getGHESInputs(confg)) {
+                return;
+            }
             let isTLS = yield isTLSEnabled(owner);
             if (!isTLS) {
                 console.log("TLS is not enabled for this organization. Agent installation skipped for self-hosted runner.");
@@ -86389,6 +86436,7 @@ function installAgentForSelfHosted(owner, confg) {
                 customer: owner,
                 working_directory: confg.working_directory,
                 api_url: confg.api_url,
+                telemetry_url: confg.telemetry_url,
                 api_key: v4(),
                 allowed_endpoints: confg.allowed_endpoints,
                 denied_endpoints: confg.denied_endpoints,
@@ -86399,6 +86447,15 @@ function installAgentForSelfHosted(owner, confg) {
                 disable_file_monitoring: confg.disable_file_monitoring,
                 is_github_hosted: false,
             };
+            if (confg.is_ghes) {
+                selfHostedConfig["customer"] = confg.customer;
+                selfHostedConfig["server_name"] = confg.server_name;
+                selfHostedConfig["is_ghes"] = confg.is_ghes;
+                selfHostedConfig["correlation_id"] = confg.correlation_id;
+                selfHostedConfig["repo"] = confg.repo;
+                selfHostedConfig["run_id"] = confg.run_id;
+                console.log(`[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`);
+            }
             const selfHostedConfigStr = JSON.stringify(selfHostedConfig);
             external_child_process_.execSync("sudo mkdir -p /home/agent");
             chownForFolder(getRunnerUser(), "/home/agent");
@@ -86458,6 +86515,16 @@ function installAgentForBravo(owner, bravoConfigStr, provider) {
             console.log(`Failed to install bravo agent: ${error.message}`);
         }
     });
+}
+function getPolicyOwner(owner, confg) {
+    if (!confg.is_ghes) {
+        return owner;
+    }
+    const inputs = getGHESInputs(confg);
+    if (!inputs) {
+        throw new Error("GHES policy owner requires customer and server-name inputs.");
+    }
+    return `${inputs.customer}::${inputs.server_name}::${owner}`;
 }
 
 })();
