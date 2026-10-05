@@ -86437,6 +86437,7 @@ function installAgentForSelfHosted(owner, confg) {
                 server_name: confg.server_name,
                 is_ghes: confg.is_ghes,
                 working_directory: confg.working_directory,
+                correlation_id: confg.correlation_id,
                 api_url: confg.api_url,
                 telemetry_url: confg.telemetry_url,
                 api_key: v4(),
