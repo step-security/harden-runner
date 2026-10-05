@@ -22,6 +22,7 @@ const base: Configuration = {
   api_key: "tenant-key",
   use_policy_store: false,
   deploy_on_self_hosted_vm: false,
+  is_ghes: false,
 };
 
 describe("buildBravoConfig", () => {

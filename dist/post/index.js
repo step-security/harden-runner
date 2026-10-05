@@ -32094,6 +32094,20 @@ const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based ru
 const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner community tier.";
 const ARM64_WINDOWS_RUNNER_MESSAGE = "Windows ARM runners are not yet supported by Harden-Runner.";
 const UBUNTU_SLIM_MESSAGE = "This job is running on an ubuntu-slim runner. Harden Runner is not supported on ubuntu-slim runners. This job will not be monitored.";
+function common_isGHES(serverUrl = process.env.GITHUB_SERVER_URL || "https://github.com") {
+    return serverUrl !== "https://github.com";
+}
+function common_getGHESInputs(inputs = {
+    customer: lib_core.getInput("customer"),
+    server_name: lib_core.getInput("server-name"),
+}) {
+    const { customer, server_name } = inputs;
+    if (!customer || !server_name) {
+        lib_core.info("customer and server-name inputs are required in GitHub Enterprise Server (GHES) environments.");
+        return undefined;
+    }
+    return { customer, server_name };
+}
 
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(6928);
@@ -32188,9 +32202,18 @@ var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisAr
 };
 
 
+
 function isTLSEnabled(owner) {
     return tls_inspect_awaiter(this, void 0, void 0, function* () {
-        const tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
+        let tlsStatusOwner = owner;
+        if (isGHES()) {
+            const inputs = getGHESInputs();
+            if (!inputs) {
+                return false;
+            }
+            tlsStatusOwner = `${inputs.customer}::${inputs.server_name}::${owner}`;
+        }
+        const tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${tlsStatusOwner}/actions/tls-inspection-status`;
         core.info(`[!] Checking TLS_STATUS: ${owner}`);
         try {
             const resp = yield fetch(tlsStatusEndpoint, {
@@ -32267,8 +32290,16 @@ process.on("unhandledRejection", (reason) => {
         return;
     }
     const thirdPartyProvider = detectThirdPartyRunnerProvider();
+    // Self-hosted runners have no post step; a pre-baked agent is driven by the
+    // runner's job hooks instead. GHES is the exception: the agent has no hooks
+    // there, so the post step drives the event upload and prints the agent log.
     if (process.env.STATE_selfHosted === "true") {
-        return;
+        if (!common_isGHES()) {
+            return;
+        }
+        if (!common_getGHESInputs()) {
+            return;
+        }
     }
     if (process.env.STATE_customVMImage === "true") {
         return;

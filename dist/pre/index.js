@@ -85286,6 +85286,20 @@ const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based ru
 const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner community tier.";
 const ARM64_WINDOWS_RUNNER_MESSAGE = "Windows ARM runners are not yet supported by Harden-Runner.";
 const UBUNTU_SLIM_MESSAGE = "This job is running on an ubuntu-slim runner. Harden Runner is not supported on ubuntu-slim runners. This job will not be monitored.";
+function isGHES(serverUrl = process.env.GITHUB_SERVER_URL || "https://github.com") {
+    return serverUrl !== "https://github.com";
+}
+function getGHESInputs(inputs = {
+    customer: lib_core.getInput("customer"),
+    server_name: lib_core.getInput("server-name"),
+}) {
+    const { customer, server_name } = inputs;
+    if (!customer || !server_name) {
+        lib_core.info("customer and server-name inputs are required in GitHub Enterprise Server (GHES) environments.");
+        return undefined;
+    }
+    return { customer, server_name };
+}
 
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = require("node:fs");
@@ -85546,9 +85560,18 @@ var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisAr
 };
 
 
+
 function isTLSEnabled(owner) {
     return tls_inspect_awaiter(this, void 0, void 0, function* () {
-        const tlsStatusEndpoint = `${configs_STEPSECURITY_API_URL}/github/${owner}/actions/tls-inspection-status`;
+        let tlsStatusOwner = owner;
+        if (isGHES()) {
+            const inputs = getGHESInputs();
+            if (!inputs) {
+                return false;
+            }
+            tlsStatusOwner = `${inputs.customer}::${inputs.server_name}::${owner}`;
+        }
+        const tlsStatusEndpoint = `${configs_STEPSECURITY_API_URL}/github/${tlsStatusOwner}/actions/tls-inspection-status`;
         lib_core.info(`[!] Checking TLS_STATUS: ${owner}`);
         try {
             const resp = yield fetch(tlsStatusEndpoint, {
@@ -86047,6 +86070,9 @@ function resolveCacheHost() {
             api_key: lib_core.getInput("api-key"),
             use_policy_store: lib_core.getBooleanInput("use-policy-store"),
             deploy_on_self_hosted_vm: lib_core.getBooleanInput("deploy-on-self-hosted-vm"),
+            customer: lib_core.getInput("customer"),
+            server_name: lib_core.getInput("server-name"),
+            is_ghes: isGHES(),
         };
         if (confg.api_key !== "") {
             lib_core.setSecret(confg.api_key);
@@ -86060,10 +86086,11 @@ function resolveCacheHost() {
             }
             else {
                 try {
+                    const policyOwner = getPolicyOwner(github.context.repo.owner, confg);
                     const repoName = (process.env["GITHUB_REPOSITORY"] || "").split("/")[1] || "";
                     const workflowRef = process.env["GITHUB_WORKFLOW_REF"] || "";
                     const workflow = workflowRef.replace(/.*\.github\/workflows\//, "").replace(/@.*/, "");
-                    let result = yield fetchPolicyFromStore(github.context.repo.owner, repoName, confg.api_key, workflow, confg.run_id, confg.correlation_id);
+                    let result = yield fetchPolicyFromStore(policyOwner, repoName, confg.api_key, workflow, confg.run_id, confg.correlation_id);
                     if (result !== null) {
                         lib_core.info(`Policy found: ${result.policy_name || "unnamed"}`);
                         confg = mergeConfigs(confg, result);
@@ -86089,8 +86116,9 @@ function resolveCacheHost() {
         else if (policyName !== "") {
             console.log(`Fetching policy from API with name: ${policyName}`);
             try {
+                const policyOwner = getPolicyOwner(github.context.repo.owner, confg);
                 let idToken = yield lib_core.getIDToken();
-                let result = yield fetchPolicy(github.context.repo.owner, policyName, idToken);
+                let result = yield fetchPolicy(policyOwner, policyName, idToken);
                 confg = mergeConfigs(confg, result);
             }
             catch (err) {
@@ -86279,6 +86307,11 @@ function resolveCacheHost() {
             return;
         }
         const { api_key, use_policy_store } = confg, agentConfig = __rest(confg, ["api_key", "use_policy_store"]);
+        if (!confg.is_ghes) {
+            delete agentConfig.customer;
+            delete agentConfig.server_name;
+            delete agentConfig.is_ghes;
+        }
         const configStr = JSON.stringify(agentConfig);
         // platform specific
         let statusFile = "";
@@ -86380,15 +86413,22 @@ function installAgentForSelfHosted(owner, confg) {
     return setup_awaiter(this, void 0, void 0, function* () {
         try {
             console.log("Installing Harden Runner agent for self-hosted runner");
+            if (confg.is_ghes && !getGHESInputs(confg)) {
+                return;
+            }
             let isTLS = yield isTLSEnabled(owner);
             if (!isTLS) {
                 console.log("TLS is not enabled for this organization. Agent installation skipped for self-hosted runner.");
                 return;
             }
             const selfHostedConfig = {
-                customer: owner,
+                customer: confg.customer || owner,
+                server_name: confg.server_name,
+                is_ghes: confg.is_ghes,
+                correlation_id: confg.correlation_id,
                 working_directory: confg.working_directory,
                 api_url: confg.api_url,
+                telemetry_url: confg.telemetry_url,
                 api_key: v4(),
                 allowed_endpoints: confg.allowed_endpoints,
                 denied_endpoints: confg.denied_endpoints,
@@ -86398,7 +86438,17 @@ function installAgentForSelfHosted(owner, confg) {
                 disable_sudo_and_containers: confg.disable_sudo_and_containers,
                 disable_file_monitoring: confg.disable_file_monitoring,
                 is_github_hosted: false,
+                is_persistent: !confg.is_ghes,
             };
+            if (!confg.is_ghes) {
+                delete selfHostedConfig.server_name;
+                delete selfHostedConfig.is_ghes;
+            }
+            else {
+                console.log(`[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`);
+                selfHostedConfig["repo"] = confg.repo;
+                selfHostedConfig["run_id"] = confg.run_id;
+            }
             const selfHostedConfigStr = JSON.stringify(selfHostedConfig);
             external_child_process_.execSync("sudo mkdir -p /home/agent");
             chownForFolder(getRunnerUser(), "/home/agent");
@@ -86458,6 +86508,16 @@ function installAgentForBravo(owner, bravoConfigStr, provider) {
             console.log(`Failed to install bravo agent: ${error.message}`);
         }
     });
+}
+function getPolicyOwner(owner, confg) {
+    if (!confg.is_ghes) {
+        return owner;
+    }
+    const inputs = getGHESInputs(confg);
+    if (!inputs) {
+        throw new Error("GHES policy owner requires customer and server-name inputs.");
+    }
+    return `${inputs.customer}::${inputs.server_name}::${owner}`;
 }
 
 })();
