@@ -86433,11 +86433,8 @@ function installAgentForSelfHosted(owner, confg) {
                 return;
             }
             const selfHostedConfig = {
-                customer: confg.customer || owner,
-                server_name: confg.server_name,
-                is_ghes: confg.is_ghes,
+                customer: owner,
                 working_directory: confg.working_directory,
-                correlation_id: confg.correlation_id,
                 api_url: confg.api_url,
                 telemetry_url: confg.telemetry_url,
                 api_key: v4(),
@@ -86450,15 +86447,14 @@ function installAgentForSelfHosted(owner, confg) {
                 disable_file_monitoring: confg.disable_file_monitoring,
                 is_github_hosted: false,
             };
-            if (!confg.is_ghes) {
-                delete selfHostedConfig.server_name;
-                delete selfHostedConfig.is_ghes;
-                delete selfHostedConfig.correlation_id;
-            }
-            else {
-                console.log(`[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`);
+            if (confg.is_ghes) {
+                selfHostedConfig["customer"] = confg.customer;
+                selfHostedConfig["server_name"] = confg.server_name;
+                selfHostedConfig["is_ghes"] = confg.is_ghes;
+                selfHostedConfig["correlation_id"] = confg.correlation_id;
                 selfHostedConfig["repo"] = confg.repo;
                 selfHostedConfig["run_id"] = confg.run_id;
+                console.log(`[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`);
             }
             const selfHostedConfigStr = JSON.stringify(selfHostedConfig);
             external_child_process_.execSync("sudo mkdir -p /home/agent");
