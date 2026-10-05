@@ -85190,8 +85190,16 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 function printInfo(web_url) {
+    let repository = process.env["GITHUB_REPOSITORY"];
+    if (isGHES()) {
+        const inputs = getGHESInputs();
+        if (!inputs) {
+            return;
+        }
+        repository = `${inputs.customer}::${inputs.server_name}::${repository}`;
+    }
     console.log("\x1b[32m%s\x1b[0m", "View security insights and recommended policy at:");
-    console.log(`${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
+    console.log(`${web_url}/github/${repository}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
 }
 const processLogLine = (line, tableEntries) => {
     if (line.includes("pid") &&

@@ -31992,8 +31992,16 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 function printInfo(web_url) {
+    let repository = process.env["GITHUB_REPOSITORY"];
+    if (common_isGHES()) {
+        const inputs = common_getGHESInputs();
+        if (!inputs) {
+            return;
+        }
+        repository = `${inputs.customer}::${inputs.server_name}::${repository}`;
+    }
     console.log("\x1b[32m%s\x1b[0m", "View security insights and recommended policy at:");
-    console.log(`${web_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
+    console.log(`${web_url}/github/${repository}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
 }
 const processLogLine = (line, tableEntries) => {
     if (line.includes("pid") &&
@@ -32092,12 +32100,12 @@ function common_isGHES(serverUrl = process.env.GITHUB_SERVER_URL || "https://git
     return serverUrl !== "https://github.com";
 }
 function common_getGHESInputs(inputs = {
-    customer: core.getInput("customer"),
-    server_name: core.getInput("server-name"),
+    customer: lib_core.getInput("customer"),
+    server_name: lib_core.getInput("server-name"),
 }) {
     const { customer, server_name } = inputs;
     if (!customer || !server_name) {
-        core.info("customer and server-name inputs are required in GitHub Enterprise Server (GHES) environments.");
+        lib_core.info("customer and server-name inputs are required in GitHub Enterprise Server (GHES) environments.");
         return undefined;
     }
     return { customer, server_name };
