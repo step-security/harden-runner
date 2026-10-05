@@ -31998,9 +31998,13 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 function printInfo(web_url) {
-    const repository = common_getQualifiedOwner(process.env["GITHUB_REPOSITORY"]);
-    if (!repository) {
-        return;
+    let repository = process.env["GITHUB_REPOSITORY"];
+    if (common_isGHES()) {
+        const inputs = common_getGHESInputs();
+        if (!inputs) {
+            return;
+        }
+        repository = `${inputs.customer}::${inputs.server_name}::${repository}`;
     }
     console.log("\x1b[32m%s\x1b[0m", "View security insights and recommended policy at:");
     console.log(`${web_url}/github/${repository}/actions/runs/${process.env["GITHUB_RUN_ID"]}`);
@@ -32031,8 +32035,7 @@ const processLogLine = (line, tableEntries) => {
 function addSummary() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
-        const ghesSelfHosted = isGHES() && process.env.STATE_selfHosted === "true";
-        if (!ghesSelfHosted && process.env.STATE_addSummary !== "true") {
+        if (process.env.STATE_addSummary !== "true") {
             return;
         }
         const correlation_id = process.env.STATE_correlation_id;
@@ -32069,12 +32072,8 @@ function addSummary() {
         if (!owner || !repo || !run_id || !correlation_id) {
             return;
         }
-        const summaryOwner = common_getQualifiedOwner(owner);
-        if (!summaryOwner) {
-            return;
-        }
         // Fetch job summary from API
-        const apiUrl = `${configs_STEPSECURITY_API_URL}/github/${summaryOwner}/${repo}/actions/runs/${run_id}/correlation/${correlation_id}/job-markdown-summary`;
+        const apiUrl = `${configs_STEPSECURITY_API_URL}/github/${owner}/${repo}/actions/runs/${run_id}/correlation/${correlation_id}/job-markdown-summary`;
         try {
             const response = yield fetch(apiUrl, {
                 signal: AbortSignal.timeout(3000),
@@ -32103,10 +32102,10 @@ const ARC_RUNNER_MESSAGE = "Workflow is currently being executed in ARC based ru
 const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner community tier.";
 const ARM64_WINDOWS_RUNNER_MESSAGE = "Windows ARM runners are not yet supported by Harden-Runner.";
 const UBUNTU_SLIM_MESSAGE = "This job is running on an ubuntu-slim runner. Harden Runner is not supported on ubuntu-slim runners. This job will not be monitored.";
-function isGHES(serverUrl = process.env.GITHUB_SERVER_URL || "https://github.com") {
+function common_isGHES(serverUrl = process.env.GITHUB_SERVER_URL || "https://github.com") {
     return serverUrl !== "https://github.com";
 }
-function getGHESInputs(inputs = {
+function common_getGHESInputs(inputs = {
     customer: lib_core.getInput("customer"),
     server_name: lib_core.getInput("server-name"),
 }) {
@@ -32116,17 +32115,6 @@ function getGHESInputs(inputs = {
         return undefined;
     }
     return { customer, server_name };
-}
-function common_getQualifiedOwner(owner, options) {
-    var _a;
-    if (!((_a = options === null || options === void 0 ? void 0 : options.is_ghes) !== null && _a !== void 0 ? _a : isGHES())) {
-        return owner;
-    }
-    const inputs = getGHESInputs(options);
-    if (!inputs) {
-        return undefined;
-    }
-    return `${inputs.customer}::${inputs.server_name}::${owner}`;
 }
 
 // EXTERNAL MODULE: external "path"
@@ -32225,9 +32213,13 @@ var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisAr
 
 function isTLSEnabled(owner) {
     return tls_inspect_awaiter(this, void 0, void 0, function* () {
-        const tlsStatusOwner = getQualifiedOwner(owner);
-        if (!tlsStatusOwner) {
-            return false;
+        let tlsStatusOwner = owner;
+        if (isGHES()) {
+            const inputs = getGHESInputs();
+            if (!inputs) {
+                return false;
+            }
+            tlsStatusOwner = `${inputs.customer}::${inputs.server_name}::${owner}`;
         }
         const tlsStatusEndpoint = `${STEPSECURITY_API_URL}/github/${tlsStatusOwner}/actions/tls-inspection-status`;
         core.info(`[!] Checking TLS_STATUS: ${owner}`);
@@ -32310,10 +32302,10 @@ process.on("unhandledRejection", (reason) => {
     // runner's job hooks instead. GHES is the exception: the agent has no hooks
     // there, so the post step drives the event upload and prints the agent log.
     if (process.env.STATE_selfHosted === "true") {
-        if (!isGHES()) {
+        if (!common_isGHES()) {
             return;
         }
-        if (!getGHESInputs()) {
+        if (!common_getGHESInputs()) {
             return;
         }
     }
