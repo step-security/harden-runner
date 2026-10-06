@@ -46,8 +46,16 @@ process.on("unhandledRejection", (reason) => {
 
   const thirdPartyProvider = detectThirdPartyRunnerProvider();
 
+  // Self-hosted runners have no post step; a pre-baked agent is driven by the
+  // runner's job hooks instead. GHES is the exception: the agent has no hooks
+  // there, so the post step drives the event upload and prints the agent log.
   if (process.env.STATE_selfHosted === "true") {
-    return;
+    if (!common.isGHES()) {
+      return;
+    }
+    if (!common.getGHESInputs()) {
+      return;
+    }
   }
 
   if (process.env.STATE_customVMImage === "true") {
@@ -120,9 +128,6 @@ async function handleAgentBravoCleanup() {
 }
 
 async function handleLinuxCleanup() {
-  if (process.env.STATE_isTLS === "false" && process.arch === "arm64") {
-    return;
-  }
 
   // If Pre-step crashed before installing the agent, /home/agent doesn't exist;
   // bail out instead of throwing ENOENT on the writeFileSync below.

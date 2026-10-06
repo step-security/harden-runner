@@ -16,5 +16,6 @@ For GitHub-hosted runners, Harden-Runner GitHub Action downloads and installs th
 ### Self-Hosted VM Runners (e.g. on EC2)
 
 - For self-hosted VMs, you add the Harden-Runner agent into your runner image (e.g. AMI).
+- If you use GitHub Enterprise Server (GHES) with `deploy-on-self-hosted-vm` on an ephemeral Linux VM, set the `customer` and `server-name` action inputs. The action uploads events and prints agent logs during its post step.
 - You can find more details in this [blog post](https://www.stepsecurity.io/blog/ci-cd-security-for-self-hosted-vm-runners)
 - Agent for self-hosted VMs is NOT open source.

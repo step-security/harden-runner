@@ -182,6 +182,9 @@ async function resolveCacheHost(): Promise<string | undefined> {
       api_key: core.getInput("api-key"),
       use_policy_store: core.getBooleanInput("use-policy-store"),
       deploy_on_self_hosted_vm: core.getBooleanInput("deploy-on-self-hosted-vm"),
+      customer: core.getInput("customer"),
+      server_name: core.getInput("server-name"),
+      is_ghes: common.isGHES(),
     };
 
     if (confg.api_key !== "") {
@@ -198,11 +201,12 @@ async function resolveCacheHost(): Promise<string | undefined> {
         confg.egress_policy = "audit";
       } else {
         try {
+          const policyOwner = getPolicyOwner(context.repo.owner, confg);
           const repoName = (process.env["GITHUB_REPOSITORY"] || "").split("/")[1] || "";
           const workflowRef = process.env["GITHUB_WORKFLOW_REF"] || "";
           const workflow = workflowRef.replace(/.*\.github\/workflows\//, "").replace(/@.*/, "");
           let result: PolicyResponse | null = await fetchPolicyFromStore(
-            context.repo.owner,
+            policyOwner,
             repoName,
             confg.api_key,
             workflow,
@@ -230,9 +234,10 @@ async function resolveCacheHost(): Promise<string | undefined> {
     } else if (policyName !== "") {
       console.log(`Fetching policy from API with name: ${policyName}`);
       try {
+        const policyOwner = getPolicyOwner(context.repo.owner, confg);
         let idToken: string = await core.getIDToken();
         let result: PolicyResponse = await fetchPolicy(
-          context.repo.owner,
+          policyOwner,
           policyName,
           idToken
         );
@@ -350,8 +355,17 @@ async function resolveCacheHost(): Promise<string | undefined> {
         }
         core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
         confg.correlation_id = runnerName || confg.correlation_id;
-        await callMonitorEndpoint(api_url, confg);
-        const bravoConfigStr = JSON.stringify(buildBravoConfig(confg));
+        const ghesSelfHosted = confg.is_ghes && thirdPartyProvider === "codebuild";
+        if (ghesSelfHosted) {
+          if (!common.getGHESInputs(confg)) {
+            return;
+          }
+          fs.appendFileSync(process.env.GITHUB_STATE, `correlation_id=${confg.correlation_id}${EOL}`, { encoding: "utf8" });
+          console.log(`[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`);
+        } else {
+          await callMonitorEndpoint(api_url, confg);
+        }
+        const bravoConfigStr = JSON.stringify(buildBravoConfig(confg, ghesSelfHosted));
         switch (process.platform) {
           case "darwin": {
             const installed = await installMacosAgent(bravoConfigStr);
@@ -474,6 +488,11 @@ async function resolveCacheHost(): Promise<string | undefined> {
     }
 
     const { api_key, use_policy_store, ...agentConfig } = confg;
+    if (!confg.is_ghes) {
+      delete (agentConfig as Partial<Configuration>).customer;
+      delete (agentConfig as Partial<Configuration>).server_name;
+      delete (agentConfig as Partial<Configuration>).is_ghes;
+    }
     const configStr = JSON.stringify(agentConfig);
 
     // platform specific
@@ -584,6 +603,10 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
   try {
     console.log("Installing Harden Runner agent for self-hosted runner");
 
+    if (confg.is_ghes && !common.getGHESInputs(confg)) {
+      return;
+    }
+
     let isTLS = await isTLSEnabled(owner);
 
     if (!isTLS) {
@@ -595,6 +618,7 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
       customer: owner,
       working_directory: confg.working_directory,
       api_url: confg.api_url,
+      telemetry_url: confg.telemetry_url,
       api_key: uuidv4(),
       allowed_endpoints: confg.allowed_endpoints,
       denied_endpoints: confg.denied_endpoints,
@@ -605,6 +629,20 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
       disable_file_monitoring: confg.disable_file_monitoring,
       is_github_hosted: false,
     };
+
+    if (confg.is_ghes) {
+
+      selfHostedConfig["customer"] = confg.customer;
+      selfHostedConfig["server_name"] = confg.server_name;
+      selfHostedConfig["is_ghes"] = confg.is_ghes;
+      selfHostedConfig["correlation_id"] = confg.correlation_id;
+      selfHostedConfig["repo"] = confg.repo;
+      selfHostedConfig["run_id"] = confg.run_id;
+      console.log(
+        `[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`,
+      );
+    }
+
     const selfHostedConfigStr = JSON.stringify(selfHostedConfig);
 
     cp.execSync("sudo mkdir -p /home/agent");
@@ -675,4 +713,17 @@ export async function installAgentForBravo(
   } catch (error) {
     console.log(`Failed to install bravo agent: ${error.message}`);
   }
+}
+
+function getPolicyOwner(owner: string, confg: Configuration): string {
+  if (!confg.is_ghes) {
+    return owner;
+  }
+
+  const inputs = common.getGHESInputs(confg);
+  if (!inputs) {
+    throw new Error("GHES policy owner requires customer and server-name inputs.");
+  }
+
+  return `${inputs.customer}::${inputs.server_name}::${owner}`;
 }

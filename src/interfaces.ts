@@ -19,6 +19,9 @@ export interface Configuration {
   api_key: string;
   use_policy_store: boolean;
   deploy_on_self_hosted_vm: boolean;
+  customer?: string;
+  server_name?: string;
+  is_ghes: boolean;
 }
 
 export interface PolicyResponse {
