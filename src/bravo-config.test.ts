@@ -100,9 +100,8 @@ describe("buildBravoConfig in GHES self-hosted mode", () => {
     expect(cfg.server_name).toBe("example-server");
     expect(cfg.is_ghes).toBe(true);
     expect(cfg.is_github_hosted).toBe(false);
-    expect(cfg.is_persistent).toBe(false);
-    expect(cfg.api_key).toBeTruthy();
-    expect(cfg.api_key).not.toBe(base.api_key);
+    expect(cfg).not.toHaveProperty("is_persistent");
+    expect(cfg.api_key).toBe(base.api_key);
   });
 
   test("keeps the github.com shape when not enabled", () => {

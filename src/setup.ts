@@ -362,6 +362,7 @@ async function resolveCacheHost(): Promise<string | undefined> {
           }
           fs.appendFileSync(process.env.GITHUB_STATE, `correlation_id=${confg.correlation_id}${EOL}`, { encoding: "utf8" });
           console.log(`[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`);
+          confg.repo = getGHESRepo(confg);
         } else {
           await callMonitorEndpoint(api_url, confg);
         }
@@ -634,9 +635,10 @@ export async function installAgentForSelfHosted(owner: string, confg: Configurat
 
       selfHostedConfig["customer"] = confg.customer;
       selfHostedConfig["server_name"] = confg.server_name;
+      selfHostedConfig["api_key"] = confg.api_key;
       selfHostedConfig["is_ghes"] = confg.is_ghes;
       selfHostedConfig["correlation_id"] = confg.correlation_id;
-      selfHostedConfig["repo"] = confg.repo;
+      selfHostedConfig["repo"] = getGHESRepo(confg);
       selfHostedConfig["run_id"] = confg.run_id;
       console.log(
         `[StepSecurity] Generated job correlationId for self-hosted agent: ${confg.correlation_id}`,
@@ -726,4 +728,11 @@ function getPolicyOwner(owner: string, confg: Configuration): string {
   }
 
   return `${inputs.customer}::${inputs.server_name}::${owner}`;
+}
+
+// agent and armour derive the api owner from repo, so in GHES it carries the
+// customer::server_name::org owner
+function getGHESRepo(confg: Configuration): string {
+  const [owner, repoName] = confg.repo.split("/");
+  return `${getPolicyOwner(owner, confg)}/${repoName}`;
 }
