@@ -1,8 +1,48 @@
-import { fetchPolicy, fetchPolicyFromStore, mergeConfigs } from "./policy-utils";
+import { fetchPolicy, fetchPolicyFromStore, includeGHESServerEndpoint, mergeConfigs } from "./policy-utils";
 import { Configuration, PolicyResponse } from "./interfaces";
 import { STEPSECURITY_API_URL } from "./configs";
 
 const ORIGINAL_FETCH = globalThis.fetch;
+
+describe("includeGHESServerEndpoint", () => {
+  const serverUrl = "https://github.example.com";
+
+  test("adds the GHES hostname with any port to a configured allow list", () => {
+    expect(includeGHESServerEndpoint("example.com:443", true, serverUrl)).toBe(
+      "example.com:443 github.example.com:*"
+    );
+  });
+
+  test.each(["", "   ", "\n"])(
+    "leaves an empty allow list unchanged (%j)",
+    (allowedEndpoints) => {
+      expect(includeGHESServerEndpoint(allowedEndpoints, true, serverUrl)).toBe(
+        allowedEndpoints
+      );
+    }
+  );
+
+  test("does not add a GHES endpoint after merging an empty policy allow list", () => {
+    const config = mergeConfigs(
+      { allowed_endpoints: "", denied_endpoints: "" } as Configuration,
+      { allowed_endpoints: [] }
+    );
+
+    expect(includeGHESServerEndpoint(config.allowed_endpoints, true, serverUrl)).toBe("");
+  });
+
+  test("does not add a duplicate GHES endpoint", () => {
+    expect(includeGHESServerEndpoint("example.com:443 github.example.com:*", true, serverUrl)).toBe(
+      "example.com:443 github.example.com:*"
+    );
+  });
+
+  test("leaves GitHub.com allow lists unchanged", () => {
+    expect(includeGHESServerEndpoint("example.com:443", false, "https://github.com")).toBe(
+      "example.com:443"
+    );
+  });
+});
 
 afterEach(() => {
   globalThis.fetch = ORIGINAL_FETCH;

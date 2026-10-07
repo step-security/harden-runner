@@ -85494,6 +85494,16 @@ function mergeConfigs(localConfig, remoteConfig) {
     }
     return localConfig;
 }
+function includeGHESServerEndpoint(allowedEndpoints, isGHES, serverUrl) {
+    if (!isGHES || !allowedEndpoints.trim() || !serverUrl) {
+        return allowedEndpoints;
+    }
+    const endpoint = `${new URL(serverUrl).hostname}:*`;
+    if (allowedEndpoints.split(/\s+/).includes(endpoint)) {
+        return allowedEndpoints;
+    }
+    return `${allowedEndpoints.trim()} ${endpoint}`;
+}
 function sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
@@ -86138,6 +86148,7 @@ function resolveCacheHost() {
                 }
             }
         }
+        confg.allowed_endpoints = includeGHESServerEndpoint(confg.allowed_endpoints, confg.is_ghes, process.env.GITHUB_SERVER_URL || "");
         external_fs_.appendFileSync(process.env.GITHUB_STATE, `disableSudo=${confg.disable_sudo}${external_os_.EOL}`, {
             encoding: "utf8",
         });
