@@ -14,7 +14,7 @@ import {
   isValidEvent,
 } from "./cache";
 import { Configuration, PolicyResponse } from "./interfaces";
-import { fetchPolicy, fetchPolicyFromStore, mergeConfigs } from "./policy-utils";
+import { fetchPolicy, fetchPolicyFromStore, includeGHESServerEndpoint, mergeConfigs } from "./policy-utils";
 import * as cache from "@actions/cache";
 import { getCacheEntry } from "@actions/cache/lib/internal/cacheHttpClient";
 import * as cacheTwirpClient from "@actions/cache/lib/internal/shared/cacheTwirpClient";
@@ -258,6 +258,11 @@ async function resolveCacheHost(): Promise<string | undefined> {
         }
       }
     }
+    confg.allowed_endpoints = includeGHESServerEndpoint(
+      confg.allowed_endpoints,
+      confg.is_ghes,
+      process.env.GITHUB_SERVER_URL || ""
+    );
     fs.appendFileSync(
       process.env.GITHUB_STATE,
       `disableSudo=${confg.disable_sudo}${EOL}`,

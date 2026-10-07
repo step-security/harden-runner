@@ -147,6 +147,23 @@ export function mergeConfigs(
   return localConfig;
 }
 
+export function includeGHESServerEndpoint(
+  allowedEndpoints: string,
+  isGHES: boolean,
+  serverUrl: string
+): string {
+  if (!isGHES || !allowedEndpoints.trim() || !serverUrl) {
+    return allowedEndpoints;
+  }
+
+  const endpoint = `${new URL(serverUrl).hostname}:*`;
+  if (allowedEndpoints.split(/\s+/).includes(endpoint)) {
+    return allowedEndpoints;
+  }
+
+  return `${allowedEndpoints.trim()} ${endpoint}`;
+}
+
 function sleep(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
