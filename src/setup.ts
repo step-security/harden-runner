@@ -358,11 +358,6 @@ async function resolveCacheHost(): Promise<string | undefined> {
           core.info(`Detected ${providerLabel} runner on ${process.platform}. HardenRunner is not supported on this third-party provider, skipping install.`);
           return;
         }
-        if (isAgentInstalled(process.platform)) {
-          fs.appendFileSync(process.env.GITHUB_STATE, `agentPreinstalled=true${EOL}`, { encoding: "utf8" });
-          core.info(`Agent already present on ${providerLabel} runner, skipping installation.`);
-          return;
-        }
         core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
         confg.correlation_id = runnerName || confg.correlation_id;
         const ghesSelfHosted = confg.is_ghes && thirdPartyProvider === "codebuild";
@@ -438,7 +433,6 @@ async function resolveCacheHost(): Promise<string | undefined> {
     }
 
     if (isGithubHosted() && isAgentInstalled(process.platform)) {
-      fs.appendFileSync(process.env.GITHUB_STATE, `agentPreinstalled=true${EOL}`, { encoding: "utf8" });
       console.log("Agent already installed, skipping installation");
       return;
     }

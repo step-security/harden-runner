@@ -86214,11 +86214,6 @@ function resolveCacheHost() {
                     lib_core.info(`Detected ${providerLabel} runner on ${process.platform}. HardenRunner is not supported on this third-party provider, skipping install.`);
                     return;
                 }
-                if (isAgentInstalled(process.platform)) {
-                    external_fs_.appendFileSync(process.env.GITHUB_STATE, `agentPreinstalled=true${external_os_.EOL}`, { encoding: "utf8" });
-                    lib_core.info(`Agent already present on ${providerLabel} runner, skipping installation.`);
-                    return;
-                }
                 lib_core.info(`Detected ${providerLabel} runner environment. Installing agent-bravo.`);
                 confg.correlation_id = runnerName || confg.correlation_id;
                 const ghesSelfHosted = confg.is_ghes && thirdPartyProvider === "codebuild";
@@ -86288,7 +86283,6 @@ function resolveCacheHost() {
             return;
         }
         if (isGithubHosted() && isAgentInstalled(process.platform)) {
-            external_fs_.appendFileSync(process.env.GITHUB_STATE, `agentPreinstalled=true${external_os_.EOL}`, { encoding: "utf8" });
             console.log("Agent already installed, skipping installation");
             return;
         }
