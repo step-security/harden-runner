@@ -26,7 +26,7 @@ export async function installAgent(
 
   if (isTLS) {
     downloadPath = await tc.downloadTool(
-      `https://github.com/step-security/agent-ebpf/releases/download/v1.9.3/harden-runner_1.9.3_linux_${variant}.tar.gz`,
+      `https://github.com/step-security/agent-ebpf/releases/download/v1.9.4/harden-runner_1.9.4_linux_${variant}.tar.gz`,
       undefined,
       auth
     );
@@ -75,7 +75,7 @@ export async function installAgentBravo(
 
   const variant = process.arch === "x64" ? "amd64" : "arm64";
   const downloadPath = await tc.downloadTool(
-    `https://github.com/step-security/agent-ebpf/releases/download/v1.9.3/harden-runner-bravo_1.9.3_linux_${variant}.tar.gz`,
+    `https://github.com/step-security/agent-ebpf/releases/download/v1.9.4/harden-runner-bravo_1.9.4_linux_${variant}.tar.gz`,
     undefined,
     auth
   );
@@ -145,7 +145,7 @@ export async function installMacosAgent(configStr: string): Promise<boolean> {
 
     // Download installer package
     const downloadUrl =
-      "https://github.com/step-security/agent-releases/releases/download/v0.0.7-mac/macos-installer-0.0.7.tar.gz";
+      "https://github.com/step-security/agent-releases/releases/download/v0.0.9-mac/macos-installer-0.0.9.tar.gz";
     core.info(`Downloading macOS installer.. : ${downloadUrl}`);
     const downloadPath = await tc.downloadTool(downloadUrl, undefined, auth);
     core.info(`✓ Successfully downloaded installer to: ${downloadPath}`);
