@@ -62,6 +62,12 @@ process.on("unhandledRejection", (reason) => {
     return;
   }
 
+  // Agent was already installed; its cleanup is handled by
+  // the runner's job hooks.
+  if (process.env.STATE_agentPreinstalled === "true") {
+    return;
+  }
+
   if (
     String(process.env.STATE_monitorStatusCode) ===
     common.STATUS_HARDEN_RUNNER_UNAVAILABLE

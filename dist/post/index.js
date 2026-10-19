@@ -32312,6 +32312,11 @@ process.on("unhandledRejection", (reason) => {
     if (process.env.STATE_customVMImage === "true") {
         return;
     }
+    // Agent was already installed; its cleanup is handled by
+    // the runner's job hooks.
+    if (process.env.STATE_agentPreinstalled === "true") {
+        return;
+    }
     if (String(process.env.STATE_monitorStatusCode) ===
         STATUS_HARDEN_RUNNER_UNAVAILABLE) {
         console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
