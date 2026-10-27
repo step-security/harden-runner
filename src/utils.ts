@@ -81,7 +81,7 @@ export function shouldDeployAgentOnSelfHosted(
   return deployOnSelfHostedVm && !isContainer && !agentAlreadyInstalled;
 }
 
-export type ThirdPartyRunnerProvider = "depot" | "namespace" | "warp" | "blacksmith" | "bitrise" | "codebuild";
+export type ThirdPartyRunnerProvider = "depot" | "namespace" | "warp" | "blacksmith" | "avrea" | "bitrise" | "codebuild";
 
 export function detectThirdPartyRunnerProvider(): ThirdPartyRunnerProvider | null {
   if (process.env["DEPOT_RUNNER"] === "1") return "depot";
@@ -91,6 +91,7 @@ export function detectThirdPartyRunnerProvider(): ThirdPartyRunnerProvider | nul
   const runnerName = process.env["RUNNER_NAME"] ?? "";
   if (runnerName.startsWith("warp-")) return "warp";
   if (runnerName.startsWith("blacksmith-")) return "blacksmith";
+  if (runnerName.startsWith("avrea-exe-")) return "avrea";
   return null;
 }
 

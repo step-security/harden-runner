@@ -177,6 +177,11 @@ describe("detectThirdPartyRunnerProvider", () => {
     expect(detectThirdPartyRunnerProvider()).toBe("blacksmith");
   });
 
+  test("returns avrea for RUNNER_NAME prefix avrea-exe-", () => {
+    process.env.RUNNER_NAME = "avrea-exe-01kpj";
+    expect(detectThirdPartyRunnerProvider()).toBe("avrea");
+  });
+
   test("returns null when no env vars match", () => {
     expect(detectThirdPartyRunnerProvider()).toBeNull();
   });

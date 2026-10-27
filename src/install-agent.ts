@@ -26,13 +26,13 @@ export async function installAgent(
 
   if (isTLS) {
     downloadPath = await tc.downloadTool(
-      `https://github.com/step-security/agent-ebpf/releases/download/v1.9.4/harden-runner_1.9.4_linux_${variant}.tar.gz`,
+      `https://github.com/step-security/agent-ebpf/releases/download/v1.9.5/harden-runner_1.9.5_linux_${variant}.tar.gz`,
       undefined,
       auth
     );
   } else {
     downloadPath = await tc.downloadTool(
-      `https://github.com/step-security/agent/releases/download/v0.17.0/agent_0.17.0_linux_${variant}.tar.gz`,
+      `https://github.com/step-security/agent/releases/download/v0.18.0/agent_0.18.0_linux_${variant}.tar.gz`,
       undefined,
       auth
     );
@@ -75,7 +75,7 @@ export async function installAgentBravo(
 
   const variant = process.arch === "x64" ? "amd64" : "arm64";
   const downloadPath = await tc.downloadTool(
-    `https://github.com/step-security/agent-ebpf/releases/download/v1.9.4/harden-runner-bravo_1.9.4_linux_${variant}.tar.gz`,
+    `https://github.com/step-security/agent-ebpf/releases/download/v1.9.5/harden-runner-bravo_1.9.5_linux_${variant}.tar.gz`,
     undefined,
     auth
   );

@@ -31969,6 +31969,8 @@ function detectThirdPartyRunnerProvider() {
         return "warp";
     if (runnerName.startsWith("blacksmith-"))
         return "blacksmith";
+    if (runnerName.startsWith("avrea-exe-"))
+        return "avrea";
     return null;
 }
 function getAnnotationLogs(platform) {
