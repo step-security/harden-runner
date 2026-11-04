@@ -73,6 +73,10 @@ test("tls-inspect returns false when GHES inputs are missing", async () => {
 test("isGHES returns false for GitHub.com", () => {
   expect(isGHES()).toBe(false);
   expect(isGHES("https://github.com")).toBe(false);
+  expect(isGHES("https://github.com/")).toBe(false);
+  expect(isGHES("https://github.com///")).toBe(false);
+  expect(isGHES(" https://github.com/ ")).toBe(false);
+  expect(isGHES("")).toBe(false);
 });
 
 test("isGHES returns true for GitHub Enterprise Server", () => {
@@ -80,6 +84,7 @@ test("isGHES returns true for GitHub Enterprise Server", () => {
 
   expect(isGHES()).toBe(true);
   expect(isGHES("https://github.enterprise.local")).toBe(true);
+  expect(isGHES("https://github.enterprise.local/")).toBe(true);
 });
 
 test("isTLSEnabled returns true within ~3s when server is slow (regression test for AggregateError)", async () => {
