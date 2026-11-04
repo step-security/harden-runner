@@ -85297,7 +85297,8 @@ const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner
 const ARM64_WINDOWS_RUNNER_MESSAGE = "Windows ARM runners are not yet supported by Harden-Runner.";
 const UBUNTU_SLIM_MESSAGE = "This job is running on an ubuntu-slim runner. Harden Runner is not supported on ubuntu-slim runners. This job will not be monitored.";
 function isGHES(serverUrl = process.env.GITHUB_SERVER_URL || "https://github.com") {
-    return serverUrl !== "https://github.com";
+    const normalized = (serverUrl || "https://github.com").trim().replace(/\/+$/, "");
+    return normalized !== "https://github.com" && normalized !== "";
 }
 function getGHESInputs(inputs = {
     customer: lib_core.getInput("customer"),
@@ -85476,10 +85477,10 @@ function getJsonWithTimeout(url, headers) {
 }
 function mergeConfigs(localConfig, remoteConfig) {
     const getEndpoints = (endpoints) => Array.isArray(endpoints) ? endpoints.join(" ") : "";
-    if (localConfig.allowed_endpoints === "") {
+    if (!localConfig.allowed_endpoints || localConfig.allowed_endpoints.trim() === "") {
         localConfig.allowed_endpoints = getEndpoints(remoteConfig.allowed_endpoints);
     }
-    if (localConfig.denied_endpoints === "") {
+    if (!localConfig.denied_endpoints || localConfig.denied_endpoints.trim() === "") {
         localConfig.denied_endpoints = getEndpoints(remoteConfig.denied_endpoints);
     }
     if (remoteConfig.disable_sudo !== undefined) {
@@ -85491,7 +85492,10 @@ function mergeConfigs(localConfig, remoteConfig) {
     if (remoteConfig.disable_file_monitoring !== undefined) {
         localConfig.disable_file_monitoring = remoteConfig.disable_file_monitoring;
     }
-    if (remoteConfig.egress_policy !== undefined) {
+    if (remoteConfig.disable_telemetry !== undefined) {
+        localConfig.disable_telemetry = remoteConfig.disable_telemetry;
+    }
+    if (remoteConfig.egress_policy !== undefined && remoteConfig.egress_policy.trim() !== "") {
         localConfig.egress_policy = remoteConfig.egress_policy;
     }
     return localConfig;
@@ -85500,7 +85504,18 @@ function includeGHESServerEndpoint(allowedEndpoints, isGHES, serverUrl) {
     if (!isGHES || !allowedEndpoints.trim() || !serverUrl) {
         return allowedEndpoints;
     }
-    const endpoint = `${new URL(serverUrl).hostname}:*`;
+    let hostname;
+    try {
+        const url = serverUrl.includes("://") ? serverUrl : `https://${serverUrl}`;
+        hostname = new URL(url).hostname;
+    }
+    catch (_a) {
+        return allowedEndpoints;
+    }
+    if (!hostname) {
+        return allowedEndpoints;
+    }
+    const endpoint = `${hostname}:*`;
     if (allowedEndpoints.split(/\s+/).includes(endpoint)) {
         return allowedEndpoints;
     }

@@ -32105,7 +32105,8 @@ const ARM64_RUNNER_MESSAGE = "ARM runners are not supported in the Harden-Runner
 const ARM64_WINDOWS_RUNNER_MESSAGE = "Windows ARM runners are not yet supported by Harden-Runner.";
 const UBUNTU_SLIM_MESSAGE = "This job is running on an ubuntu-slim runner. Harden Runner is not supported on ubuntu-slim runners. This job will not be monitored.";
 function common_isGHES(serverUrl = process.env.GITHUB_SERVER_URL || "https://github.com") {
-    return serverUrl !== "https://github.com";
+    const normalized = (serverUrl || "https://github.com").trim().replace(/\/+$/, "");
+    return normalized !== "https://github.com" && normalized !== "";
 }
 function common_getGHESInputs(inputs = {
     customer: lib_core.getInput("customer"),

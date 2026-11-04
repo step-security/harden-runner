@@ -123,10 +123,10 @@ export function mergeConfigs(
   const getEndpoints = (endpoints?: string[]) =>
     Array.isArray(endpoints) ? endpoints.join(" ") : "";
 
-  if (localConfig.allowed_endpoints === "") {
+  if (!localConfig.allowed_endpoints || localConfig.allowed_endpoints.trim() === "") {
     localConfig.allowed_endpoints = getEndpoints(remoteConfig.allowed_endpoints);
   }
-  if (localConfig.denied_endpoints === "") {
+  if (!localConfig.denied_endpoints || localConfig.denied_endpoints.trim() === "") {
     localConfig.denied_endpoints = getEndpoints(remoteConfig.denied_endpoints);
   }
   if (remoteConfig.disable_sudo !== undefined) {
@@ -140,7 +140,10 @@ export function mergeConfigs(
   if (remoteConfig.disable_file_monitoring !== undefined) {
     localConfig.disable_file_monitoring = remoteConfig.disable_file_monitoring;
   }
-  if (remoteConfig.egress_policy !== undefined) {
+  if (remoteConfig.disable_telemetry !== undefined) {
+    localConfig.disable_telemetry = remoteConfig.disable_telemetry;
+  }
+  if (remoteConfig.egress_policy !== undefined && remoteConfig.egress_policy.trim() !== "") {
     localConfig.egress_policy = remoteConfig.egress_policy;
   }
 
@@ -156,7 +159,19 @@ export function includeGHESServerEndpoint(
     return allowedEndpoints;
   }
 
-  const endpoint = `${new URL(serverUrl).hostname}:*`;
+  let hostname: string;
+  try {
+    const url = serverUrl.includes("://") ? serverUrl : `https://${serverUrl}`;
+    hostname = new URL(url).hostname;
+  } catch {
+    return allowedEndpoints;
+  }
+
+  if (!hostname) {
+    return allowedEndpoints;
+  }
+
+  const endpoint = `${hostname}:*`;
   if (allowedEndpoints.split(/\s+/).includes(endpoint)) {
     return allowedEndpoints;
   }

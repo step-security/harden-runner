@@ -37,6 +37,18 @@ describe("includeGHESServerEndpoint", () => {
     );
   });
 
+  test("handles serverUrl without protocol scheme safely", () => {
+    expect(includeGHESServerEndpoint("example.com:443", true, "github.example.com")).toBe(
+      "example.com:443 github.example.com:*"
+    );
+  });
+
+  test("returns allowedEndpoints unchanged when serverUrl is invalid", () => {
+    expect(includeGHESServerEndpoint("example.com:443", true, "://invalid url")).toBe(
+      "example.com:443"
+    );
+  });
+
   test("leaves GitHub.com allow lists unchanged", () => {
     expect(includeGHESServerEndpoint("example.com:443", false, "https://github.com")).toBe(
       "example.com:443"
@@ -475,4 +487,104 @@ test("mergeConfigs handles remote policy without endpoint lists", () => {
   localConfig = mergeConfigs(localConfig, policyResponse);
   expect(localConfig.allowed_endpoints).toBe("");
   expect(localConfig.denied_endpoints).toBe("");
+});
+
+test("mergeConfigs merges disable_telemetry when specified in remote policy", () => {
+  let localConfig: Configuration = {
+    repo: "test/repo",
+    run_id: "xyx",
+    correlation_id: "aaaaa",
+    working_directory: "/xyz",
+    api_url: "xyz",
+    telemetry_url: "xyz",
+    allowed_endpoints: "",
+    denied_endpoints: "",
+    egress_policy: "audit",
+    disable_telemetry: false,
+    disable_sudo: false,
+    disable_sudo_and_containers: false,
+    disable_file_monitoring: false,
+    private: "true",
+    is_github_hosted: true,
+    is_debug: false,
+    one_time_key: "",
+    api_key: "",
+    use_policy_store: false,
+    deploy_on_self_hosted_vm: false,
+    is_ghes: false,
+  };
+  const policyResponse: PolicyResponse = {
+    disable_telemetry: true,
+  };
+
+  localConfig = mergeConfigs(localConfig, policyResponse);
+  expect(localConfig.disable_telemetry).toBe(true);
+});
+
+test("mergeConfigs preserves local egress_policy when remote policy has empty or blank egress_policy", () => {
+  let localConfig: Configuration = {
+    repo: "test/repo",
+    run_id: "xyx",
+    correlation_id: "aaaaa",
+    working_directory: "/xyz",
+    api_url: "xyz",
+    telemetry_url: "xyz",
+    allowed_endpoints: "",
+    denied_endpoints: "",
+    egress_policy: "block",
+    disable_telemetry: false,
+    disable_sudo: false,
+    disable_sudo_and_containers: false,
+    disable_file_monitoring: false,
+    private: "true",
+    is_github_hosted: true,
+    is_debug: false,
+    one_time_key: "",
+    api_key: "",
+    use_policy_store: false,
+    deploy_on_self_hosted_vm: false,
+    is_ghes: false,
+  };
+  const policyResponse: PolicyResponse = {
+    allowed_endpoints: ["github.com:443"],
+    egress_policy: "   ",
+  };
+
+  localConfig = mergeConfigs(localConfig, policyResponse);
+  expect(localConfig.egress_policy).toBe("block");
+  expect(localConfig.allowed_endpoints).toBe("github.com:443");
+});
+
+test("mergeConfigs overrides whitespace-only local endpoints with remote endpoints", () => {
+  let localConfig: Configuration = {
+    repo: "test/repo",
+    run_id: "xyx",
+    correlation_id: "aaaaa",
+    working_directory: "/xyz",
+    api_url: "xyz",
+    telemetry_url: "xyz",
+    allowed_endpoints: "   \n  ",
+    denied_endpoints: "  ",
+    egress_policy: "block",
+    disable_telemetry: false,
+    disable_sudo: false,
+    disable_sudo_and_containers: false,
+    disable_file_monitoring: false,
+    private: "true",
+    is_github_hosted: true,
+    is_debug: false,
+    one_time_key: "",
+    api_key: "",
+    use_policy_store: false,
+    deploy_on_self_hosted_vm: false,
+    is_ghes: false,
+  };
+  const policyResponse: PolicyResponse = {
+    allowed_endpoints: ["remote.example.com:443"],
+    denied_endpoints: ["bad.example.com:443"],
+  };
+
+  localConfig = mergeConfigs(localConfig, policyResponse);
+  expect(localConfig.allowed_endpoints).toBe("remote.example.com:443");
+  expect(localConfig.denied_endpoints).toBe("bad.example.com:443");
 });
