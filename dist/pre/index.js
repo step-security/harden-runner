@@ -85568,6 +85568,44 @@ function echo(content) {
     external_child_process_.execFileSync("echo", [content]);
 }
 
+;// CONCATENATED MODULE: ./src/monitor.ts
+var monitor_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+// Posts to the /monitor endpoint, making up to 3 attempts with a 3s timeout each.
+// A timeout, a network error, or a status other than 200/409 is retried. 200 and
+// 409 (Harden Runner unavailable) are final. Returns the last response received,
+// or undefined if no attempt got a response.
+function postMonitor(url, body, apiUrl) {
+    return monitor_awaiter(this, void 0, void 0, function* () {
+        let resp;
+        for (let retry = 0; retry < 3; retry++) {
+            try {
+                resp = yield fetch(url, {
+                    method: "POST",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify(body),
+                    signal: AbortSignal.timeout(3000),
+                });
+                if (resp.status === 200 || String(resp.status) === STATUS_HARDEN_RUNNER_UNAVAILABLE)
+                    break;
+                console.log(`monitor call returned ${resp.status} (attempt ${retry + 1}/3)`);
+            }
+            catch (e) {
+                console.log(`error in connecting to ${apiUrl} (attempt ${retry + 1}/3): ${e}`);
+            }
+        }
+        return resp;
+    });
+}
+
 ;// CONCATENATED MODULE: ./src/tls-inspect.ts
 var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -85956,6 +85994,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 
 
 
+
 // Node 22+ terminates the process on unhandled promise rejections by default.
 // Third-party libraries used during Pre-step (notably @actions/cache's tar +
 // upload streams under concurrent matrix runs) can emit background rejections
@@ -86290,39 +86329,30 @@ function resolveCacheHost() {
         }
         let statusCode;
         let addSummary = "false";
-        const monitorRequestData = {
-            correlation_id: correlation_id,
-            job: process.env["GITHUB_JOB"],
-        };
-        const url = `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`;
-        for (let retry = 0; retry < 3; retry++) {
-            try {
-                const resp = yield fetch(url, {
-                    method: "POST",
-                    headers: { "content-type": "application/json" },
-                    body: JSON.stringify(monitorRequestData),
-                    signal: AbortSignal.timeout(3000),
-                });
-                if (resp.status !== 200 && retry < 2) {
-                    throw new Error(`monitor call returned ${resp.status}`);
-                }
-                statusCode = resp.status;
-                const responseData = resp.ok
-                    ? (yield resp.json())
-                    : undefined;
-                external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${external_os_.EOL}`, {
-                    encoding: "utf8",
-                });
-                if (statusCode === 200 && responseData) {
-                    console.log(`Runner IP Address: ${responseData.runner_ip_address}`);
-                    confg.one_time_key = responseData.one_time_key;
-                    addSummary = responseData.monitoring_started ? "true" : "false";
-                }
-                break;
+        try {
+            const monitorRequestData = {
+                correlation_id: correlation_id,
+                job: process.env["GITHUB_JOB"],
+            };
+            const url = `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`;
+            const resp = yield postMonitor(url, monitorRequestData, api_url);
+            if (!resp)
+                throw new Error("no response from monitor endpoint after 3 attempts");
+            statusCode = resp.status;
+            const responseData = resp.ok
+                ? (yield resp.json())
+                : undefined;
+            external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${external_os_.EOL}`, {
+                encoding: "utf8",
+            });
+            if (statusCode === 200 && responseData) {
+                console.log(`Runner IP Address: ${responseData.runner_ip_address}`);
+                confg.one_time_key = responseData.one_time_key;
+                addSummary = responseData.monitoring_started ? "true" : "false";
             }
-            catch (e) {
-                console.log(`error in connecting to ${api_url} (attempt ${retry + 1}/3): ${e}`);
-            }
+        }
+        catch (e) {
+            console.log(`error in connecting to ${api_url}: ${e}`);
         }
         external_fs_.appendFileSync(process.env.GITHUB_STATE, `addSummary=${addSummary}${external_os_.EOL}`, {
             encoding: "utf8",
@@ -86410,34 +86440,25 @@ function callMonitorEndpoint(api_url, confg) {
     return setup_awaiter(this, void 0, void 0, function* () {
         let statusCode;
         let addSummary = "false";
-        const monitorRequestData = {
-            correlation_id: confg.correlation_id,
-            job: process.env["GITHUB_JOB"],
-        };
-        const url = `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`;
-        for (let retry = 0; retry < 3; retry++) {
-            try {
-                const resp = yield fetch(url, {
-                    method: "POST",
-                    headers: { "content-type": "application/json" },
-                    body: JSON.stringify(monitorRequestData),
-                    signal: AbortSignal.timeout(3000),
-                });
-                if (resp.status !== 200 && retry < 2) {
-                    throw new Error(`monitor call returned ${resp.status}`);
-                }
-                statusCode = resp.status;
-                if (resp.ok) {
-                    const result = (yield resp.json());
-                    console.log(`Runner IP Address: ${result.runner_ip_address}`);
-                    confg.one_time_key = result.one_time_key;
-                    addSummary = result.monitoring_started ? "true" : "false";
-                }
-                break;
+        try {
+            const monitorRequestData = {
+                correlation_id: confg.correlation_id,
+                job: process.env["GITHUB_JOB"],
+            };
+            const url = `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`;
+            const resp = yield postMonitor(url, monitorRequestData, api_url);
+            if (!resp)
+                throw new Error("no response from monitor endpoint after 3 attempts");
+            statusCode = resp.status;
+            if (resp.ok) {
+                const result = (yield resp.json());
+                console.log(`Runner IP Address: ${result.runner_ip_address}`);
+                confg.one_time_key = result.one_time_key;
+                addSummary = result.monitoring_started ? "true" : "false";
             }
-            catch (e) {
-                console.log(`error in connecting to ${api_url} (attempt ${retry + 1}/3): ${e}`);
-            }
+        }
+        catch (e) {
+            console.log(`error in connecting to ${api_url}: ${e}`);
         }
         external_fs_.appendFileSync(process.env.GITHUB_STATE, `monitorStatusCode=${statusCode}${external_os_.EOL}`, { encoding: "utf8" });
         external_fs_.appendFileSync(process.env.GITHUB_STATE, `addSummary=${addSummary}${external_os_.EOL}`, { encoding: "utf8" });
