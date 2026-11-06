@@ -85625,16 +85625,16 @@ var external_crypto_ = __nccwpck_require__(6982);
 
 const CHECKSUMS = {
     tls: {
-        amd64: "811c33347d8152cf12cbcc665f571293e6af47ecf151134da9fb5195909b8a56", // v1.9.5
-        arm64: "6738ceea3aa817670aac8085b6e82095b37d81ce76e4cc5b0ac73bae4abea2ff", // v1.9.5
+        amd64: "c794a3ee8ba799519ebc718adec5b9ae79ad3ea6a48aa5a4a80cb19434766463", // v1.9.6
+        arm64: "f9732189aed33feec7f1927891ac8e8fe1d15df1d5895dcfcc02e0939a0d0b5e", // v1.9.6
     },
     non_tls: {
-        amd64: "baec749d7477e37c4410bbe1c5a1669ba72de18a49d3d013e817a9ae95d122e5", // v0.18.0
-        arm64: "ec783c4c6a04e7d60788596c71aa9f8fd19fef20985dc2bd72ce2aa7e513649f", // v0.18.0
+        amd64: "9db01a8e795ffa77e0220de75c37f3fde83ec8e411e1fad8932977a13d49e8d0", // v0.18.1
+        arm64: "82e2311147ea22346d62472c8c897b5fbb9cdbb4d6fe3bcd97298f1637d56935", // v0.18.1
     },
     bravo: {
-        amd64: "8fcae88b4f127371f943a44e020ca69c00a60db3fc92a582e9890ceb533f25a9", // v1.9.5
-        arm64: "8af18952c1cc7f9a18c4f337df2c3fd542c5180e94abaa666ee74c8c4956597c", // v1.9.5
+        amd64: "1ddf2b2846b3c6c4b6b9d3ed5a09bc75f52124aef478c5038e41c70896e2e3d3", // v1.9.6
+        arm64: "5f9e057feb82f906ed05d522bc03429b52f60a5b3067157631a1561cd42ad7ad", // v1.9.6
     },
     darwin: "0e0964799818e8a63cf785bb00d70c3b1eeb9d0d0bfbcace364be7a469ee13aa", // v0.0.9
     windows: {
@@ -85707,10 +85707,10 @@ function installAgent(isTLS, configStr) {
             encoding: "utf8",
         });
         if (isTLS) {
-            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.9.5/harden-runner_1.9.5_linux_${variant}.tar.gz`, undefined, auth);
+            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.9.6/harden-runner_1.9.6_linux_${variant}.tar.gz`, undefined, auth);
         }
         else {
-            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent/releases/download/v0.18.0/agent_0.18.0_linux_${variant}.tar.gz`, undefined, auth);
+            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent/releases/download/v0.18.1/agent_0.18.1_linux_${variant}.tar.gz`, undefined, auth);
         }
         if (!verifyChecksum(downloadPath, isTLS, variant, "linux")) {
             return false;
@@ -85738,7 +85738,7 @@ function installAgentBravo(configStr_1) {
         const token = lib_core.getInput("token", { required: true });
         const auth = `token ${token}`;
         const variant = process.arch === "x64" ? "amd64" : "arm64";
-        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.9.5/harden-runner-bravo_1.9.5_linux_${variant}.tar.gz`, undefined, auth);
+        const downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.9.6/harden-runner-bravo_1.9.6_linux_${variant}.tar.gz`, undefined, auth);
         if (!verifyChecksum(downloadPath, true, variant, "linux", "bravo")) {
             return false;
         }
