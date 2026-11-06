@@ -23,6 +23,7 @@ import { getCacheServiceVersion } from "@actions/cache/lib/internal/config";
 
 import * as utils from "@actions/cache/lib/internal/cacheUtils";
 import { isARCRunner, sendAllowedEndpoints } from "./arc-runner";
+import { postMonitor } from "./monitor";
 import {
   STEPSECURITY_API_URL,
   STEPSECURITY_TELEMETRY_URL,
@@ -445,12 +446,8 @@ async function resolveCacheHost(): Promise<string | undefined> {
         job: process.env["GITHUB_JOB"],
       };
       const url = `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`;
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(monitorRequestData),
-        signal: AbortSignal.timeout(3000),
-      });
+      const resp = await postMonitor(url, monitorRequestData, api_url);
+      if (!resp) throw new Error("no response from monitor endpoint after 3 attempts");
 
       statusCode = resp.status;
       const responseData = resp.ok
@@ -584,12 +581,8 @@ async function callMonitorEndpoint(api_url: string, confg: Configuration) {
       job: process.env["GITHUB_JOB"],
     };
     const url = `${api_url}/github/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}/monitor`;
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(monitorRequestData),
-      signal: AbortSignal.timeout(3000),
-    });
+    const resp = await postMonitor(url, monitorRequestData, api_url);
+    if (!resp) throw new Error("no response from monitor endpoint after 3 attempts");
     statusCode = resp.status;
     if (resp.ok) {
       const result = (await resp.json()) as MonitorResponse;
