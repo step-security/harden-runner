@@ -367,7 +367,6 @@ describe("setupSecureRegistry", () => {
 
     expect(readState()).toEqual({
       srToken: TOKEN,
-      srEdition: "community",
       srBinding: "oidc",
       srRegistryUrl: REGISTRY,
       srNpmrcPath: npmrcPath(),
@@ -434,6 +433,17 @@ describe("setupSecureRegistry", () => {
 
     expect(mockedCore.exportVariable).toHaveBeenCalledWith("npm_config_userconfig", npmrcPath());
     expect(fs.readFileSync(npmrcPath(), "utf8").startsWith("save-exact=true\n")).toBe(true);
+  });
+
+  test("expands ~ in the user config path, as npm does", async () => {
+    fs.mkdirSync(path.join(tmp, "home"), { recursive: true });
+    mockedHomedir.mockReturnValue(path.join(tmp, "home"));
+    fs.writeFileSync(path.join(tmp, "home", "my-npmrc"), "registry=https://mirror.example/\n");
+    process.env.NPM_CONFIG_USERCONFIG = "~/my-npmrc";
+    mockFetchSequence([]);
+
+    expect(await setupSecureRegistry()).toEqual({});
+    expect(fetchCalls).toHaveLength(0);
   });
 
   test("opts in to omit-lockfile-registry-resolved", async () => {
@@ -733,7 +743,7 @@ describe("setupSecureRegistry", () => {
     expect(await setupSecureRegistry()).toEqual({});
     expect(mockedCore.warning.mock.calls[0][0]).toContain("non-https");
     expect(fs.existsSync(npmrcPath())).toBe(false);
-    expect(readState()).toEqual({ srToken: TOKEN, srEdition: "community", srBinding: "oidc" });
+    expect(readState()).toEqual({ srToken: TOKEN, srBinding: "oidc" });
   });
 
   test("a token for other ecosystems only leaves npm alone", async () => {
@@ -749,7 +759,7 @@ describe("setupSecureRegistry", () => {
       "secure-registry: npm is not listed in ecosystems, nothing to configure"
     );
     expect(fs.existsSync(npmrcPath())).toBe(false);
-    expect(readState()).toEqual({ srToken: TOKEN, srEdition: "community", srBinding: "oidc" });
+    expect(readState()).toEqual({ srToken: TOKEN, srBinding: "oidc" });
   });
 
   test("ignores ecosystems other than npm", async () => {

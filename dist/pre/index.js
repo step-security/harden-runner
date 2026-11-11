@@ -86216,6 +86216,14 @@ function npmGlobalConfigPath(env) {
 }
 // Decides, before any token is minted, whether npm can be switched without
 // overriding a registry the user configured on purpose.
+// npm expands a leading ~ in config paths; fs does not.
+function resolveConfigPath(value, homeDir) {
+    if (value === "~")
+        return homeDir;
+    if (value.startsWith("~/") || value.startsWith("~\\"))
+        return external_path_.join(homeDir, value.slice(2));
+    return external_path_.resolve(value);
+}
 function npmPreflight(env, homeDir, globalConfigPath = npmGlobalConfigPath) {
     const envRegistry = findEnv(env, "npm_config_registry");
     if (envRegistry) {
@@ -86225,7 +86233,7 @@ function npmPreflight(env, homeDir, globalConfigPath = npmGlobalConfigPath) {
         };
     }
     const userConfig = findEnv(env, "npm_config_userconfig");
-    const sourcePath = userConfig ? userConfig.value : external_path_.join(homeDir, ".npmrc");
+    const sourcePath = userConfig ? resolveConfigPath(userConfig.value, homeDir) : external_path_.join(homeDir, ".npmrc");
     const content = external_fs_.existsSync(sourcePath)
         ? external_fs_.readFileSync(sourcePath, "utf8")
         : "";
@@ -86416,7 +86424,7 @@ function sessionAuth() {
 }
 function configureNpm(config, job) {
     return secure_registry_awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         if (isGHES()) {
             skipNotice("not supported on GitHub Enterprise Server yet");
             return {};
@@ -86463,17 +86471,16 @@ function configureNpm(config, job) {
         }
         // Saved before anything else can fail, so the post step can always revoke.
         saveState("srToken", session.token);
-        saveState("srEdition", (_b = session.edition) !== null && _b !== void 0 ? _b : "");
-        saveState("srBinding", (_c = session.binding) !== null && _c !== void 0 ? _c : "");
+        saveState("srBinding", (_b = session.binding) !== null && _b !== void 0 ? _b : "");
         if (session.binding === "none") {
             lib_core.notice('secure-registry: this job is not linked to run insights, so the packages it installs will not appear there. Add "permissions: id-token: write" to this job to link it.');
         }
-        for (const ecosystem of Object.keys((_d = session.registries) !== null && _d !== void 0 ? _d : {})) {
+        for (const ecosystem of Object.keys((_c = session.registries) !== null && _c !== void 0 ? _c : {})) {
             if (ecosystem !== "npm") {
                 lib_core.info(`secure-registry: this version of Harden-Runner configures npm only, ignoring ${ecosystem}`);
             }
         }
-        const registryUrl = (_e = session.registries) === null || _e === void 0 ? void 0 : _e.npm;
+        const registryUrl = (_d = session.registries) === null || _d === void 0 ? void 0 : _d.npm;
         if (!registryUrl) {
             lib_core.info(`secure-registry: ${npmNotConfiguredReason(session)}, nothing to configure`);
             return {};
@@ -86482,7 +86489,7 @@ function configureNpm(config, job) {
         try {
             registry = new URL(registryUrl);
         }
-        catch (_m) {
+        catch (_l) {
             skipWarning(`the session API returned an invalid npm registry URL`);
             return {};
         }
@@ -86494,17 +86501,17 @@ function configureNpm(config, job) {
         const content = mergeNpmrc(preflight.source.content, {
             registryUrl,
             token: session.token,
-            omitLockfileResolved: ((_g = (_f = session.config) === null || _f === void 0 ? void 0 : _f.npm) === null || _g === void 0 ? void 0 : _g.lockfile_resolved) === "omit",
+            omitLockfileResolved: ((_f = (_e = session.config) === null || _e === void 0 ? void 0 : _e.npm) === null || _f === void 0 ? void 0 : _f.lockfile_resolved) === "omit",
         });
         external_fs_.writeFileSync(target, content, { encoding: "utf8", mode: 0o600 });
         // mode only applies when the file is created; setup-node may have created it.
         external_fs_.chmodSync(target, 0o600);
-        lib_core.exportVariable((_h = preflight.source.envKey) !== null && _h !== void 0 ? _h : "NPM_CONFIG_USERCONFIG", target);
+        lib_core.exportVariable((_g = preflight.source.envKey) !== null && _g !== void 0 ? _g : "NPM_CONFIG_USERCONFIG", target);
         saveState("srRegistryUrl", registryUrl);
         saveState("srNpmrcPath", target);
         // The audit rows for held versions do not say how long the cooldown is, so
         // the post step takes it from here.
-        const cooldownDays = (_l = (_k = (_j = session.config) === null || _j === void 0 ? void 0 : _j.npm) === null || _k === void 0 ? void 0 : _k.cooldown) === null || _l === void 0 ? void 0 : _l.days;
+        const cooldownDays = (_k = (_j = (_h = session.config) === null || _h === void 0 ? void 0 : _h.npm) === null || _j === void 0 ? void 0 : _j.cooldown) === null || _k === void 0 ? void 0 : _k.days;
         if (typeof cooldownDays === "number" && Number.isInteger(cooldownDays) && cooldownDays >= 0) {
             saveState("srCooldownDays", String(cooldownDays));
         }

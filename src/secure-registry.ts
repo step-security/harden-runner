@@ -242,6 +242,13 @@ function npmGlobalConfigPath(env: NodeJS.ProcessEnv): string | undefined {
 
 // Decides, before any token is minted, whether npm can be switched without
 // overriding a registry the user configured on purpose.
+// npm expands a leading ~ in config paths; fs does not.
+function resolveConfigPath(value: string, homeDir: string): string {
+  if (value === "~") return homeDir;
+  if (value.startsWith("~/") || value.startsWith("~\\")) return path.join(homeDir, value.slice(2));
+  return path.resolve(value);
+}
+
 export function npmPreflight(
   env: NodeJS.ProcessEnv,
   homeDir: string,
@@ -256,7 +263,7 @@ export function npmPreflight(
   }
 
   const userConfig = findEnv(env, "npm_config_userconfig");
-  const sourcePath = userConfig ? userConfig.value : path.join(homeDir, ".npmrc");
+  const sourcePath = userConfig ? resolveConfigPath(userConfig.value, homeDir) : path.join(homeDir, ".npmrc");
   const content = fs.existsSync(sourcePath)
     ? fs.readFileSync(sourcePath, "utf8")
     : "";
@@ -513,7 +520,6 @@ async function configureNpm(config: string, job: JobBinding): Promise<SecureRegi
 
   // Saved before anything else can fail, so the post step can always revoke.
   saveState("srToken", session.token);
-  saveState("srEdition", session.edition ?? "");
   saveState("srBinding", session.binding ?? "");
 
   if (session.binding === "none") {

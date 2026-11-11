@@ -493,6 +493,17 @@ describe("renderSummary", () => {
     });
   });
 
+  test("names with backticks, pipes, quotes or line breaks stay in their cell and entry", () => {
+    const md = renderSummary({
+      held: [{ ecosystem: "javascript", package: "a`b", versions: ["1.0.0|x\r\ny", "1.0.0-rc\r1"], controls: [{ name: "cooldown" }] }],
+      blocked: [{ ecosystem: "javascript", package: 'q"`', version: "1.0.0", controls: [{ name: "cooldown" }] }],
+    })!;
+    expect(md).toContain("| ``a`b`` | `1.0.0|x y`, `1.0.0-rc 1` |".replace("|x", "\\|x"));
+    expect(md).toContain('| ``q"`@1.0.0`` |');
+    expect(md).toContain('        - "q\\"`@1.0.0"');
+    expect(md).toContain('        - "a`b@1.0.0|x\\r\\ny"');
+  });
+
   describe("long lists", () => {
     const INSIGHTS = "https://app.example/github/o/r/actions/runs/1?tab=packages";
     const blocked = Array.from({ length: 12 }, (_, i) => ({

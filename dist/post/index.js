@@ -32587,8 +32587,8 @@ function revokeToken(token) {
         }
     });
 }
-// Parses a Go duration as printed by secure-registry ("18h10m0s") into minutes.
-function parseGoDuration(value) {
+// Parses a duration as printed by secure-registry ("18h10m0s") into minutes.
+function parseDuration(value) {
     const re = /(\d+(?:\.\d+)?)(h|m|s)/g;
     let minutes = 0;
     let consumed = 0;
@@ -32611,7 +32611,7 @@ function formatMinutes(total) {
 // "x@1.0.0 was published 18h10m0s ago, which is within the 2-day cooldown period".
 function cooldownTiming(reason) {
     const published = /published (\S+) ago/.exec(reason);
-    const age = published ? parseGoDuration(published[1]) : undefined;
+    const age = published ? parseDuration(published[1]) : undefined;
     if (age === undefined) {
         return undefined;
     }
@@ -32663,7 +32663,17 @@ function compareVersions(a, b) {
     return x.pre.length - y.pre.length;
 }
 function cell(value) {
-    return value.replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
+    return value.replace(/\|/g, "\\|").replace(/\r\n|\r|\n/g, " ");
+}
+// An inline code span for a table cell. The fence is one backtick longer
+// than the longest run inside, so a backtick in the value cannot end it.
+function code(value) {
+    var _a;
+    const text = cell(value);
+    const longest = Math.max(0, ...((_a = text.match(/`+/g)) !== null && _a !== void 0 ? _a : []).map((run) => run.length));
+    const fence = "`".repeat(longest + 1);
+    const pad = text.startsWith("`") || text.endsWith("`") ? " " : "";
+    return `${fence}${pad}${text}${pad}${fence}`;
 }
 function controlNames(controls) {
     return controls.map((c) => c.name).join(", ") || "unknown";
@@ -32730,8 +32740,10 @@ function exemptionSnippet(exemptions, max) {
         if (left <= 0)
             break;
         lines.push(`  ${key}:`, "    cooldown:", "      exemptions:");
+        // JSON strings are valid YAML double-quoted scalars, so quotes and line
+        // breaks in a name stay inside the entry.
         for (const spec of specs.slice(0, left))
-            lines.push(`        - "${spec}"`);
+            lines.push(`        - ${JSON.stringify(spec)}`);
         left -= specs.length;
     }
     return lines.join("\n");
@@ -32756,7 +32768,7 @@ function showing(total, noun, insightsUrl) {
 }
 function blockedRow(b) {
     const label = b.version ? `${b.package}@${b.version}` : b.package;
-    return `| \`${cell(label)}\` | ${cell(controlNames(b.controls))} | ${cell(blockedDetails(b))} |`;
+    return `| ${code(label)} | ${cell(controlNames(b.controls))} | ${cell(blockedDetails(b))} |`;
 }
 function days(n) {
     return n === 1 ? "1 day" : `${n} days`;
@@ -32783,10 +32795,10 @@ function renderSummary(summary, options = {}) {
         const window = cooldown && heldByCooldown ? ` The cooldown for this job is ${days(cooldown)}.` : "";
         out.push(`**Held.** These versions were hidden from npm, so it used an older version or failed with ETARGET ("No matching version found").${window}`, "", ...table("| Package | Hidden versions | Reason |", [...summary.held].sort(byPackage), (h) => {
             const sorted = [...h.versions].sort(compareVersions).reverse();
-            const shown = sorted.slice(0, MAX_VERSIONS_SHOWN).map((v) => `\`${v}\``).join(", ");
+            const shown = sorted.slice(0, MAX_VERSIONS_SHOWN).map(code).join(", ");
             const more = sorted.length > MAX_VERSIONS_SHOWN ? ` and ${sorted.length - MAX_VERSIONS_SHOWN} more` : "";
             const reason = h.controls.map((c) => c.reason || c.name).join("; ");
-            return `| \`${cell(h.package)}\` | ${shown}${more} | ${cell(reason)} |`;
+            return `| ${code(h.package)} | ${shown}${more} | ${cell(reason)} |`;
         }, options.insightsUrl));
     }
     const wouldBlock = (_a = summary.wouldBlock) !== null && _a !== void 0 ? _a : [];

@@ -281,8 +281,8 @@ export async function revokeToken(token: string): Promise<void> {
   }
 }
 
-// Parses a Go duration as printed by secure-registry ("18h10m0s") into minutes.
-function parseGoDuration(value: string): number | undefined {
+// Parses a duration as printed by secure-registry ("18h10m0s") into minutes.
+function parseDuration(value: string): number | undefined {
   const re = /(\d+(?:\.\d+)?)(h|m|s)/g;
   let minutes = 0;
   let consumed = 0;
@@ -306,7 +306,7 @@ function formatMinutes(total: number): string {
 // "x@1.0.0 was published 18h10m0s ago, which is within the 2-day cooldown period".
 export function cooldownTiming(reason: string): { age: string; clearsIn?: string } | undefined {
   const published = /published (\S+) ago/.exec(reason);
-  const age = published ? parseGoDuration(published[1]) : undefined;
+  const age = published ? parseDuration(published[1]) : undefined;
   if (age === undefined) {
     return undefined;
   }
@@ -356,7 +356,17 @@ export function compareVersions(a: string, b: string): number {
 }
 
 function cell(value: string): string {
-  return value.replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
+  return value.replace(/\|/g, "\\|").replace(/\r\n|\r|\n/g, " ");
+}
+
+// An inline code span for a table cell. The fence is one backtick longer
+// than the longest run inside, so a backtick in the value cannot end it.
+function code(value: string): string {
+  const text = cell(value);
+  const longest = Math.max(0, ...(text.match(/`+/g) ?? []).map((run) => run.length));
+  const fence = "`".repeat(longest + 1);
+  const pad = text.startsWith("`") || text.endsWith("`") ? " " : "";
+  return `${fence}${pad}${text}${pad}${fence}`;
 }
 
 function controlNames(controls: ControlResult[]): string {
@@ -423,7 +433,9 @@ function exemptionSnippet(exemptions: Map<string, string[]>, max: number): strin
   for (const [key, specs] of exemptions) {
     if (left <= 0) break;
     lines.push(`  ${key}:`, "    cooldown:", "      exemptions:");
-    for (const spec of specs.slice(0, left)) lines.push(`        - "${spec}"`);
+    // JSON strings are valid YAML double-quoted scalars, so quotes and line
+    // breaks in a name stay inside the entry.
+    for (const spec of specs.slice(0, left)) lines.push(`        - ${JSON.stringify(spec)}`);
     left -= specs.length;
   }
   return lines.join("\n");
@@ -452,7 +464,7 @@ function showing(total: number, noun: string, insightsUrl?: string): string[] {
 
 function blockedRow(b: BlockedVersion): string {
   const label = b.version ? `${b.package}@${b.version}` : b.package;
-  return `| \`${cell(label)}\` | ${cell(controlNames(b.controls))} | ${cell(blockedDetails(b))} |`;
+  return `| ${code(label)} | ${cell(controlNames(b.controls))} | ${cell(blockedDetails(b))} |`;
 }
 
 function days(n: number): string {
@@ -503,10 +515,10 @@ export function renderSummary(summary: RunSummary, options: RenderOptions = {}):
         [...summary.held].sort(byPackage),
         (h) => {
           const sorted = [...h.versions].sort(compareVersions).reverse();
-          const shown = sorted.slice(0, MAX_VERSIONS_SHOWN).map((v) => `\`${v}\``).join(", ");
+          const shown = sorted.slice(0, MAX_VERSIONS_SHOWN).map(code).join(", ");
           const more = sorted.length > MAX_VERSIONS_SHOWN ? ` and ${sorted.length - MAX_VERSIONS_SHOWN} more` : "";
           const reason = h.controls.map((c) => c.reason || c.name).join("; ");
-          return `| \`${cell(h.package)}\` | ${shown}${more} | ${cell(reason)} |`;
+          return `| ${code(h.package)} | ${shown}${more} | ${cell(reason)} |`;
         },
         options.insightsUrl
       )
