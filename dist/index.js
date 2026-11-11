@@ -31979,6 +31979,14 @@ function utils_getAnnotationLogs(platform) {
             throw new Error("platform not supported");
     }
 }
+// Replaces the query string of signed S3 URLs, which carries the request's
+// credentials and signature, before agent output is printed to the job log.
+// Other URLs and all other text are left unchanged.
+const URL_WITH_QUERY = /(https?:\/\/[^\s"'?\\]+)\?((?:[^\s"'\\]|\\u0026)*)/g;
+const SIGNED_QUERY = /X-Amz-(Signature|Credential|Security-Token)=/i;
+function redactSignedUrls(text) {
+    return text.replace(URL_WITH_QUERY, (match, base, query) => SIGNED_QUERY.test(query) ? `${base}?REDACTED` : match);
+}
 
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {

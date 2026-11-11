@@ -7,9 +7,8 @@ import isDocker from "is-docker";
 import { isARCRunner } from "./arc-runner";
 import { isGithubHosted } from "./tls-inspect";
 import { context } from "@actions/github";
-import { isPlatformSupported, isAgentInstalled, detectThirdPartyRunnerProvider } from "./utils";
+import { isPlatformSupported, isAgentInstalled, detectThirdPartyRunnerProvider, redactSignedUrls } from "./utils";
 import { finishSecureRegistry } from "./secure-registry-post";
-import { redactSignedUrls } from "./redact";
 
 // See setup.ts for rationale — Node 22+ kills the process on unhandled rejections.
 process.on("unhandledRejection", (reason) => {
