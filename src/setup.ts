@@ -39,6 +39,7 @@ import {
 
 import { chownForFolder, getRunnerUser, getPrivilegeMode, detectThirdPartyRunnerProvider, isAgentInstalled, isPlatformSupported, shouldDeployAgentOnSelfHosted, ThirdPartyRunnerProvider } from "./utils";
 import { buildBravoConfig } from "./bravo-config";
+import { SecureRegistryResult, sessionWaitsForMonitor, setupSecureRegistry } from "./secure-registry";
 
 interface MonitorResponse {
   runner_ip_address?: string;
@@ -148,11 +149,15 @@ async function resolveCacheHost(): Promise<string | undefined> {
     }
     if (isGithubHosted() && isDocker()) {
       console.log(common.CONTAINER_MESSAGE);
+      // No agent here, but npm in the container still reads the user config
+      // written under RUNNER_TEMP, which is mounted into the container.
+      await setupSecureRegistry();
       return;
     }
 
     if (isGithubHosted() && process.platform === "linux" && !process.env.USER) {
       console.log(common.UBUNTU_SLIM_MESSAGE);
+      await setupSecureRegistry();
       return;
     }
 
@@ -320,6 +325,31 @@ async function resolveCacheHost(): Promise<string | undefined> {
       core.setFailed("disable-telemetry must be a boolean value");
     }
 
+    const allowSecureRegistry = (secureRegistry: SecureRegistryResult) => {
+      if (
+        secureRegistry.registryEndpoint &&
+        confg.egress_policy === "block" &&
+        !isDenyListMode
+      ) {
+        core.info(`Adding secure-registry endpoint: ${secureRegistry.registryEndpoint} to allowed-endpoints`);
+        confg.allowed_endpoints += ` ${secureRegistry.registryEndpoint}`;
+      }
+    };
+
+    // On the main hosted path the session is created after /monitor, so a
+    // job without an OIDC token can be linked to its one-time key. Every
+    // other path returns before /monitor and still hands allowed-endpoints
+    // to an agent, so it sets up here.
+    const secureRegistryAfterMonitor = sessionWaitsForMonitor({
+      arc: isARCRunner(),
+      githubHosted: isGithubHosted(),
+      customVMImage: process.env.STEP_SECURITY_HARDEN_RUNNER === "true",
+      agentInstalled: isAgentInstalled(process.platform),
+    });
+    if (!secureRegistryAfterMonitor) {
+      allowSecureRegistry(await setupSecureRegistry());
+    }
+
     if (
       isValidEvent() &&
       confg.egress_policy === "block" &&
@@ -485,6 +515,18 @@ async function resolveCacheHost(): Promise<string | undefined> {
     );
 
     console.log(`Step Security Job Correlation ID: ${correlation_id}`);
+
+    // After /monitor, so the session can carry the one-time key, and before
+    // the agent config is built, so the registry host is in allowed-endpoints.
+    if (secureRegistryAfterMonitor) {
+      allowSecureRegistry(
+        await setupSecureRegistry({
+          correlationId: correlation_id,
+          oneTimeKey: confg.one_time_key,
+        })
+      );
+    }
+
     if (String(statusCode) === common.STATUS_HARDEN_RUNNER_UNAVAILABLE) {
       console.log(common.HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
       return;

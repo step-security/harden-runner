@@ -31883,6 +31883,8 @@ const STEPSECURITY_ENV = "agent"; // agent or int
 const configs_STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
 const STEPSECURITY_TELEMETRY_URL = "https://prod.app-api.stepsecurity.io/v1";
 const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
+// OIDC audience the secure-registry session API accepts.
+const SECURE_REGISTRY_AUDIENCE = "stepsecurity-secure-registry";
 
 // EXTERNAL MODULE: external "child_process"
 var external_child_process_ = __nccwpck_require__(5317);
@@ -32249,6 +32251,625 @@ function isGithubHosted() {
 
 // EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
 var github = __nccwpck_require__(3228);
+;// CONCATENATED MODULE: ./src/npmrc.ts
+// npm user config rules for secure-registry, as plain string functions with
+// no I/O.
+const DEFAULT_REGISTRY_HOSTS = (/* unused pure expression or super */ null && (["registry.npmjs.org", "registry.yarnpkg.com"]));
+// Looks up an npm config environment variable case-insensitively, the way npm
+// reads npm_config_* variables. Empty values are treated as unset.
+function findEnv(env, name) {
+    const wanted = name.toLowerCase();
+    for (const [key, value] of Object.entries(env)) {
+        if (key.toLowerCase() === wanted && value) {
+            return { key, value };
+        }
+    }
+    return undefined;
+}
+function parseLine(line) {
+    const trimmed = line.trim();
+    if (trimmed === "" || trimmed.startsWith(";") || trimmed.startsWith("#")) {
+        return undefined;
+    }
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) {
+        return undefined;
+    }
+    let value = trimmed.slice(eq + 1).trim();
+    if (value.length >= 2 &&
+        (value[0] === '"' || value[0] === "'") &&
+        value[value.length - 1] === value[0]) {
+        value = value.slice(1, -1);
+    }
+    return { key: trimmed.slice(0, eq).trim(), value };
+}
+// Returns the unscoped registry= value npm would use from this file (the last
+// one wins), or undefined when the file does not set one.
+function unscopedRegistry(content) {
+    let registry;
+    for (const line of content.split(/\r?\n/)) {
+        const entry = parseLine(line);
+        if ((entry === null || entry === void 0 ? void 0 : entry.key) === "registry") {
+            registry = entry.value;
+        }
+    }
+    return registry;
+}
+// True only for the public npm registry and its yarn alias. Anything else,
+// including a ${VAR} reference we cannot resolve, is a registry the user
+// chose on purpose.
+function isDefaultRegistry(value) {
+    if (value.includes("${")) {
+        return false;
+    }
+    try {
+        return DEFAULT_REGISTRY_HOSTS.includes(new URL(value).hostname);
+    }
+    catch (_a) {
+        return false;
+    }
+}
+// Describes a registry value for a log line without echoing credentials that
+// may be embedded in the URL.
+function describeRegistry(value) {
+    try {
+        return new URL(value).host;
+    }
+    catch (_a) {
+        return value.includes("${") ? value : "a value that is not a URL";
+    }
+}
+// Builds the job's npm user config: the source lines verbatim (${VAR}
+// references are left for npm to expand), minus unscoped registry= lines and
+// any existing settings for the secure-registry host, followed by our
+// registry, its host-scoped token and a host-scoped always-auth.
+function mergeNpmrc(source, opts) {
+    const eol = source.includes("\r\n") ? "\r\n" : "\n";
+    const registry = new URL(opts.registryUrl);
+    if (!registry.pathname.endsWith("/")) {
+        registry.pathname += "/";
+    }
+    const hostPrefix = `//${registry.host}/`;
+    const kept = source.split(/\r?\n/).filter((line) => {
+        const entry = parseLine(line);
+        return (entry === undefined ||
+            (entry.key !== "registry" && !entry.key.startsWith(hostPrefix)));
+    });
+    while (kept.length > 0 && kept[kept.length - 1].trim() === "") {
+        kept.pop();
+    }
+    kept.push(`registry=${registry.href}`);
+    kept.push(`//${registry.host}${registry.pathname}:_authToken=${opts.token}`);
+    // yarn 1 sends the token for unscoped packages only when always-auth is
+    // set, and gets 401 without it. npm and pnpm ignore the key (npm 11 prints
+    // an "Unknown user config" warning). Scoped to our host, so it beats a
+    // global always-auth=false (setup-node writes one) and no other registry
+    // gets credentials.
+    kept.push(`//${registry.host}${registry.pathname}:always-auth=true`);
+    if (opts.omitLockfileResolved) {
+        kept.push("omit-lockfile-registry-resolved=true");
+    }
+    return kept.join(eol) + eol;
+}
+
+;// CONCATENATED MODULE: ./src/secure-registry-post.ts
+var secure_registry_post_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+
+
+const SUMMARY_TIMEOUT_MS = 5000;
+const REVOKE_TIMEOUT_MS = 5000;
+// Recent requests can take a moment to appear in the summary, so an empty
+// first answer is asked again once after this delay.
+const SUMMARY_RETRY_DELAY_MS = 3000;
+// Rows per table. The full list is on the run insights Packages tab.
+const MAX_ROWS = 5;
+const MAX_VERSIONS_SHOWN = 5;
+const LOCKFILE_NAMES = ["package-lock.json", "npm-shrinkwrap.json"];
+// Summary ecosystem values are registry paths; the input keys differ.
+const ECOSYSTEM_CONFIG_KEYS = { javascript: "npm" };
+// Returns what the pre step left for this step, or undefined when it
+// configured nothing.
+function readPostState(env) {
+    const token = env.STATE_srToken;
+    if (!token) {
+        return undefined;
+    }
+    const days = env.STATE_srCooldownDays ? Number(env.STATE_srCooldownDays) : NaN;
+    return {
+        token,
+        registryUrl: env.STATE_srRegistryUrl || undefined,
+        binding: env.STATE_srBinding || undefined,
+        cooldownDays: Number.isInteger(days) && days >= 0 ? days : undefined,
+        correlationId: env.STATE_correlation_id || undefined,
+    };
+}
+// Links to this job's packages on the run insights Packages tab. Only jobs
+// whose session is bound to them have rows there, and the page needs the
+// job's correlation ID.
+function insightsPackagesUrl(env, state, checkRunId) {
+    const repository = env.GITHUB_REPOSITORY;
+    const runId = env.GITHUB_RUN_ID;
+    if (state.binding !== "oidc" && state.binding !== "hr_key")
+        return undefined;
+    if (!repository || !runId || !state.correlationId || !/^\d+$/.test(checkRunId))
+        return undefined;
+    const params = new URLSearchParams({
+        tab: "packages",
+        correlationId: state.correlationId,
+        utm_source: "markdown",
+        jobId: checkRunId,
+    });
+    return `${STEPSECURITY_WEB_URL}/github/${repository}/actions/runs/${runId}?${params}`;
+}
+function sameRegistry(a, b) {
+    try {
+        const x = new URL(a);
+        const y = new URL(b);
+        return (x.origin === y.origin &&
+            x.pathname.replace(/\/+$/, "") === y.pathname.replace(/\/+$/, ""));
+    }
+    catch (_a) {
+        return false;
+    }
+}
+// Describes how npm's registry moved away from ours after the pre step, or
+// returns undefined when npm still uses it. actions/setup-node with
+// registry-url replaces our registry= line in the same file.
+function registryOverride(env, registryUrl) {
+    const envRegistry = findEnv(env, "npm_config_registry");
+    if (envRegistry) {
+        return `${envRegistry.key} is set to ${describeRegistry(envRegistry.value)}`;
+    }
+    const userConfig = findEnv(env, "npm_config_userconfig");
+    if (!userConfig) {
+        return "NPM_CONFIG_USERCONFIG is no longer set";
+    }
+    if (!external_fs_.existsSync(userConfig.value)) {
+        return `${userConfig.value} no longer exists`;
+    }
+    const registry = unscopedRegistry(external_fs_.readFileSync(userConfig.value, "utf8"));
+    if (registry === undefined) {
+        return `${userConfig.value} no longer sets a registry`;
+    }
+    if (!sameRegistry(registry, registryUrl)) {
+        return `${userConfig.value} now sets registry to ${describeRegistry(registry)}`;
+    }
+    return undefined;
+}
+// In container jobs the workspace belongs to another user, and
+// actions/checkout removes its safe.directory entry in its own post step,
+// which runs before this one. The workspace is trusted here, but settings
+// that run commands (fsmonitor, external diff) stay off.
+function git(cwd, args) {
+    const safe = ["-c", `safe.directory=${cwd}`, "-c", "core.fsmonitor=false"];
+    const out = external_child_process_.execFileSync("git", [...safe, ...args], {
+        cwd,
+        encoding: "utf8",
+        timeout: 10000,
+        stdio: ["ignore", "pipe", "ignore"],
+        maxBuffer: 10 * 1024 * 1024,
+    });
+    return out.split("\0").filter((f) => f !== "");
+}
+// Lists files the job changed: edited, staged or new, plus anything in
+// commits made since the checkout, since a job that commits its lockfile
+// leaves a clean tree behind.
+function changedFiles(workspace, sha) {
+    const files = new Set();
+    const add = (args) => {
+        for (const f of git(workspace, args))
+            files.add(f);
+    };
+    add(["ls-files", "-z", "--modified", "--others", "--exclude-standard"]);
+    add(["diff", "-z", "--no-ext-diff", "--name-only", "--cached"]);
+    if (sha) {
+        try {
+            add(["diff", "-z", "--no-ext-diff", "--name-only", sha, "HEAD"]);
+        }
+        catch (e) {
+            lib_core.debug(`secure-registry: unable to diff against ${sha}: ${e}`);
+        }
+    }
+    return [...files];
+}
+// Returns the changed npm lockfiles that record package URLs on our host.
+// Those fail with E401 anywhere the run token is not configured.
+function leakedLockfiles(workspace, files, registryHost) {
+    const needle = `//${registryHost}/`;
+    return files
+        .filter((f) => LOCKFILE_NAMES.includes(external_path_.basename(f)))
+        .filter((f) => !f.split(/[\\/]/).includes("node_modules"))
+        .filter((f) => {
+        const full = external_path_.join(workspace, f);
+        try {
+            return external_fs_.statSync(full).isFile() && external_fs_.readFileSync(full, "utf8").includes(needle);
+        }
+        catch (_a) {
+            return false;
+        }
+    })
+        .sort();
+}
+function checkLockfiles(registryUrl) {
+    const workspace = process.env.GITHUB_WORKSPACE;
+    if (!workspace) {
+        return;
+    }
+    let host;
+    try {
+        host = new URL(registryUrl).host;
+    }
+    catch (_a) {
+        return;
+    }
+    let files;
+    try {
+        files = changedFiles(workspace, process.env.GITHUB_SHA);
+    }
+    catch (e) {
+        // No checkout, or git refuses the workspace (owner mismatch in containers).
+        lib_core.debug(`secure-registry: skipping the lockfile check: ${e}`);
+        return;
+    }
+    for (const file of leakedLockfiles(workspace, files, host)) {
+        lib_core.warning(`secure-registry: ${file} now has package URLs on ${host}. ` +
+            `Do not commit it from this job as is: installs that do not use this run's ` +
+            `registry token fail with E401. To keep lockfiles portable, add ` +
+            `"lockfile-resolved: omit" under npm in the secure-registry input.`, { file });
+    }
+}
+function getSummary(token) {
+    return secure_registry_post_awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c;
+        const resp = yield fetch(`${configs_STEPSECURITY_API_URL}/secure-registry/sessions/summary`, {
+            headers: { authorization: `Bearer ${token}` },
+            signal: AbortSignal.timeout(SUMMARY_TIMEOUT_MS),
+        });
+        if (resp.status !== 200) {
+            lib_core.info(`secure-registry: could not read the run summary (HTTP ${resp.status})`);
+            return undefined;
+        }
+        const body = (yield resp.json());
+        return { held: (_a = body.held) !== null && _a !== void 0 ? _a : [], blocked: (_b = body.blocked) !== null && _b !== void 0 ? _b : [], wouldBlock: (_c = body.would_block) !== null && _c !== void 0 ? _c : [] };
+    });
+}
+function isEmpty(summary) {
+    var _a;
+    return summary.held.length === 0 && summary.blocked.length === 0 && ((_a = summary.wouldBlock) !== null && _a !== void 0 ? _a : []).length === 0;
+}
+function fetchSummary(token_1) {
+    return secure_registry_post_awaiter(this, arguments, void 0, function* (token, sleep = (ms) => new Promise((r) => setTimeout(r, ms))) {
+        var _a;
+        const first = yield getSummary(token);
+        if (!first || !isEmpty(first)) {
+            return first;
+        }
+        yield sleep(SUMMARY_RETRY_DELAY_MS);
+        return (_a = (yield getSummary(token))) !== null && _a !== void 0 ? _a : first;
+    });
+}
+function revokeToken(token) {
+    return secure_registry_post_awaiter(this, void 0, void 0, function* () {
+        var _a, _b;
+        try {
+            const resp = yield fetch(`${configs_STEPSECURITY_API_URL}/secure-registry/sessions/revoke`, {
+                method: "POST",
+                headers: { authorization: `Bearer ${token}` },
+                signal: AbortSignal.timeout(REVOKE_TIMEOUT_MS),
+            });
+            if (resp.status === 204) {
+                lib_core.info("secure-registry: run token revoked");
+                return;
+            }
+            let code = "";
+            try {
+                code = (_b = (_a = ((yield resp.json()))) === null || _a === void 0 ? void 0 : _a.code) !== null && _b !== void 0 ? _b : "";
+            }
+            catch (_c) {
+                // Not JSON; the status is enough.
+            }
+            lib_core.info(`secure-registry: could not revoke the run token (HTTP ${resp.status}${code ? `, ${code}` : ""}); it expires on its own`);
+        }
+        catch (e) {
+            lib_core.info(`secure-registry: could not revoke the run token (${e instanceof Error ? e.message : e}); it expires on its own`);
+        }
+    });
+}
+// Parses a Go duration as printed by secure-registry ("18h10m0s") into minutes.
+function parseGoDuration(value) {
+    const re = /(\d+(?:\.\d+)?)(h|m|s)/g;
+    let minutes = 0;
+    let consumed = 0;
+    for (const m of value.matchAll(re)) {
+        const n = Number(m[1]);
+        minutes += m[2] === "h" ? n * 60 : m[2] === "m" ? n : n / 60;
+        consumed += m[0].length;
+    }
+    return consumed === value.length && consumed > 0 ? minutes : undefined;
+}
+function formatMinutes(total) {
+    const rounded = Math.max(0, Math.round(total));
+    const h = Math.floor(rounded / 60);
+    const m = rounded % 60;
+    if (h === 0)
+        return `${m}m`;
+    return m === 0 ? `${h}h` : `${h}h${m}m`;
+}
+// Reads the age and cooldown window out of a cooldown block reason, such as
+// "x@1.0.0 was published 18h10m0s ago, which is within the 2-day cooldown period".
+function cooldownTiming(reason) {
+    const published = /published (\S+) ago/.exec(reason);
+    const age = published ? parseGoDuration(published[1]) : undefined;
+    if (age === undefined) {
+        return undefined;
+    }
+    const window = /within the (\d+)-day cooldown/.exec(reason);
+    if (!window) {
+        return { age: formatMinutes(age) };
+    }
+    return {
+        age: formatMinutes(age),
+        clearsIn: formatMinutes(Number(window[1]) * 24 * 60 - age),
+    };
+}
+function parseVersion(v) {
+    const [main, ...rest] = v.split("+")[0].split("-");
+    return {
+        core: main.split(".").map((p) => Number(p) || 0),
+        pre: rest.length ? rest.join("-").split(".") : [],
+    };
+}
+function compareIdentifiers(a, b) {
+    const an = /^\d+$/.test(a);
+    const bn = /^\d+$/.test(b);
+    if (an && bn)
+        return Number(a) - Number(b);
+    if (an)
+        return -1;
+    if (bn)
+        return 1;
+    return a < b ? -1 : a > b ? 1 : 0;
+}
+// Semver precedence, enough to pick the newest of a package's versions.
+function compareVersions(a, b) {
+    var _a, _b;
+    const x = parseVersion(a);
+    const y = parseVersion(b);
+    for (let i = 0; i < 3; i++) {
+        const d = ((_a = x.core[i]) !== null && _a !== void 0 ? _a : 0) - ((_b = y.core[i]) !== null && _b !== void 0 ? _b : 0);
+        if (d !== 0)
+            return d;
+    }
+    if (!x.pre.length || !y.pre.length) {
+        return y.pre.length - x.pre.length;
+    }
+    for (let i = 0; i < Math.min(x.pre.length, y.pre.length); i++) {
+        const d = compareIdentifiers(x.pre[i], y.pre[i]);
+        if (d !== 0)
+            return d;
+    }
+    return x.pre.length - y.pre.length;
+}
+function cell(value) {
+    return value.replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
+}
+function controlNames(controls) {
+    return controls.map((c) => c.name).join(", ") || "unknown";
+}
+function onlyCooldown(controls) {
+    return controls.length > 0 && controls.every((c) => c.name === "cooldown");
+}
+function blockedDetails(b) {
+    const parts = [];
+    for (const c of b.controls) {
+        const timing = c.name === "cooldown" && c.reason ? cooldownTiming(c.reason) : undefined;
+        if (timing) {
+            parts.push(`published ${timing.age} ago${timing.clearsIn ? `, clears in ${timing.clearsIn}` : ""}`);
+        }
+        else if (c.reason) {
+            parts.push(c.reason);
+        }
+    }
+    return parts.join("; ");
+}
+// Picks one exact version per held or blocked package that cooldown alone
+// kept out: the version npm asked to download, or else the newest hidden
+// one. A single release keeps later releases covered by cooldown. Blocked
+// versions come first (each sorted): a refused download is what fails the
+// install, while npm can often fall back past a held version.
+function suggestedExemptions(summary) {
+    var _a, _b;
+    const blocked = new Map();
+    const held = new Map();
+    const covered = new Set();
+    const add = (into, ecosystem, spec) => {
+        const key = ECOSYSTEM_CONFIG_KEYS[ecosystem];
+        if (!key)
+            return;
+        if (!into.has(key))
+            into.set(key, new Set());
+        into.get(key).add(spec);
+    };
+    for (const b of summary.blocked) {
+        covered.add(`${b.ecosystem}\0${b.package}`);
+        if (onlyCooldown(b.controls) && b.version) {
+            add(blocked, b.ecosystem, `${b.package}@${b.version}`);
+        }
+    }
+    for (const h of summary.held) {
+        if (covered.has(`${h.ecosystem}\0${h.package}`))
+            continue;
+        if (!onlyCooldown(h.controls) || h.versions.length === 0)
+            continue;
+        const newest = [...h.versions].sort(compareVersions).pop();
+        add(held, h.ecosystem, `${h.package}@${newest}`);
+    }
+    const out = new Map();
+    for (const key of new Set([...blocked.keys(), ...held.keys()])) {
+        out.set(key, [...[...((_a = blocked.get(key)) !== null && _a !== void 0 ? _a : [])].sort(), ...[...((_b = held.get(key)) !== null && _b !== void 0 ? _b : [])].sort()]);
+    }
+    return out;
+}
+// The exemption snippet with at most `max` entries in all, taken in order.
+function exemptionSnippet(exemptions, max) {
+    const lines = ["secure-registry: |"];
+    let left = max;
+    for (const [key, specs] of exemptions) {
+        if (left <= 0)
+            break;
+        lines.push(`  ${key}:`, "    cooldown:", "      exemptions:");
+        for (const spec of specs.slice(0, left))
+            lines.push(`        - "${spec}"`);
+        left -= specs.length;
+    }
+    return lines.join("\n");
+}
+function byPackage(a, b) {
+    return a.package < b.package ? -1 : a.package > b.package ? 1 : 0;
+}
+function byPackageVersion(a, b) {
+    return byPackage(a, b) || compareVersions(a.version, b.version);
+}
+// A markdown table of at most MAX_ROWS rows. When rows are cut, a line under
+// it says so and links to the job's full list in run insights, if there is one.
+function table(header, items, render, insightsUrl) {
+    return [header, "|---|---|---|", ...items.slice(0, MAX_ROWS).map(render), "", ...showing(items.length, "", insightsUrl)];
+}
+// "Showing 5 of N." under a list cut at MAX_ROWS, or nothing when it wasn't.
+function showing(total, noun, insightsUrl) {
+    if (total <= MAX_ROWS)
+        return [];
+    const all = insightsUrl ? ` [See all packages for this job in run insights](${insightsUrl}).` : "";
+    return [`Showing ${MAX_ROWS} of ${total}${noun}.${all}`, ""];
+}
+function blockedRow(b) {
+    const label = b.version ? `${b.package}@${b.version}` : b.package;
+    return `| \`${cell(label)}\` | ${cell(controlNames(b.controls))} | ${cell(blockedDetails(b))} |`;
+}
+function days(n) {
+    return n === 1 ? "1 day" : `${n} days`;
+}
+// Same wording as the pre-step notice for binding=none.
+const UNLINKED = "This job is not linked to run insights, so the packages it installs will not appear there. " +
+    "Add `permissions: id-token: write` to this job to link it.";
+// Renders the job summary section, or undefined when nothing was held,
+// blocked or would have been blocked, and the session is linked to the job
+// (or its binding is unknown).
+function renderSummary(summary, options = {}) {
+    var _a;
+    const unlinked = options.binding === "none";
+    if (isEmpty(summary)) {
+        return unlinked ? ["### Secure registry", "", UNLINKED, ""].join("\n") : undefined;
+    }
+    const cooldown = options.cooldownDays && options.cooldownDays > 0 ? options.cooldownDays : undefined;
+    const out = ["### Secure registry", ""];
+    if (summary.blocked.length > 0) {
+        out.push("**Blocked.** Downloads of these versions were refused.", "", ...table("| Version | Control | Details |", [...summary.blocked].sort(byPackageVersion), blockedRow, options.insightsUrl));
+    }
+    if (summary.held.length > 0) {
+        const heldByCooldown = summary.held.some((h) => h.controls.some((c) => c.name === "cooldown"));
+        const window = cooldown && heldByCooldown ? ` The cooldown for this job is ${days(cooldown)}.` : "";
+        out.push(`**Held.** These versions were hidden from npm, so it used an older version or failed with ETARGET ("No matching version found").${window}`, "", ...table("| Package | Hidden versions | Reason |", [...summary.held].sort(byPackage), (h) => {
+            const sorted = [...h.versions].sort(compareVersions).reverse();
+            const shown = sorted.slice(0, MAX_VERSIONS_SHOWN).map((v) => `\`${v}\``).join(", ");
+            const more = sorted.length > MAX_VERSIONS_SHOWN ? ` and ${sorted.length - MAX_VERSIONS_SHOWN} more` : "";
+            const reason = h.controls.map((c) => c.reason || c.name).join("; ");
+            return `| \`${cell(h.package)}\` | ${shown}${more} | ${cell(reason)} |`;
+        }, options.insightsUrl));
+    }
+    const wouldBlock = (_a = summary.wouldBlock) !== null && _a !== void 0 ? _a : [];
+    if (wouldBlock.length > 0) {
+        out.push("**Would be blocked.** This job runs secure-registry in audit mode, so these downloads were allowed. In enforce mode they would have been refused.", "", ...table("| Version | Control | Details |", [...wouldBlock].sort(byPackageVersion), blockedRow, options.insightsUrl));
+    }
+    // Cut at MAX_ROWS like the tables, blocked versions first.
+    const exemptions = suggestedExemptions(summary);
+    const exemptionCount = [...exemptions.values()].reduce((n, specs) => n + specs.length, 0);
+    if (exemptions.size > 0) {
+        const passed = cooldown ? `the ${cooldown}-day cooldown` : "the cooldown";
+        out.push(`To allow these versions now, add them to the \`secure-registry\` input, merged with any settings you already have. Each entry allows that one release only, so later releases stay covered. You can also rerun the job once ${passed} has passed.`, "", "```yaml", exemptionSnippet(exemptions, MAX_ROWS), "```", "", ...showing(exemptionCount, " exemptions", options.insightsUrl));
+    }
+    if (summary.blocked.some((b) => b.controls.some((c) => c.name === "compromised"))) {
+        out.push("Versions blocked as compromised cannot be exempted.", "");
+    }
+    out.push("_Requests from the last moments of the job may be missing from this list._", "");
+    if (unlinked) {
+        out.push(UNLINKED, "");
+    }
+    return out.join("\n");
+}
+function reportRun(state) {
+    return secure_registry_post_awaiter(this, void 0, void 0, function* () {
+        var _a;
+        const override = registryOverride(process.env, state.registryUrl);
+        if (override) {
+            lib_core.notice(`secure-registry: npm stopped using secure-registry during this job (${override}), ` +
+                `so installs after that change were not checked. actions/setup-node with ` +
+                `registry-url: https://registry.npmjs.org after Harden-Runner does this.`);
+        }
+        checkLockfiles(state.registryUrl);
+        // The binding comes from the pre step, so the unlinked line is written even
+        // when the summary cannot be read.
+        let summary;
+        try {
+            summary = yield fetchSummary(state.token);
+        }
+        catch (e) {
+            lib_core.info(`secure-registry: could not read the run summary: ${e instanceof Error ? e.message : e}`);
+        }
+        if (summary) {
+            const wouldBlock = ((_a = summary.wouldBlock) === null || _a === void 0 ? void 0 : _a.length) ? `, ${summary.wouldBlock.length} would be blocked in enforce mode` : "";
+            lib_core.info(isEmpty(summary)
+                ? "secure-registry: no package versions were held or blocked"
+                : `secure-registry: ${summary.held.length} package(s) held, ${summary.blocked.length} version(s) blocked${wouldBlock}, see the job summary`);
+        }
+        const markdown = renderSummary(summary !== null && summary !== void 0 ? summary : { held: [], blocked: [] }, {
+            binding: state.binding,
+            cooldownDays: state.cooldownDays,
+            insightsUrl: insightsPackagesUrl(process.env, state, lib_core.getInput("check-run-id")),
+        });
+        if (markdown) {
+            yield lib_core.summary.addRaw(markdown, true).write();
+        }
+    });
+}
+// Reports what secure-registry did in this job, then revokes the run token.
+// Skips quietly when the pre step configured nothing, and never fails the
+// job.
+function finishSecureRegistry() {
+    return secure_registry_post_awaiter(this, void 0, void 0, function* () {
+        const state = readPostState(process.env);
+        if (!state) {
+            return;
+        }
+        // Masks registered in the pre step cover the job, but this is cheap.
+        lib_core.setSecret(state.token);
+        try {
+            if (state.registryUrl) {
+                yield reportRun(Object.assign(Object.assign({}, state), { registryUrl: state.registryUrl }));
+            }
+        }
+        catch (e) {
+            lib_core.info(`secure-registry: post-step report failed: ${e instanceof Error ? e.message : e}`);
+        }
+        finally {
+            // After the summary: revoking first would make the summary call fail.
+            yield revokeToken(state.token);
+        }
+    });
+}
+
 ;// CONCATENATED MODULE: ./src/cleanup.ts
 var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -32259,6 +32880,7 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -32283,6 +32905,9 @@ process.on("unhandledRejection", (reason) => {
         console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
         return;
     }
+    // Before the early returns below: the pre step configures npm in container
+    // and ubuntu-slim jobs too, and its token must be revoked there as well.
+    yield finishSecureRegistry();
     if (!isPlatformSupported(process.platform)) {
         console.log(UNSUPPORTED_RUNNER_MESSAGE);
         return;

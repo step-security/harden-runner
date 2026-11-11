@@ -85368,6 +85368,8 @@ const STEPSECURITY_ENV = "agent"; // agent or int
 const configs_STEPSECURITY_API_URL = `https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`;
 const STEPSECURITY_TELEMETRY_URL = "https://prod.app-api.stepsecurity.io/v1";
 const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
+// OIDC audience the secure-registry session API accepts.
+const SECURE_REGISTRY_AUDIENCE = "stepsecurity-secure-registry";
 
 ;// CONCATENATED MODULE: ./src/policy-utils.ts
 var policy_utils_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -85951,6 +85953,588 @@ function buildBravoConfig(confg, ghesSelfHosted = false) {
     }));
 }
 
+;// CONCATENATED MODULE: ./src/npmrc.ts
+// npm user config rules for secure-registry, as plain string functions with
+// no I/O.
+const DEFAULT_REGISTRY_HOSTS = ["registry.npmjs.org", "registry.yarnpkg.com"];
+// Looks up an npm config environment variable case-insensitively, the way npm
+// reads npm_config_* variables. Empty values are treated as unset.
+function findEnv(env, name) {
+    const wanted = name.toLowerCase();
+    for (const [key, value] of Object.entries(env)) {
+        if (key.toLowerCase() === wanted && value) {
+            return { key, value };
+        }
+    }
+    return undefined;
+}
+function parseLine(line) {
+    const trimmed = line.trim();
+    if (trimmed === "" || trimmed.startsWith(";") || trimmed.startsWith("#")) {
+        return undefined;
+    }
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) {
+        return undefined;
+    }
+    let value = trimmed.slice(eq + 1).trim();
+    if (value.length >= 2 &&
+        (value[0] === '"' || value[0] === "'") &&
+        value[value.length - 1] === value[0]) {
+        value = value.slice(1, -1);
+    }
+    return { key: trimmed.slice(0, eq).trim(), value };
+}
+// Returns the unscoped registry= value npm would use from this file (the last
+// one wins), or undefined when the file does not set one.
+function unscopedRegistry(content) {
+    let registry;
+    for (const line of content.split(/\r?\n/)) {
+        const entry = parseLine(line);
+        if ((entry === null || entry === void 0 ? void 0 : entry.key) === "registry") {
+            registry = entry.value;
+        }
+    }
+    return registry;
+}
+// True only for the public npm registry and its yarn alias. Anything else,
+// including a ${VAR} reference we cannot resolve, is a registry the user
+// chose on purpose.
+function isDefaultRegistry(value) {
+    if (value.includes("${")) {
+        return false;
+    }
+    try {
+        return DEFAULT_REGISTRY_HOSTS.includes(new URL(value).hostname);
+    }
+    catch (_a) {
+        return false;
+    }
+}
+// Describes a registry value for a log line without echoing credentials that
+// may be embedded in the URL.
+function describeRegistry(value) {
+    try {
+        return new URL(value).host;
+    }
+    catch (_a) {
+        return value.includes("${") ? value : "a value that is not a URL";
+    }
+}
+// Builds the job's npm user config: the source lines verbatim (${VAR}
+// references are left for npm to expand), minus unscoped registry= lines and
+// any existing settings for the secure-registry host, followed by our
+// registry, its host-scoped token and a host-scoped always-auth.
+function mergeNpmrc(source, opts) {
+    const eol = source.includes("\r\n") ? "\r\n" : "\n";
+    const registry = new URL(opts.registryUrl);
+    if (!registry.pathname.endsWith("/")) {
+        registry.pathname += "/";
+    }
+    const hostPrefix = `//${registry.host}/`;
+    const kept = source.split(/\r?\n/).filter((line) => {
+        const entry = parseLine(line);
+        return (entry === undefined ||
+            (entry.key !== "registry" && !entry.key.startsWith(hostPrefix)));
+    });
+    while (kept.length > 0 && kept[kept.length - 1].trim() === "") {
+        kept.pop();
+    }
+    kept.push(`registry=${registry.href}`);
+    kept.push(`//${registry.host}${registry.pathname}:_authToken=${opts.token}`);
+    // yarn 1 sends the token for unscoped packages only when always-auth is
+    // set, and gets 401 without it. npm and pnpm ignore the key (npm 11 prints
+    // an "Unknown user config" warning). Scoped to our host, so it beats a
+    // global always-auth=false (setup-node writes one) and no other registry
+    // gets credentials.
+    kept.push(`//${registry.host}${registry.pathname}:always-auth=true`);
+    if (opts.omitLockfileResolved) {
+        kept.push("omit-lockfile-registry-resolved=true");
+    }
+    return kept.join(eol) + eol;
+}
+
+;// CONCATENATED MODULE: ./src/secure-registry.ts
+var secure_registry_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+
+
+
+
+
+
+// Session creation can take longer than the other API calls.
+const SESSION_TIMEOUT_MS = 10000;
+const SKIP_SUFFIX = "npm stays on the default registry.";
+// Why the session gave npm no registry. The resolved config leaves out every
+// ecosystem not listed in `ecosystems`, and keeps a covered one with mode off.
+function npmNotConfiguredReason(session) {
+    var _a;
+    if ((_a = session.config) === null || _a === void 0 ? void 0 : _a.npm) {
+        return "npm is off";
+    }
+    return "npm is not listed in ecosystems";
+}
+// Returns the raw input to send to the session API, or undefined when the
+// feature is off. The action applies no defaults of its own.
+function secureRegistryInput(raw) {
+    const value = raw.trim();
+    if (value === "" || value.toLowerCase() === "false") {
+        return undefined;
+    }
+    return value;
+}
+// GitHub gives fork pull_request runs no OIDC token even with id-token: write.
+function missingTokenReason(eventName, payload) {
+    var _a, _b, _c, _d;
+    if (eventName === "pull_request") {
+        const head = (_c = (_b = (_a = payload === null || payload === void 0 ? void 0 : payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.repo) === null || _c === void 0 ? void 0 : _c.full_name;
+        const base = (_d = payload === null || payload === void 0 ? void 0 : payload.repository) === null || _d === void 0 ? void 0 : _d.full_name;
+        if (!head || head !== base) {
+            return "fork pull request, no OIDC token available";
+        }
+    }
+    return "no id-token: write permission";
+}
+// Mirrors the session API's checks for declared claims, so a request that
+// would only get a 400 is not sent.
+const MAX_CLAIM_LENGTH = 512;
+const NUMERIC = /^[0-9]+$/;
+const GITHUB_NAME = /^[A-Za-z0-9._-]+$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const REQUIRED_CLAIMS = [
+    "repository",
+    "repository_id",
+    "repository_owner",
+    "repository_owner_id",
+    "run_id",
+    "run_attempt",
+    "check_run_id",
+    "repository_visibility",
+    "runner_environment",
+];
+const NUMERIC_CLAIMS = new Set([
+    "repository_id",
+    "repository_owner_id",
+    "run_id",
+    "run_attempt",
+    "check_run_id",
+    "actor_id",
+]);
+function repositoryVisibility(payload) {
+    const repository = payload === null || payload === void 0 ? void 0 : payload.repository;
+    if (repository === null || repository === void 0 ? void 0 : repository.visibility) {
+        return repository.visibility;
+    }
+    if (typeof (repository === null || repository === void 0 ? void 0 : repository.private) === "boolean") {
+        return repository.private ? "private" : "public";
+    }
+    return undefined;
+}
+// Builds the job identity from the runner environment. checkRunId comes from
+// the action's check-run-id input (${{ job.check_run_id }}): no environment
+// variable carries it.
+function buildDeclaredClaims(env, payload, checkRunId) {
+    const candidates = {
+        repository: env.GITHUB_REPOSITORY,
+        repository_id: env.GITHUB_REPOSITORY_ID,
+        repository_owner: env.GITHUB_REPOSITORY_OWNER,
+        repository_owner_id: env.GITHUB_REPOSITORY_OWNER_ID,
+        run_id: env.GITHUB_RUN_ID,
+        run_attempt: env.GITHUB_RUN_ATTEMPT,
+        check_run_id: checkRunId,
+        repository_visibility: repositoryVisibility(payload),
+        runner_environment: env.RUNNER_ENVIRONMENT,
+        actor: env.GITHUB_ACTOR,
+        actor_id: env.GITHUB_ACTOR_ID,
+        event_name: env.GITHUB_EVENT_NAME,
+        ref: env.GITHUB_REF,
+        head_ref: env.GITHUB_HEAD_REF,
+        sha: env.GITHUB_SHA,
+        workflow_ref: env.GITHUB_WORKFLOW_REF,
+    };
+    const claims = {};
+    for (const [name, raw] of Object.entries(candidates)) {
+        const value = (raw !== null && raw !== void 0 ? raw : "").trim();
+        const required = REQUIRED_CLAIMS.includes(name);
+        const valid = value !== "" &&
+            value.length <= MAX_CLAIM_LENGTH &&
+            (!NUMERIC_CLAIMS.has(name) || NUMERIC.test(value));
+        if (valid) {
+            claims[name] = value;
+        }
+        else if (required) {
+            return { ok: false, reason: value === "" ? `${name} is missing` : `${name} is malformed` };
+        }
+        // An optional claim that is empty or malformed is left out.
+    }
+    const [owner, repo, ...rest] = claims.repository.split("/");
+    if (rest.length > 0 || !GITHUB_NAME.test(owner !== null && owner !== void 0 ? owner : "") || !GITHUB_NAME.test(repo !== null && repo !== void 0 ? repo : "")) {
+        return { ok: false, reason: "repository is malformed" };
+    }
+    if (owner.toLowerCase() !== claims.repository_owner.toLowerCase()) {
+        return { ok: false, reason: "repository_owner does not match repository" };
+    }
+    return { ok: true, claims };
+}
+// Whether the pre step reaches the /monitor call on its main path. Must match
+// the early returns in setup.ts that come before /monitor: ARC, self-hosted
+// (including third-party providers), a custom VM image with Harden-Runner
+// baked in, and an agent that is already installed. When it does, the
+// session is created after /monitor so it can carry the one-time key.
+function sessionWaitsForMonitor(runner) {
+    return !runner.arc && runner.githubHosted && !runner.customVMImage && !runner.agentInstalled;
+}
+function npmGlobalConfigPath(env) {
+    const fromEnv = findEnv(env, "npm_config_globalconfig");
+    if (fromEnv) {
+        return fromEnv.value;
+    }
+    try {
+        const out = external_child_process_.execSync("npm config get globalconfig", {
+            encoding: "utf8",
+            timeout: 5000,
+            stdio: ["ignore", "pipe", "ignore"],
+        });
+        return out.trim() || undefined;
+    }
+    catch (e) {
+        lib_core.debug(`secure-registry: unable to locate the global npm config: ${e}`);
+        return undefined;
+    }
+}
+// Decides, before any token is minted, whether npm can be switched without
+// overriding a registry the user configured on purpose.
+function npmPreflight(env, homeDir, globalConfigPath = npmGlobalConfigPath) {
+    const envRegistry = findEnv(env, "npm_config_registry");
+    if (envRegistry) {
+        return {
+            ok: false,
+            reason: `${envRegistry.key} is set (${describeRegistry(envRegistry.value)})`,
+        };
+    }
+    const userConfig = findEnv(env, "npm_config_userconfig");
+    const sourcePath = userConfig ? userConfig.value : external_path_.join(homeDir, ".npmrc");
+    const content = external_fs_.existsSync(sourcePath)
+        ? external_fs_.readFileSync(sourcePath, "utf8")
+        : "";
+    const userRegistry = unscopedRegistry(content);
+    if (userRegistry !== undefined && !isDefaultRegistry(userRegistry)) {
+        return {
+            ok: false,
+            reason: `${sourcePath} sets registry to ${describeRegistry(userRegistry)}`,
+        };
+    }
+    const globalPath = globalConfigPath(env);
+    if (globalPath) {
+        try {
+            if (external_fs_.existsSync(globalPath)) {
+                const globalRegistry = unscopedRegistry(external_fs_.readFileSync(globalPath, "utf8"));
+                if (globalRegistry !== undefined && !isDefaultRegistry(globalRegistry)) {
+                    return {
+                        ok: false,
+                        reason: `the global npm config ${globalPath} sets registry to ${describeRegistry(globalRegistry)}`,
+                    };
+                }
+            }
+        }
+        catch (e) {
+            lib_core.debug(`secure-registry: unable to read ${globalPath}: ${e}`);
+        }
+    }
+    return {
+        ok: true,
+        source: { path: sourcePath, content, envKey: userConfig === null || userConfig === void 0 ? void 0 : userConfig.key },
+    };
+}
+function errorCode(body) {
+    return body === null || body === void 0 ? void 0 : body.code;
+}
+function postSession(request) {
+    return secure_registry_awaiter(this, void 0, void 0, function* () {
+        var _a;
+        const resp = yield fetch(`${configs_STEPSECURITY_API_URL}/secure-registry/sessions`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(request),
+            signal: AbortSignal.timeout(SESSION_TIMEOUT_MS),
+        });
+        let body;
+        try {
+            body = yield resp.json();
+        }
+        catch (_b) {
+            body = undefined;
+        }
+        return {
+            status: resp.status,
+            body,
+            retryAfter: (_a = resp.headers.get("retry-after")) !== null && _a !== void 0 ? _a : undefined,
+        };
+    });
+}
+// The request body. The correlation ID is sent only when it is a UUID, and
+// the key only next to it.
+function sessionBody(config, auth, job) {
+    const body = { config };
+    const correlationId = job.correlationId && UUID.test(job.correlationId) ? job.correlationId : undefined;
+    if (correlationId) {
+        body.correlation_id = correlationId;
+    }
+    if (auth.kind === "oidc") {
+        body.oidc_token = auth.idToken;
+    }
+    else {
+        body.claims = auth.claims;
+        if (correlationId && job.oneTimeKey) {
+            body.one_time_key = job.oneTimeKey;
+        }
+    }
+    return body;
+}
+// The OIDC token lives 300s, so it is requested right before the call. An
+// expired token is retried once with a fresh one; nothing else is retried.
+function createSession(config_1, auth_1) {
+    return secure_registry_awaiter(this, arguments, void 0, function* (config, auth, job = {}) {
+        let result = yield postSession(sessionBody(config, auth, job));
+        if (auth.kind === "oidc" && result.status === 401 && errorCode(result.body) === "oidc_expired") {
+            lib_core.info("secure-registry: OIDC token expired before the session was created, retrying with a new token");
+            const retry = Object.assign(Object.assign({}, auth), { idToken: yield auth.refreshIDToken() });
+            result = yield postSession(sessionBody(config, retry, job));
+        }
+        return result;
+    });
+}
+// Expected configuration states are notices; service problems are warnings.
+// Neither fails the job.
+function describeSessionFailure(result) {
+    var _a;
+    const err = ((_a = result.body) !== null && _a !== void 0 ? _a : {});
+    switch (err.code) {
+        case "not_eligible":
+            if (err.reason === "visibility") {
+                return { level: "notice", message: "the community edition is available for public repositories only" };
+            }
+            if (err.reason === "runner") {
+                return { level: "notice", message: "the community edition is available on GitHub-hosted runners only" };
+            }
+            return { level: "notice", message: `this run is not eligible (${err.reason || "no reason given"})` };
+        case "enterprise_not_supported":
+            return { level: "notice", message: "not yet available for organizations with a StepSecurity subscription" };
+        case "id_token_required":
+            return {
+                level: "notice",
+                message: 'organizations with a StepSecurity subscription need a verified job identity, add "permissions: id-token: write" to this job',
+            };
+        case "rate_limited":
+            return {
+                level: "warning",
+                message: `session rate limit reached${result.retryAfter ? `, retry after ${result.retryAfter}s` : ""}`,
+            };
+        case "oidc_expired":
+            return { level: "warning", message: "the OIDC token expired again before a session could be created" };
+        case "oidc_replayed":
+        case "oidc_invalid":
+            return { level: "warning", message: `the session API rejected the OIDC token (${err.code})` };
+        case "unavailable":
+            return { level: "warning", message: "the session API is unavailable" };
+        default:
+            return {
+                level: "warning",
+                message: `session request failed with HTTP ${result.status}${err.code ? ` (${err.code}: ${err.error})` : ""}`,
+            };
+    }
+}
+function skipNotice(reason) {
+    lib_core.notice(`secure-registry: ${reason}. ${SKIP_SUFFIX}`);
+}
+function skipWarning(reason) {
+    lib_core.warning(`secure-registry: ${reason}. ${SKIP_SUFFIX}`);
+}
+function saveState(name, value) {
+    external_fs_.appendFileSync(process.env.GITHUB_STATE, `${name}=${value}${external_os_.EOL}`, {
+        encoding: "utf8",
+    });
+}
+// Never logs the token: it is masked before this runs and is not part of
+// any field printed here.
+function printSession(session) {
+    var _a, _b, _c;
+    lib_core.startGroup("secure-registry session");
+    lib_core.info(`edition: ${session.edition}`);
+    if (session.binding) {
+        lib_core.info(`binding: ${session.binding}`);
+    }
+    if (session.expires_at) {
+        lib_core.info(`expires at: ${new Date(session.expires_at * 1000).toISOString()}`);
+    }
+    lib_core.info(`registries: ${JSON.stringify((_a = session.registries) !== null && _a !== void 0 ? _a : {})}`);
+    lib_core.info(`resolved config:\n${JSON.stringify((_b = session.config) !== null && _b !== void 0 ? _b : {}, null, 2)}`);
+    lib_core.endGroup();
+    for (const notice of (_c = session.notices) !== null && _c !== void 0 ? _c : []) {
+        lib_core.notice(`secure-registry: ${notice.message}${notice.path ? ` (${notice.path})` : ""}`);
+    }
+}
+// Uses the job's OIDC token when there is one. Without it (no id-token: write,
+// or a fork pull_request run), sends the job identity as declared claims.
+function sessionAuth() {
+    return secure_registry_awaiter(this, void 0, void 0, function* () {
+        const getIDToken = () => lib_core.getIDToken(SECURE_REGISTRY_AUDIENCE);
+        let reason;
+        if (process.env.ACTIONS_ID_TOKEN_REQUEST_URL) {
+            try {
+                return { ok: true, auth: { kind: "oidc", idToken: yield getIDToken(), refreshIDToken: getIDToken } };
+            }
+            catch (e) {
+                reason = `the OIDC token could not be fetched (${e instanceof Error ? e.message : e})`;
+            }
+        }
+        else {
+            reason = missingTokenReason(github.context.eventName, github.context.payload);
+        }
+        const declared = buildDeclaredClaims(process.env, github.context.payload, lib_core.getInput("check-run-id"));
+        if (declared.ok === false) {
+            return {
+                ok: false,
+                reason: `${reason}, and the job identity is incomplete (${declared.reason})`,
+            };
+        }
+        lib_core.debug(`secure-registry: ${reason}, using declared claims; add "permissions: id-token: write" for verified attribution`);
+        return { ok: true, auth: { kind: "declared", claims: declared.claims } };
+    });
+}
+function configureNpm(config, job) {
+    return secure_registry_awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        if (isGHES()) {
+            skipNotice("not supported on GitHub Enterprise Server yet");
+            return {};
+        }
+        const runnerTemp = process.env.RUNNER_TEMP;
+        if (!runnerTemp) {
+            skipNotice("RUNNER_TEMP is not set");
+            return {};
+        }
+        const preflight = npmPreflight(process.env, external_os_.homedir());
+        if (preflight.ok === false) {
+            skipNotice(preflight.reason);
+            return {};
+        }
+        const auth = yield sessionAuth();
+        if (auth.ok === false) {
+            skipNotice(auth.reason);
+            return {};
+        }
+        const result = yield createSession(config, auth.auth, job);
+        if (result.status !== 200 && result.status !== 201) {
+            const failure = describeSessionFailure(result);
+            if (failure.level === "notice") {
+                skipNotice(failure.message);
+            }
+            else {
+                skipWarning(failure.message);
+            }
+            return {};
+        }
+        const session = ((_a = result.body) !== null && _a !== void 0 ? _a : {});
+        if (session.token) {
+            lib_core.setSecret(session.token);
+        }
+        printSession(session);
+        if (!session.token) {
+            if (result.status === 201) {
+                skipWarning("the session API returned no token");
+            }
+            else {
+                lib_core.info(`secure-registry: ${npmNotConfiguredReason(session)}, nothing to configure`);
+            }
+            return {};
+        }
+        // Saved before anything else can fail, so the post step can always revoke.
+        saveState("srToken", session.token);
+        saveState("srEdition", (_b = session.edition) !== null && _b !== void 0 ? _b : "");
+        saveState("srBinding", (_c = session.binding) !== null && _c !== void 0 ? _c : "");
+        if (session.binding === "none") {
+            lib_core.notice('secure-registry: this job is not linked to run insights, so the packages it installs will not appear there. Add "permissions: id-token: write" to this job to link it.');
+        }
+        for (const ecosystem of Object.keys((_d = session.registries) !== null && _d !== void 0 ? _d : {})) {
+            if (ecosystem !== "npm") {
+                lib_core.info(`secure-registry: this version of Harden-Runner configures npm only, ignoring ${ecosystem}`);
+            }
+        }
+        const registryUrl = (_e = session.registries) === null || _e === void 0 ? void 0 : _e.npm;
+        if (!registryUrl) {
+            lib_core.info(`secure-registry: ${npmNotConfiguredReason(session)}, nothing to configure`);
+            return {};
+        }
+        let registry;
+        try {
+            registry = new URL(registryUrl);
+        }
+        catch (_m) {
+            skipWarning(`the session API returned an invalid npm registry URL`);
+            return {};
+        }
+        if (registry.protocol !== "https:") {
+            skipWarning(`the session API returned a non-https npm registry URL`);
+            return {};
+        }
+        const target = external_path_.join(runnerTemp, ".npmrc");
+        const content = mergeNpmrc(preflight.source.content, {
+            registryUrl,
+            token: session.token,
+            omitLockfileResolved: ((_g = (_f = session.config) === null || _f === void 0 ? void 0 : _f.npm) === null || _g === void 0 ? void 0 : _g.lockfile_resolved) === "omit",
+        });
+        external_fs_.writeFileSync(target, content, { encoding: "utf8", mode: 0o600 });
+        // mode only applies when the file is created; setup-node may have created it.
+        external_fs_.chmodSync(target, 0o600);
+        lib_core.exportVariable((_h = preflight.source.envKey) !== null && _h !== void 0 ? _h : "NPM_CONFIG_USERCONFIG", target);
+        saveState("srRegistryUrl", registryUrl);
+        saveState("srNpmrcPath", target);
+        // The audit rows for held versions do not say how long the cooldown is, so
+        // the post step takes it from here.
+        const cooldownDays = (_l = (_k = (_j = session.config) === null || _j === void 0 ? void 0 : _j.npm) === null || _k === void 0 ? void 0 : _k.cooldown) === null || _l === void 0 ? void 0 : _l.days;
+        if (typeof cooldownDays === "number" && Number.isInteger(cooldownDays) && cooldownDays >= 0) {
+            saveState("srCooldownDays", String(cooldownDays));
+        }
+        if (preflight.source.content !== "") {
+            lib_core.info(`secure-registry: merged existing npm config from ${preflight.source.path}`);
+        }
+        lib_core.info(`secure-registry: npm installs now go through ${registry.origin}${registry.pathname}`);
+        return { registryEndpoint: `${registry.hostname}:${registry.port || "443"}` };
+    });
+}
+// Points npm at secure-registry for the rest of the job. Fails open: any
+// problem leaves npm on its default registry and never fails the job.
+// job carries the correlation ID and one-time key when /monitor has run;
+// the key is sent to the session API only and never logged or saved.
+function setupSecureRegistry() {
+    return secure_registry_awaiter(this, arguments, void 0, function* (job = {}) {
+        const config = secureRegistryInput(lib_core.getInput("secure-registry"));
+        if (config === undefined) {
+            return {};
+        }
+        try {
+            return yield configureNpm(config, job);
+        }
+        catch (e) {
+            skipWarning(`setup failed: ${e instanceof Error ? e.message : e}`);
+            return {};
+        }
+    });
+}
+
 ;// CONCATENATED MODULE: ./src/setup.ts
 var setup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -85972,6 +86556,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
         }
     return t;
 };
+
 
 
 
@@ -86090,10 +86675,14 @@ function resolveCacheHost() {
         }
         if (isGithubHosted() && isDocker()) {
             console.log(CONTAINER_MESSAGE);
+            // No agent here, but npm in the container still reads the user config
+            // written under RUNNER_TEMP, which is mounted into the container.
+            yield setupSecureRegistry();
             return;
         }
         if (isGithubHosted() && process.platform === "linux" && !process.env.USER) {
             console.log(UBUNTU_SLIM_MESSAGE);
+            yield setupSecureRegistry();
             return;
         }
         var correlation_id = v4();
@@ -86221,6 +86810,27 @@ function resolveCacheHost() {
         }
         if (confg.disable_telemetry !== true && confg.disable_telemetry !== false) {
             lib_core.setFailed("disable-telemetry must be a boolean value");
+        }
+        const allowSecureRegistry = (secureRegistry) => {
+            if (secureRegistry.registryEndpoint &&
+                confg.egress_policy === "block" &&
+                !isDenyListMode) {
+                lib_core.info(`Adding secure-registry endpoint: ${secureRegistry.registryEndpoint} to allowed-endpoints`);
+                confg.allowed_endpoints += ` ${secureRegistry.registryEndpoint}`;
+            }
+        };
+        // On the main hosted path the session is created after /monitor, so a
+        // job without an OIDC token can be linked to its one-time key. Every
+        // other path returns before /monitor and still hands allowed-endpoints
+        // to an agent, so it sets up here.
+        const secureRegistryAfterMonitor = sessionWaitsForMonitor({
+            arc: isARCRunner(),
+            githubHosted: isGithubHosted(),
+            customVMImage: process.env.STEP_SECURITY_HARDEN_RUNNER === "true",
+            agentInstalled: isAgentInstalled(process.platform),
+        });
+        if (!secureRegistryAfterMonitor) {
+            allowSecureRegistry(yield setupSecureRegistry());
         }
         if (isValidEvent() &&
             confg.egress_policy === "block" &&
@@ -86361,6 +86971,14 @@ function resolveCacheHost() {
             encoding: "utf8",
         });
         console.log(`Step Security Job Correlation ID: ${correlation_id}`);
+        // After /monitor, so the session can carry the one-time key, and before
+        // the agent config is built, so the registry host is in allowed-endpoints.
+        if (secureRegistryAfterMonitor) {
+            allowSecureRegistry(yield setupSecureRegistry({
+                correlationId: correlation_id,
+                oneTimeKey: confg.one_time_key,
+            }));
+        }
         if (String(statusCode) === STATUS_HARDEN_RUNNER_UNAVAILABLE) {
             console.log(HARDEN_RUNNER_UNAVAILABLE_MESSAGE);
             return;

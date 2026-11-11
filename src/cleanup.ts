@@ -8,6 +8,7 @@ import { isARCRunner } from "./arc-runner";
 import { isGithubHosted } from "./tls-inspect";
 import { context } from "@actions/github";
 import { isPlatformSupported, isAgentInstalled, detectThirdPartyRunnerProvider } from "./utils";
+import { finishSecureRegistry } from "./secure-registry-post";
 
 // See setup.ts for rationale — Node 22+ kills the process on unhandled rejections.
 process.on("unhandledRejection", (reason) => {
@@ -24,6 +25,10 @@ process.on("unhandledRejection", (reason) => {
     console.log("Skipping harden-runner: custom property 'skip-harden-runner' is set to 'true'");
     return;
   }
+
+  // Before the early returns below: the pre step configures npm in container
+  // and ubuntu-slim jobs too, and its token must be revoked there as well.
+  await finishSecureRegistry();
 
   if (!isPlatformSupported(process.platform)) {
     console.log(common.UNSUPPORTED_RUNNER_MESSAGE);
