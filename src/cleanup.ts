@@ -9,6 +9,7 @@ import { isGithubHosted } from "./tls-inspect";
 import { context } from "@actions/github";
 import { isPlatformSupported, isAgentInstalled, detectThirdPartyRunnerProvider } from "./utils";
 import { finishSecureRegistry } from "./secure-registry-post";
+import { redactSignedUrls } from "./redact";
 
 // See setup.ts for rationale — Node 22+ kills the process on unhandled rejections.
 process.on("unhandledRejection", (reason) => {
@@ -122,7 +123,7 @@ async function handleAgentBravoCleanup() {
   const log = "/home/agent/agent.log";
   if (fs.existsSync(log)) {
     console.log("log:");
-    console.log(fs.readFileSync(log, "utf-8"));
+    console.log(redactSignedUrls(fs.readFileSync(log, "utf-8")));
   }
 
   const status = "/home/agent/agent.status";
@@ -174,14 +175,14 @@ async function handleLinuxCleanup() {
   if (fs.existsSync(log)) {
     console.log("log:");
     var content = fs.readFileSync(log, "utf-8");
-    console.log(content);
+    console.log(redactSignedUrls(content));
   }
 
   const daemonLog = "/home/agent/daemon.log";
   if (fs.existsSync(daemonLog)) {
     console.log("daemonLog:");
     var content = fs.readFileSync(daemonLog, "utf-8");
-    console.log(content);
+    console.log(redactSignedUrls(content));
   }
 
   var status = "/home/agent/agent.status";
@@ -204,7 +205,7 @@ async function handleLinuxCleanup() {
         }
       );
       console.log("agent.service log:");
-      console.log(journalLog);
+      console.log(redactSignedUrls(journalLog));
     } catch (error) {
       console.log("Warning: Could not fetch service logs:", error.message);
     }
@@ -253,7 +254,7 @@ async function handleMacosCleanup() {
   if (fs.existsSync(macAgentLog)) {
     console.log("macAgentLog:");
     var content = fs.readFileSync(macAgentLog, "utf-8");
-    console.log(content);
+    console.log(redactSignedUrls(content));
   } else {
     console.log("😭 macos agent.log file not found");
   }
@@ -269,7 +270,7 @@ async function handleMacosCleanup() {
         timeout: 5000, // 5 seconds timeout
       }
     );
-    console.log(logStreamOutput);
+    console.log(redactSignedUrls(logStreamOutput));
   } catch (error) {
     console.log("Warning: Could not fetch system log stream:", error.message);
   }
@@ -385,7 +386,7 @@ async function handleWindowsCleanup() {
   if (fs.existsSync(log)) {
     console.log("agent log:");
     const content = fs.readFileSync(log, "utf-8");
-    console.log(content);
+    console.log(redactSignedUrls(content));
   }
 }
 

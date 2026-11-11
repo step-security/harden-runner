@@ -32882,6 +32882,16 @@ function finishSecureRegistry() {
     });
 }
 
+;// CONCATENATED MODULE: ./src/redact.ts
+// Replaces the query string of signed S3 URLs, which carries the request's
+// credentials and signature, before agent output is printed to the job log.
+// Other URLs and all other text are left unchanged.
+const URL_WITH_QUERY = /(https?:\/\/[^\s"'?\\]+)\?((?:[^\s"'\\]|\\u0026)*)/g;
+const SIGNED_QUERY = /X-Amz-(Signature|Credential|Security-Token)=/i;
+function redactSignedUrls(text) {
+    return text.replace(URL_WITH_QUERY, (match, base, query) => SIGNED_QUERY.test(query) ? `${base}?REDACTED` : match);
+}
+
 ;// CONCATENATED MODULE: ./src/cleanup.ts
 var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -32892,6 +32902,7 @@ var cleanup_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -33003,7 +33014,7 @@ function handleAgentBravoCleanup() {
         const log = "/home/agent/agent.log";
         if (external_fs_.existsSync(log)) {
             console.log("log:");
-            console.log(external_fs_.readFileSync(log, "utf-8"));
+            console.log(redactSignedUrls(external_fs_.readFileSync(log, "utf-8")));
         }
         const status = "/home/agent/agent.status";
         if (external_fs_.existsSync(status)) {
@@ -33045,13 +33056,13 @@ function handleLinuxCleanup() {
         if (external_fs_.existsSync(log)) {
             console.log("log:");
             var content = external_fs_.readFileSync(log, "utf-8");
-            console.log(content);
+            console.log(redactSignedUrls(content));
         }
         const daemonLog = "/home/agent/daemon.log";
         if (external_fs_.existsSync(daemonLog)) {
             console.log("daemonLog:");
             var content = external_fs_.readFileSync(daemonLog, "utf-8");
-            console.log(content);
+            console.log(redactSignedUrls(content));
         }
         var status = "/home/agent/agent.status";
         if (external_fs_.existsSync(status)) {
@@ -33068,7 +33079,7 @@ function handleLinuxCleanup() {
                     maxBuffer: 1024 * 1024 * 10, // 10MB buffer
                 });
                 console.log("agent.service log:");
-                console.log(journalLog);
+                console.log(redactSignedUrls(journalLog));
             }
             catch (error) {
                 console.log("Warning: Could not fetch service logs:", error.message);
@@ -33113,7 +33124,7 @@ function handleMacosCleanup() {
         if (external_fs_.existsSync(macAgentLog)) {
             console.log("macAgentLog:");
             var content = external_fs_.readFileSync(macAgentLog, "utf-8");
-            console.log(content);
+            console.log(redactSignedUrls(content));
         }
         else {
             console.log("😭 macos agent.log file not found");
@@ -33126,7 +33137,7 @@ function handleMacosCleanup() {
                 maxBuffer: 1024 * 1024 * 10, // 10MB buffer
                 timeout: 5000, // 5 seconds timeout
             });
-            console.log(logStreamOutput);
+            console.log(redactSignedUrls(logStreamOutput));
         }
         catch (error) {
             console.log("Warning: Could not fetch system log stream:", error.message);
@@ -33226,7 +33237,7 @@ function handleWindowsCleanup() {
         if (external_fs_.existsSync(log)) {
             console.log("agent log:");
             const content = external_fs_.readFileSync(log, "utf-8");
-            console.log(content);
+            console.log(redactSignedUrls(content));
         }
     });
 }
