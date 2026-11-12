@@ -503,6 +503,15 @@ describe("setupSecureRegistry", () => {
     });
   });
 
+  test("a global mirror does not matter when the user config sets the public registry", async () => {
+    fs.writeFileSync(process.env.npm_config_globalconfig, "registry=https://nexus.example.com/repository/npm/\n");
+    fs.writeFileSync(path.join(home, ".npmrc"), "registry=https://registry.npmjs.org/\n");
+    mockFetchSequence([created()]);
+
+    expect(await setupSecureRegistry()).toEqual({ registryEndpoint: "community.registry.stepsecurity.io:443" });
+    expect(mockedCore.notice).not.toHaveBeenCalled();
+  });
+
   test("sends the correlation ID but not the key with an OIDC token", async () => {
     mockFetchSequence([created()]);
 

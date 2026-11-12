@@ -86252,7 +86252,9 @@ function npmPreflight(env, homeDir, globalConfigPath = npmGlobalConfigPath) {
             reason: `${sourcePath} sets registry to ${describeRegistry(userRegistry)}`,
         };
     }
-    const globalPath = globalConfigPath(env);
+    // The user config outranks the global one, so a registry set there
+    // decides what npm uses.
+    const globalPath = userRegistry === undefined ? globalConfigPath(env) : undefined;
     if (globalPath) {
         try {
             if (external_fs_.existsSync(globalPath)) {

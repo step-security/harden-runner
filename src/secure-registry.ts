@@ -275,7 +275,9 @@ export function npmPreflight(
     };
   }
 
-  const globalPath = globalConfigPath(env);
+  // The user config outranks the global one, so a registry set there
+  // decides what npm uses.
+  const globalPath = userRegistry === undefined ? globalConfigPath(env) : undefined;
   if (globalPath) {
     try {
       if (fs.existsSync(globalPath)) {
