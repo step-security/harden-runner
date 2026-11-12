@@ -86513,17 +86513,32 @@ function configureNpm(config, job) {
             token: session.token,
             omitLockfileResolved: ((_f = (_e = session.config) === null || _e === void 0 ? void 0 : _e.npm) === null || _f === void 0 ? void 0 : _f.lockfile_resolved) === "omit",
         });
-        external_fs_.writeFileSync(target, content, { encoding: "utf8", mode: 0o600 });
-        // mode only applies when the file is created; setup-node may have created it.
-        external_fs_.chmodSync(target, 0o600);
-        lib_core.exportVariable((_g = preflight.source.envKey) !== null && _g !== void 0 ? _g : "NPM_CONFIG_USERCONFIG", target);
-        saveState("srRegistryUrl", registryUrl);
-        saveState("srNpmrcPath", target);
-        // The audit rows for held versions do not say how long the cooldown is, so
-        // the post step takes it from here.
-        const cooldownDays = (_k = (_j = (_h = session.config) === null || _h === void 0 ? void 0 : _h.npm) === null || _j === void 0 ? void 0 : _j.cooldown) === null || _k === void 0 ? void 0 : _k.days;
-        if (typeof cooldownDays === "number" && Number.isInteger(cooldownDays) && cooldownDays >= 0) {
-            saveState("srCooldownDays", String(cooldownDays));
+        // npm uses the file only once the environment points at it, so that is the
+        // last step. Any earlier failure removes the file and leaves npm as it was.
+        try {
+            external_fs_.writeFileSync(target, content, { encoding: "utf8", mode: 0o600 });
+            // mode only applies when the file is created.
+            external_fs_.chmodSync(target, 0o600);
+            saveState("srRegistryUrl", registryUrl);
+            saveState("srNpmrcPath", target);
+            // The audit rows for held versions do not say how long the cooldown is, so
+            // the post step takes it from here.
+            const cooldownDays = (_j = (_h = (_g = session.config) === null || _g === void 0 ? void 0 : _g.npm) === null || _h === void 0 ? void 0 : _h.cooldown) === null || _j === void 0 ? void 0 : _j.days;
+            if (typeof cooldownDays === "number" && Number.isInteger(cooldownDays) && cooldownDays >= 0) {
+                saveState("srCooldownDays", String(cooldownDays));
+            }
+            lib_core.exportVariable((_k = preflight.source.envKey) !== null && _k !== void 0 ? _k : "NPM_CONFIG_USERCONFIG", target);
+        }
+        catch (e) {
+            external_fs_.rmSync(target, { force: true });
+            try {
+                // The post step reports only when a registry URL was saved.
+                saveState("srRegistryUrl", "");
+            }
+            catch (_m) {
+                // The state file is unwritable; the outer warning already covers it.
+            }
+            throw e;
         }
         if (preflight.source.content !== "") {
             lib_core.info(`secure-registry: merged existing npm config from ${preflight.source.path}`);

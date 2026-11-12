@@ -435,6 +435,41 @@ describe("setupSecureRegistry", () => {
     expect(fs.readFileSync(npmrcPath(), "utf8").startsWith("save-exact=true\n")).toBe(true);
   });
 
+  describe("a failure while switching npm leaves it unchanged", () => {
+    test("the environment export fails", async () => {
+      mockedCore.exportVariable.mockImplementationOnce(() => {
+        throw new Error("GITHUB_ENV is not writable");
+      });
+      mockFetchSequence([created()]);
+
+      expect(await setupSecureRegistry()).toEqual({});
+      expect(fs.existsSync(npmrcPath())).toBe(false);
+      expect(readState()).toMatchObject({ srToken: TOKEN, srRegistryUrl: "" });
+      expect(mockedCore.warning).toHaveBeenCalledWith(
+        "secure-registry: setup failed: GITHUB_ENV is not writable. npm stays on the default registry."
+      );
+    });
+
+    test("a state write fails", async () => {
+      const realFs = jest.requireActual("fs");
+      const append = realFs.appendFileSync;
+      const spy = jest.spyOn(realFs, "appendFileSync").mockImplementation((...args: unknown[]) => {
+        if (String(args[1]).startsWith("srNpmrcPath=")) throw new Error("GITHUB_STATE is not writable");
+        return append(...args);
+      });
+      mockFetchSequence([created()]);
+
+      try {
+        expect(await setupSecureRegistry()).toEqual({});
+      } finally {
+        spy.mockRestore();
+      }
+      expect(fs.existsSync(npmrcPath())).toBe(false);
+      expect(mockedCore.exportVariable).not.toHaveBeenCalled();
+      expect(readState()).toMatchObject({ srToken: TOKEN, srRegistryUrl: "" });
+    });
+  });
+
   test("expands ~ in the user config path, as npm does", async () => {
     fs.mkdirSync(path.join(tmp, "home"), { recursive: true });
     mockedHomedir.mockReturnValue(path.join(tmp, "home"));

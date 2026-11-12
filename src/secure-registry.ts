@@ -559,18 +559,30 @@ async function configureNpm(config: string, job: JobBinding): Promise<SecureRegi
     token: session.token,
     omitLockfileResolved: session.config?.npm?.lockfile_resolved === "omit",
   });
-  fs.writeFileSync(target, content, { encoding: "utf8", mode: 0o600 });
-  // mode only applies when the file is created; setup-node may have created it.
-  fs.chmodSync(target, 0o600);
-  core.exportVariable(preflight.source.envKey ?? "NPM_CONFIG_USERCONFIG", target);
-
-  saveState("srRegistryUrl", registryUrl);
-  saveState("srNpmrcPath", target);
-  // The audit rows for held versions do not say how long the cooldown is, so
-  // the post step takes it from here.
-  const cooldownDays = session.config?.npm?.cooldown?.days;
-  if (typeof cooldownDays === "number" && Number.isInteger(cooldownDays) && cooldownDays >= 0) {
-    saveState("srCooldownDays", String(cooldownDays));
+  // npm uses the file only once the environment points at it, so that is the
+  // last step. Any earlier failure removes the file and leaves npm as it was.
+  try {
+    fs.writeFileSync(target, content, { encoding: "utf8", mode: 0o600 });
+    // mode only applies when the file is created.
+    fs.chmodSync(target, 0o600);
+    saveState("srRegistryUrl", registryUrl);
+    saveState("srNpmrcPath", target);
+    // The audit rows for held versions do not say how long the cooldown is, so
+    // the post step takes it from here.
+    const cooldownDays = session.config?.npm?.cooldown?.days;
+    if (typeof cooldownDays === "number" && Number.isInteger(cooldownDays) && cooldownDays >= 0) {
+      saveState("srCooldownDays", String(cooldownDays));
+    }
+    core.exportVariable(preflight.source.envKey ?? "NPM_CONFIG_USERCONFIG", target);
+  } catch (e) {
+    fs.rmSync(target, { force: true });
+    try {
+      // The post step reports only when a registry URL was saved.
+      saveState("srRegistryUrl", "");
+    } catch {
+      // The state file is unwritable; the outer warning already covers it.
+    }
+    throw e;
   }
 
   if (preflight.source.content !== "") {
