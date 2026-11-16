@@ -199,7 +199,13 @@ export async function fetchSummary(
     return first;
   }
   await sleep(SUMMARY_RETRY_DELAY_MS);
-  return (await getSummary(token)) ?? first;
+  try {
+    return (await getSummary(token)) ?? first;
+  } catch (e) {
+    // The first answer may still carry markdown worth writing.
+    core.info(`secure-registry: could not read the run summary again: ${e instanceof Error ? e.message : e}`);
+    return first;
+  }
 }
 
 export async function revokeToken(token: string): Promise<void> {

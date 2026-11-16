@@ -263,6 +263,13 @@ describe("fetchSummary", () => {
     expect(await fetchSummary(TOKEN, noSleep)).toEqual({ held: [], blocked: [], wouldBlock: [], markdown: "" });
   });
 
+  test("keeps the first answer if the retry throws", async () => {
+    const unlinked = { ...EMPTY, markdown: "### Secure registry\n\nThis job is not linked to run insights.\n" };
+    mockFetchSequence([jsonResponse(200, unlinked), new Error("socket hang up")]);
+    expect(await fetchSummary(TOKEN, noSleep)).toEqual({ held: [], blocked: [], wouldBlock: [], markdown: unlinked.markdown });
+    expect(logged()).toContain("could not read the run summary again: socket hang up");
+  });
+
   test("missing or malformed fields read as empty", async () => {
     mockFetchSequence([jsonResponse(200, { held: "x", blocked: null, markdown: 42 }), jsonResponse(500, {})]);
     expect(await fetchSummary(TOKEN, async () => undefined)).toEqual({ held: [], blocked: [], wouldBlock: [], markdown: "" });

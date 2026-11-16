@@ -32539,7 +32539,14 @@ function fetchSummary(token_1) {
             return first;
         }
         yield sleep(SUMMARY_RETRY_DELAY_MS);
-        return (_a = (yield getSummary(token))) !== null && _a !== void 0 ? _a : first;
+        try {
+            return (_a = (yield getSummary(token))) !== null && _a !== void 0 ? _a : first;
+        }
+        catch (e) {
+            // The first answer may still carry markdown worth writing.
+            lib_core.info(`secure-registry: could not read the run summary again: ${e instanceof Error ? e.message : e}`);
+            return first;
+        }
     });
 }
 function revokeToken(token) {
