@@ -39,6 +39,7 @@ Harden-Runner secures over **25 million CI/CD workflow runs every week**, protec
 
 ## Quick Links
 - [Getting Started Guide](#getting-started)
+- [Secure Registry (Free Community Tier)](#secure-registry)
 - [Why Choose Harden-Runner](#why-choose-harden-runner)
 - [Features and Pricing Tiers](#features-and-pricing-tiers)
 - [StepSecurity Maintained Actions (Free for Public Repos)](#stepsecurity-maintained-actions)
@@ -79,6 +80,9 @@ To integrate Harden-Runner, follow these steps:
        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
        with:
          egress-policy: audit
+   ```
+
+Want to protect package downloads too? Enable [Secure Registry](#secure-registry) with `secure-registry: true` to apply a cooldown to new releases and block known compromised packages. It is free for public repositories using GitHub-hosted runners with Harden-Runner.
 
 **Tip**: Automate this step by pasting your workflow into the [StepSecurity online tool](https://app.stepsecurity.io/secure-workflow)
 <details>
@@ -99,11 +103,63 @@ Run your workflow. Once completed:
       <img src="images/network-events.png" alt="Link in network events" >
     </p>
 
+If you enabled Secure Registry, open the **Packages** tab to review this job's package requests, allowed or blocked outcomes, and policy block reasons.
+
 </details>
+
+---
+## Secure Registry
+
+Protect package downloads with StepSecurity Secure Registry, integrated with the Harden-Runner GitHub Action. The community tier is free for public repositories using GitHub-hosted runners with Harden-Runner. Private repositories and self-hosted runners require the Enterprise tier, including self-hosted runners used by public repositories.
+
+StepSecurity hosts and operates the registry. There is no registry infrastructure to deploy or manage.
+
+### Enable package protection
+
+Add `secure-registry: true` to your Harden-Runner step and keep it first in the job:
+
+```yaml
+steps:
+  - name: Harden Runner
+    uses: step-security/harden-runner@rc-49
+    with:
+      egress-policy: audit
+      secure-registry: true
+
+  # Continue with your existing checkout, setup, and install steps.
+```
+
+Harden-Runner automatically configures supported package managers to use Secure Registry. For a standard npm workflow, keep your existing `npm install` or `npm ci` command.
+
+The community tier initially supports the JavaScript ecosystem, including npm, pnpm, and Bun. See the [Secure Registry documentation](https://docs.stepsecurity.io/packages/secure-registry) for setup and supported ecosystems.
+
+With `secure-registry: true`, the default package policy provides:
+
+- **Two-day cooldown:** Holds newly published package versions during the waiting period.
+- **Compromised-package blocking:** Blocks known compromised versions, including versions older than the cooldown period.
+- **Package visibility:** Shows package requests and policy outcomes for each job in Harden-Runner Insights.
+
+The registry enforces these package protections even when `egress-policy: audit` is selected. That setting controls network monitoring separately from registry package policies.
+
+### Verify the results
+
+After your workflow finishes, follow the Harden-Runner Insights link in the job summary and open the **Packages** tab. Select the job to review allowed and blocked requests, including the reason for each policy block. Use **Network Events** to inspect the registry domains contacted by the job.
+
+Explore an [example workflow run](https://github.com/step-community-org/int-tests/actions/runs/43761709796) and its [package records](https://app.stepsecurity.io/github/step-community-org/int-tests/actions/runs/43761709796?tab=packages&correlationId=ed061de1-18a2-42c5-8605-145e071e1e59):
+
+- `is-number@7.0.0`: metadata lookup and archive download allowed.
+- `typescript@7.1.0-dev.20261115.1`: archive download blocked by the two-day cooldown.
+- `chalk@5.6.1`: archive download blocked as a known compromised package.
+
+The test job succeeds because it checks for the expected blocks. The blocked packages are not installed. These two tests request archive URLs directly; they do not demonstrate metadata version filtering or installation from an existing lockfile.
+
+For policy configuration and setup details, see the [Secure Registry documentation](https://docs.stepsecurity.io/packages/secure-registry).
+
 
 ---
 ## Why Choose Harden-Runner?
 
+- **Protect Package Downloads:** Use Secure Registry to hold newly published versions during a cooldown, block known compromised packages, and inspect package requests in Harden-Runner Insights.
 - **Prevent Exfiltration:** Prevent the exfiltration of CI/CD secrets and source code.
 - **Detect Tampering:** Identify source code modifications during builds.
 - **Anomaly Detection:** Spot unusual dependencies and workflow behaviors.
@@ -134,6 +190,7 @@ Available for public repositories running on GitHub-hosted runners:
 - **Anomaly Detection:** Once the baseline is created, any future outbound calls not in the baseline trigger a detection.
 - **Block Network Egress Traffic with Domain Allowlist:** Optionally use the automatically created baseline to control outbound network traffic by specifying allowed domains, preventing unauthorized data exfiltration.
 - **Global Block List:** Block known-malicious domains and IP addresses tied to active supply chain attacks, maintained by StepSecurity's 24x7 SOC. No configuration required, new indicators apply automatically without an action version bump, and it is enforced even in `egress-policy: audit` mode.
+- **Secure Registry:** Opt in with `secure-registry: true` to automatically configure supported package managers, apply a default two-day cooldown, and block known compromised packages. Review package requests and block reasons in Harden-Runner Insights. [Get started](#secure-registry).
 - **Detect Modification of Source Code:** Monitor and alert on unauthorized changes to your source code during the CI/CD pipeline.
 
 ### Enterprise (Paid)
@@ -242,3 +299,4 @@ For enterprise support, email support@stepsecurity.io. Interested in using Harde
 ## License
 
 Harden-Runner is open source. See the [LICENSE](LICENSE) file for details.
+
