@@ -35,7 +35,7 @@ interface SessionResponse {
   binding?: string;
   edition?: string;
   registries?: Record<string, string>;
-  config?: Record<string, { mode?: string; lockfile_resolved?: string; cooldown?: { days?: number } }>;
+  config?: Record<string, { mode?: string; lockfile_resolved?: string }>;
   notices?: SessionNotice[];
 }
 
@@ -522,7 +522,6 @@ async function configureNpm(config: string, job: JobBinding): Promise<SecureRegi
 
   // Saved before anything else can fail, so the post step can always revoke.
   saveState("srToken", session.token);
-  saveState("srBinding", session.binding ?? "");
 
   if (session.binding === "none") {
     core.notice(
@@ -567,12 +566,6 @@ async function configureNpm(config: string, job: JobBinding): Promise<SecureRegi
     fs.chmodSync(target, 0o600);
     saveState("srRegistryUrl", registryUrl);
     saveState("srNpmrcPath", target);
-    // The audit rows for held versions do not say how long the cooldown is, so
-    // the post step takes it from here.
-    const cooldownDays = session.config?.npm?.cooldown?.days;
-    if (typeof cooldownDays === "number" && Number.isInteger(cooldownDays) && cooldownDays >= 0) {
-      saveState("srCooldownDays", String(cooldownDays));
-    }
     core.exportVariable(preflight.source.envKey ?? "NPM_CONFIG_USERCONFIG", target);
   } catch (e) {
     fs.rmSync(target, { force: true });

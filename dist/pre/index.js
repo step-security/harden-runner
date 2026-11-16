@@ -86434,7 +86434,7 @@ function sessionAuth() {
 }
 function configureNpm(config, job) {
     return secure_registry_awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f;
         if (isGHES()) {
             skipNotice("not supported on GitHub Enterprise Server yet");
             return {};
@@ -86481,16 +86481,15 @@ function configureNpm(config, job) {
         }
         // Saved before anything else can fail, so the post step can always revoke.
         saveState("srToken", session.token);
-        saveState("srBinding", (_b = session.binding) !== null && _b !== void 0 ? _b : "");
         if (session.binding === "none") {
             lib_core.notice('secure-registry: this job is not linked to run insights, so the packages it installs will not appear there. Add "permissions: id-token: write" to this job to link it.');
         }
-        for (const ecosystem of Object.keys((_c = session.registries) !== null && _c !== void 0 ? _c : {})) {
+        for (const ecosystem of Object.keys((_b = session.registries) !== null && _b !== void 0 ? _b : {})) {
             if (ecosystem !== "npm") {
                 lib_core.info(`secure-registry: this version of Harden-Runner configures npm only, ignoring ${ecosystem}`);
             }
         }
-        const registryUrl = (_d = session.registries) === null || _d === void 0 ? void 0 : _d.npm;
+        const registryUrl = (_c = session.registries) === null || _c === void 0 ? void 0 : _c.npm;
         if (!registryUrl) {
             lib_core.info(`secure-registry: ${npmNotConfiguredReason(session)}, nothing to configure`);
             return {};
@@ -86499,7 +86498,7 @@ function configureNpm(config, job) {
         try {
             registry = new URL(registryUrl);
         }
-        catch (_l) {
+        catch (_g) {
             skipWarning(`the session API returned an invalid npm registry URL`);
             return {};
         }
@@ -86511,7 +86510,7 @@ function configureNpm(config, job) {
         const content = mergeNpmrc(preflight.source.content, {
             registryUrl,
             token: session.token,
-            omitLockfileResolved: ((_f = (_e = session.config) === null || _e === void 0 ? void 0 : _e.npm) === null || _f === void 0 ? void 0 : _f.lockfile_resolved) === "omit",
+            omitLockfileResolved: ((_e = (_d = session.config) === null || _d === void 0 ? void 0 : _d.npm) === null || _e === void 0 ? void 0 : _e.lockfile_resolved) === "omit",
         });
         // npm uses the file only once the environment points at it, so that is the
         // last step. Any earlier failure removes the file and leaves npm as it was.
@@ -86521,13 +86520,7 @@ function configureNpm(config, job) {
             external_fs_.chmodSync(target, 0o600);
             saveState("srRegistryUrl", registryUrl);
             saveState("srNpmrcPath", target);
-            // The audit rows for held versions do not say how long the cooldown is, so
-            // the post step takes it from here.
-            const cooldownDays = (_j = (_h = (_g = session.config) === null || _g === void 0 ? void 0 : _g.npm) === null || _h === void 0 ? void 0 : _h.cooldown) === null || _j === void 0 ? void 0 : _j.days;
-            if (typeof cooldownDays === "number" && Number.isInteger(cooldownDays) && cooldownDays >= 0) {
-                saveState("srCooldownDays", String(cooldownDays));
-            }
-            lib_core.exportVariable((_k = preflight.source.envKey) !== null && _k !== void 0 ? _k : "NPM_CONFIG_USERCONFIG", target);
+            lib_core.exportVariable((_f = preflight.source.envKey) !== null && _f !== void 0 ? _f : "NPM_CONFIG_USERCONFIG", target);
         }
         catch (e) {
             external_fs_.rmSync(target, { force: true });
@@ -86535,7 +86528,7 @@ function configureNpm(config, job) {
                 // The post step reports only when a registry URL was saved.
                 saveState("srRegistryUrl", "");
             }
-            catch (_m) {
+            catch (_h) {
                 // The state file is unwritable; the outer warning already covers it.
             }
             throw e;
