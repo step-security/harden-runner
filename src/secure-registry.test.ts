@@ -367,10 +367,8 @@ describe("setupSecureRegistry", () => {
 
     expect(readState()).toEqual({
       srToken: TOKEN,
-      srBinding: "oidc",
       srRegistryUrl: REGISTRY,
       srNpmrcPath: npmrcPath(),
-      srCooldownDays: "2",
     });
     expect(mockedCore.notice).toHaveBeenCalledWith("secure-registry: pypi is not supported yet (pypi)");
     expect(mockedCore.warning).not.toHaveBeenCalled();
@@ -489,22 +487,6 @@ describe("setupSecureRegistry", () => {
     expect(fs.readFileSync(npmrcPath(), "utf8")).toContain("\nomit-lockfile-registry-resolved=true\n");
   });
 
-  test("saves npm's cooldown days for the post step", async () => {
-    mockFetchSequence([created({ config: { npm: { mode: "enforce", cooldown: { days: 0, exemptions: [] } } } })]);
-    await setupSecureRegistry();
-    expect(readState().srCooldownDays).toBe("0");
-  });
-
-  test("no cooldown state when the config has no usable cooldown", async () => {
-    for (const cooldown of [undefined, {}, { days: "2" }, { days: -1 }]) {
-      fs.writeFileSync(stateFile, "");
-      mockFetchSequence([created({ config: { npm: { mode: "enforce", cooldown } } })]);
-      await setupSecureRegistry();
-      expect(readState()).toHaveProperty("srRegistryUrl", REGISTRY);
-      expect(readState()).not.toHaveProperty("srCooldownDays");
-    }
-  });
-
   describe("does not switch a registry the user chose", () => {
     test("NPM_CONFIG_REGISTRY is set", async () => {
       process.env.NPM_CONFIG_REGISTRY = "https://user:secret@mirror.example.com/npm/";
@@ -578,7 +560,7 @@ describe("setupSecureRegistry", () => {
       );
       expect(mockedCore.notice).not.toHaveBeenCalled();
       expect(mockedCore.warning).not.toHaveBeenCalled();
-      expect(readState()).toMatchObject({ srToken: TOKEN, srBinding: "hr_key" });
+      expect(readState()).toMatchObject({ srToken: TOKEN });
       expect(mockedCore.info).toHaveBeenCalledWith("binding: hr_key");
     });
 
@@ -603,7 +585,6 @@ describe("setupSecureRegistry", () => {
       expect(mockedCore.notice.mock.calls[0][0]).toBe(
         'secure-registry: this job is not linked to run insights, so the packages it installs will not appear there. Add "permissions: id-token: write" to this job to link it.'
       );
-      expect(readState()).toMatchObject({ srBinding: "none" });
       expect(fs.existsSync(npmrcPath())).toBe(true);
     });
 
@@ -787,7 +768,7 @@ describe("setupSecureRegistry", () => {
     expect(await setupSecureRegistry()).toEqual({});
     expect(mockedCore.warning.mock.calls[0][0]).toContain("non-https");
     expect(fs.existsSync(npmrcPath())).toBe(false);
-    expect(readState()).toEqual({ srToken: TOKEN, srBinding: "oidc" });
+    expect(readState()).toEqual({ srToken: TOKEN });
   });
 
   test("a token for other ecosystems only leaves npm alone", async () => {
@@ -803,7 +784,7 @@ describe("setupSecureRegistry", () => {
       "secure-registry: npm is not listed in ecosystems, nothing to configure"
     );
     expect(fs.existsSync(npmrcPath())).toBe(false);
-    expect(readState()).toEqual({ srToken: TOKEN, srBinding: "oidc" });
+    expect(readState()).toEqual({ srToken: TOKEN });
   });
 
   test("ignores ecosystems other than npm", async () => {

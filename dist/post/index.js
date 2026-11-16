@@ -32381,12 +32381,7 @@ const REVOKE_TIMEOUT_MS = 5000;
 // Recent requests can take a moment to appear in the summary, so an empty
 // first answer is asked again once after this delay.
 const SUMMARY_RETRY_DELAY_MS = 3000;
-// Rows per table. The full list is on the run insights Packages tab.
-const MAX_ROWS = 5;
-const MAX_VERSIONS_SHOWN = 5;
 const LOCKFILE_NAMES = ["package-lock.json", "npm-shrinkwrap.json"];
-// Summary ecosystem values are registry paths; the input keys differ.
-const ECOSYSTEM_CONFIG_KEYS = { javascript: "npm" };
 // Returns what the pre step left for this step, or undefined when it
 // configured nothing.
 function readPostState(env) {
@@ -32394,32 +32389,7 @@ function readPostState(env) {
     if (!token) {
         return undefined;
     }
-    const days = env.STATE_srCooldownDays ? Number(env.STATE_srCooldownDays) : NaN;
-    return {
-        token,
-        registryUrl: env.STATE_srRegistryUrl || undefined,
-        binding: env.STATE_srBinding || undefined,
-        cooldownDays: Number.isInteger(days) && days >= 0 ? days : undefined,
-        correlationId: env.STATE_correlation_id || undefined,
-    };
-}
-// Links to this job's packages on the run insights Packages tab. Only jobs
-// whose session is bound to them have rows there, and the page needs the
-// job's correlation ID.
-function insightsPackagesUrl(env, state, checkRunId) {
-    const repository = env.GITHUB_REPOSITORY;
-    const runId = env.GITHUB_RUN_ID;
-    if (state.binding !== "oidc" && state.binding !== "hr_key")
-        return undefined;
-    if (!repository || !runId || !state.correlationId || !/^\d+$/.test(checkRunId))
-        return undefined;
-    const params = new URLSearchParams({
-        tab: "packages",
-        correlationId: state.correlationId,
-        utm_source: "markdown",
-        jobId: checkRunId,
-    });
-    return `${STEPSECURITY_WEB_URL}/github/${repository}/actions/runs/${runId}?${params}`;
+    return { token, registryUrl: env.STATE_srRegistryUrl || undefined };
 }
 function sameRegistry(a, b) {
     try {
@@ -32540,7 +32510,6 @@ function checkLockfiles(registryUrl) {
 }
 function getSummary(token) {
     return secure_registry_post_awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c;
         const resp = yield fetch(`${configs_STEPSECURITY_API_URL}/secure-registry/sessions/summary`, {
             headers: { authorization: `Bearer ${token}` },
             signal: AbortSignal.timeout(SUMMARY_TIMEOUT_MS),
@@ -32550,12 +32519,17 @@ function getSummary(token) {
             return undefined;
         }
         const body = (yield resp.json());
-        return { held: (_a = body.held) !== null && _a !== void 0 ? _a : [], blocked: (_b = body.blocked) !== null && _b !== void 0 ? _b : [], wouldBlock: (_c = body.would_block) !== null && _c !== void 0 ? _c : [] };
+        const list = (v) => (Array.isArray(v) ? v : []);
+        return {
+            held: list(body.held),
+            blocked: list(body.blocked),
+            wouldBlock: list(body.would_block),
+            markdown: typeof body.markdown === "string" ? body.markdown : "",
+        };
     });
 }
 function isEmpty(summary) {
-    var _a;
-    return summary.held.length === 0 && summary.blocked.length === 0 && ((_a = summary.wouldBlock) !== null && _a !== void 0 ? _a : []).length === 0;
+    return summary.held.length === 0 && summary.blocked.length === 0 && summary.wouldBlock.length === 0;
 }
 function fetchSummary(token_1) {
     return secure_registry_post_awaiter(this, arguments, void 0, function* (token, sleep = (ms) => new Promise((r) => setTimeout(r, ms))) {
@@ -32565,7 +32539,14 @@ function fetchSummary(token_1) {
             return first;
         }
         yield sleep(SUMMARY_RETRY_DELAY_MS);
-        return (_a = (yield getSummary(token))) !== null && _a !== void 0 ? _a : first;
+        try {
+            return (_a = (yield getSummary(token))) !== null && _a !== void 0 ? _a : first;
+        }
+        catch (e) {
+            // The first answer may still carry markdown worth writing.
+            lib_core.info(`secure-registry: could not read the run summary again: ${e instanceof Error ? e.message : e}`);
+            return first;
+        }
     });
 }
 function revokeToken(token) {
@@ -32595,243 +32576,8 @@ function revokeToken(token) {
         }
     });
 }
-// Parses a duration as printed by secure-registry ("18h10m0s") into minutes.
-function parseDuration(value) {
-    const re = /(\d+(?:\.\d+)?)(h|m|s)/g;
-    let minutes = 0;
-    let consumed = 0;
-    for (const m of value.matchAll(re)) {
-        const n = Number(m[1]);
-        minutes += m[2] === "h" ? n * 60 : m[2] === "m" ? n : n / 60;
-        consumed += m[0].length;
-    }
-    return consumed === value.length && consumed > 0 ? minutes : undefined;
-}
-function formatMinutes(total) {
-    const rounded = Math.max(0, Math.round(total));
-    const h = Math.floor(rounded / 60);
-    const m = rounded % 60;
-    if (h === 0)
-        return `${m}m`;
-    return m === 0 ? `${h}h` : `${h}h${m}m`;
-}
-// Reads the age and cooldown window out of a cooldown block reason, such as
-// "x@1.0.0 was published 18h10m0s ago, which is within the 2-day cooldown period".
-function cooldownTiming(reason) {
-    const published = /published (\S+) ago/.exec(reason);
-    const age = published ? parseDuration(published[1]) : undefined;
-    if (age === undefined) {
-        return undefined;
-    }
-    const window = /within the (\d+)-day cooldown/.exec(reason);
-    if (!window) {
-        return { age: formatMinutes(age) };
-    }
-    return {
-        age: formatMinutes(age),
-        clearsIn: formatMinutes(Number(window[1]) * 24 * 60 - age),
-    };
-}
-function parseVersion(v) {
-    const [main, ...rest] = v.split("+")[0].split("-");
-    return {
-        core: main.split(".").map((p) => Number(p) || 0),
-        pre: rest.length ? rest.join("-").split(".") : [],
-    };
-}
-function compareIdentifiers(a, b) {
-    const an = /^\d+$/.test(a);
-    const bn = /^\d+$/.test(b);
-    if (an && bn)
-        return Number(a) - Number(b);
-    if (an)
-        return -1;
-    if (bn)
-        return 1;
-    return a < b ? -1 : a > b ? 1 : 0;
-}
-// Semver precedence, enough to pick the newest of a package's versions.
-function compareVersions(a, b) {
-    var _a, _b;
-    const x = parseVersion(a);
-    const y = parseVersion(b);
-    for (let i = 0; i < 3; i++) {
-        const d = ((_a = x.core[i]) !== null && _a !== void 0 ? _a : 0) - ((_b = y.core[i]) !== null && _b !== void 0 ? _b : 0);
-        if (d !== 0)
-            return d;
-    }
-    if (!x.pre.length || !y.pre.length) {
-        return y.pre.length - x.pre.length;
-    }
-    for (let i = 0; i < Math.min(x.pre.length, y.pre.length); i++) {
-        const d = compareIdentifiers(x.pre[i], y.pre[i]);
-        if (d !== 0)
-            return d;
-    }
-    return x.pre.length - y.pre.length;
-}
-function cell(value) {
-    return value.replace(/\|/g, "\\|").replace(/\r\n|\r|\n/g, " ");
-}
-// An inline code span for a table cell. The fence is one backtick longer
-// than the longest run inside, so a backtick in the value cannot end it.
-function code(value) {
-    var _a;
-    const text = cell(value);
-    const longest = Math.max(0, ...((_a = text.match(/`+/g)) !== null && _a !== void 0 ? _a : []).map((run) => run.length));
-    const fence = "`".repeat(longest + 1);
-    const pad = text.startsWith("`") || text.endsWith("`") ? " " : "";
-    return `${fence}${pad}${text}${pad}${fence}`;
-}
-function controlNames(controls) {
-    return controls.map((c) => c.name).join(", ") || "unknown";
-}
-function onlyCooldown(controls) {
-    return controls.length > 0 && controls.every((c) => c.name === "cooldown");
-}
-function blockedDetails(b) {
-    const parts = [];
-    for (const c of b.controls) {
-        const timing = c.name === "cooldown" && c.reason ? cooldownTiming(c.reason) : undefined;
-        if (timing) {
-            parts.push(`published ${timing.age} ago${timing.clearsIn ? `, clears in ${timing.clearsIn}` : ""}`);
-        }
-        else if (c.reason) {
-            parts.push(c.reason);
-        }
-    }
-    return parts.join("; ");
-}
-// Picks one exact version per held or blocked package that cooldown alone
-// kept out: the version npm asked to download, or else the newest hidden
-// one. A single release keeps later releases covered by cooldown. Blocked
-// versions come first (each sorted): a refused download is what fails the
-// install, while npm can often fall back past a held version.
-function suggestedExemptions(summary) {
-    var _a, _b;
-    const blocked = new Map();
-    const held = new Map();
-    const covered = new Set();
-    const add = (into, ecosystem, spec) => {
-        const key = ECOSYSTEM_CONFIG_KEYS[ecosystem];
-        if (!key)
-            return;
-        if (!into.has(key))
-            into.set(key, new Set());
-        into.get(key).add(spec);
-    };
-    for (const b of summary.blocked) {
-        covered.add(`${b.ecosystem}\0${b.package}`);
-        if (onlyCooldown(b.controls) && b.version) {
-            add(blocked, b.ecosystem, `${b.package}@${b.version}`);
-        }
-    }
-    for (const h of summary.held) {
-        if (covered.has(`${h.ecosystem}\0${h.package}`))
-            continue;
-        if (!onlyCooldown(h.controls) || h.versions.length === 0)
-            continue;
-        const newest = [...h.versions].sort(compareVersions).pop();
-        add(held, h.ecosystem, `${h.package}@${newest}`);
-    }
-    const out = new Map();
-    for (const key of new Set([...blocked.keys(), ...held.keys()])) {
-        out.set(key, [...[...((_a = blocked.get(key)) !== null && _a !== void 0 ? _a : [])].sort(), ...[...((_b = held.get(key)) !== null && _b !== void 0 ? _b : [])].sort()]);
-    }
-    return out;
-}
-// The exemption snippet with at most `max` entries in all, taken in order.
-function exemptionSnippet(exemptions, max) {
-    const lines = ["secure-registry: |"];
-    let left = max;
-    for (const [key, specs] of exemptions) {
-        if (left <= 0)
-            break;
-        lines.push(`  ${key}:`, "    cooldown:", "      exemptions:");
-        // JSON strings are valid YAML double-quoted scalars, so quotes and line
-        // breaks in a name stay inside the entry.
-        for (const spec of specs.slice(0, left))
-            lines.push(`        - ${JSON.stringify(spec)}`);
-        left -= specs.length;
-    }
-    return lines.join("\n");
-}
-function byPackage(a, b) {
-    return a.package < b.package ? -1 : a.package > b.package ? 1 : 0;
-}
-function byPackageVersion(a, b) {
-    return byPackage(a, b) || compareVersions(a.version, b.version);
-}
-// A markdown table of at most MAX_ROWS rows. When rows are cut, a line under
-// it says so and links to the job's full list in run insights, if there is one.
-function table(header, items, render, insightsUrl) {
-    return [header, "|---|---|---|", ...items.slice(0, MAX_ROWS).map(render), "", ...showing(items.length, "", insightsUrl)];
-}
-// "Showing 5 of N." under a list cut at MAX_ROWS, or nothing when it wasn't.
-function showing(total, noun, insightsUrl) {
-    if (total <= MAX_ROWS)
-        return [];
-    const all = insightsUrl ? ` [See all packages for this job in run insights](${insightsUrl}).` : "";
-    return [`Showing ${MAX_ROWS} of ${total}${noun}.${all}`, ""];
-}
-function blockedRow(b) {
-    const label = b.version ? `${b.package}@${b.version}` : b.package;
-    return `| ${code(label)} | ${cell(controlNames(b.controls))} | ${cell(blockedDetails(b))} |`;
-}
-function days(n) {
-    return n === 1 ? "1 day" : `${n} days`;
-}
-// Same wording as the pre-step notice for binding=none.
-const UNLINKED = "This job is not linked to run insights, so the packages it installs will not appear there. " +
-    "Add `permissions: id-token: write` to this job to link it.";
-// Renders the job summary section, or undefined when nothing was held,
-// blocked or would have been blocked, and the session is linked to the job
-// (or its binding is unknown).
-function renderSummary(summary, options = {}) {
-    var _a;
-    const unlinked = options.binding === "none";
-    if (isEmpty(summary)) {
-        return unlinked ? ["### Secure registry", "", UNLINKED, ""].join("\n") : undefined;
-    }
-    const cooldown = options.cooldownDays && options.cooldownDays > 0 ? options.cooldownDays : undefined;
-    const out = ["### Secure registry", ""];
-    if (summary.blocked.length > 0) {
-        out.push("**Blocked.** Downloads of these versions were refused.", "", ...table("| Version | Control | Details |", [...summary.blocked].sort(byPackageVersion), blockedRow, options.insightsUrl));
-    }
-    if (summary.held.length > 0) {
-        const heldByCooldown = summary.held.some((h) => h.controls.some((c) => c.name === "cooldown"));
-        const window = cooldown && heldByCooldown ? ` The cooldown for this job is ${days(cooldown)}.` : "";
-        out.push(`**Held.** These versions were hidden from npm, so it used an older version or failed with ETARGET ("No matching version found").${window}`, "", ...table("| Package | Hidden versions | Reason |", [...summary.held].sort(byPackage), (h) => {
-            const sorted = [...h.versions].sort(compareVersions).reverse();
-            const shown = sorted.slice(0, MAX_VERSIONS_SHOWN).map(code).join(", ");
-            const more = sorted.length > MAX_VERSIONS_SHOWN ? ` and ${sorted.length - MAX_VERSIONS_SHOWN} more` : "";
-            const reason = h.controls.map((c) => c.reason || c.name).join("; ");
-            return `| ${code(h.package)} | ${shown}${more} | ${cell(reason)} |`;
-        }, options.insightsUrl));
-    }
-    const wouldBlock = (_a = summary.wouldBlock) !== null && _a !== void 0 ? _a : [];
-    if (wouldBlock.length > 0) {
-        out.push("**Would be blocked.** This job runs secure-registry in audit mode, so these downloads were allowed. In enforce mode they would have been refused.", "", ...table("| Version | Control | Details |", [...wouldBlock].sort(byPackageVersion), blockedRow, options.insightsUrl));
-    }
-    // Cut at MAX_ROWS like the tables, blocked versions first.
-    const exemptions = suggestedExemptions(summary);
-    const exemptionCount = [...exemptions.values()].reduce((n, specs) => n + specs.length, 0);
-    if (exemptions.size > 0) {
-        const passed = cooldown ? `the ${cooldown}-day cooldown` : "the cooldown";
-        out.push(`To allow these versions now, add them to the \`secure-registry\` input, merged with any settings you already have. Each entry allows that one release only, so later releases stay covered. You can also rerun the job once ${passed} has passed.`, "", "```yaml", exemptionSnippet(exemptions, MAX_ROWS), "```", "", ...showing(exemptionCount, " exemptions", options.insightsUrl));
-    }
-    if (summary.blocked.some((b) => b.controls.some((c) => c.name === "compromised"))) {
-        out.push("Versions blocked as compromised cannot be exempted.", "");
-    }
-    out.push("_Requests from the last moments of the job may be missing from this list._", "");
-    if (unlinked) {
-        out.push(UNLINKED, "");
-    }
-    return out.join("\n");
-}
 function reportRun(state) {
     return secure_registry_post_awaiter(this, void 0, void 0, function* () {
-        var _a;
         const override = registryOverride(process.env, state.registryUrl);
         if (override) {
             lib_core.notice(`secure-registry: npm stopped using secure-registry during this job (${override}), ` +
@@ -32839,8 +32585,6 @@ function reportRun(state) {
                 `registry-url: https://registry.npmjs.org after Harden-Runner does this.`);
         }
         checkLockfiles(state.registryUrl);
-        // The binding comes from the pre step, so the unlinked line is written even
-        // when the summary cannot be read.
         let summary;
         try {
             summary = yield fetchSummary(state.token);
@@ -32848,19 +32592,15 @@ function reportRun(state) {
         catch (e) {
             lib_core.info(`secure-registry: could not read the run summary: ${e instanceof Error ? e.message : e}`);
         }
-        if (summary) {
-            const wouldBlock = ((_a = summary.wouldBlock) === null || _a === void 0 ? void 0 : _a.length) ? `, ${summary.wouldBlock.length} would be blocked in enforce mode` : "";
-            lib_core.info(isEmpty(summary)
-                ? "secure-registry: no package versions were held or blocked"
-                : `secure-registry: ${summary.held.length} package(s) held, ${summary.blocked.length} version(s) blocked${wouldBlock}, see the job summary`);
+        if (!summary) {
+            return;
         }
-        const markdown = renderSummary(summary !== null && summary !== void 0 ? summary : { held: [], blocked: [] }, {
-            binding: state.binding,
-            cooldownDays: state.cooldownDays,
-            insightsUrl: insightsPackagesUrl(process.env, state, lib_core.getInput("check-run-id")),
-        });
-        if (markdown) {
-            yield lib_core.summary.addRaw(markdown, true).write();
+        const wouldBlock = summary.wouldBlock.length ? `, ${summary.wouldBlock.length} would be blocked in enforce mode` : "";
+        lib_core.info(isEmpty(summary)
+            ? "secure-registry: no package versions were held or blocked"
+            : `secure-registry: ${summary.held.length} package(s) held, ${summary.blocked.length} version(s) blocked${wouldBlock}, see the job summary`);
+        if (summary.markdown) {
+            yield lib_core.summary.addRaw(summary.markdown, true).write();
         }
     });
 }
