@@ -20,6 +20,9 @@ Corporate laptops and production servers typically have robust security monitori
 Traditional security monitoring and EDR solutions are ineffective for CI/CD runners due to their ephemeral nature. These tools also lack the necessary context to correlate events with specific workflow runs in a CI/CD environment.
 
 StepSecurity Harden-Runner addresses this gap by providing security monitoring tailored for CI/CD runners, with support for Linux, Windows, and macOS runners. This approach brings CI/CD runners under the same level of security scrutiny as other critical systems, addressing a significant gap in the software supply chain.
+
+CI/CD workflows also download dependencies that can introduce malicious code into builds. Applying security policies before those packages are downloaded adds another layer of protection. Harden-Runner integrates with StepSecurity Secure Registry, a hosted SaaS registry, to apply a cooldown to newly published package versions and block known compromised packages. Harden-Runner automatically configures supported package managers to use the registry and provides visibility into package requests through its Insights page, making these protections easier to adopt and verify.
+
 ### Harden-Runner: Security Incidents Detected
 
 - [Harden-Runner Detected the Compromised axios npm Package Dropping a Remote Access Trojan](https://www.stepsecurity.io/blog/axios-compromised-on-npm-malicious-versions-drop-remote-access-trojan) ([backstage/backstage#33693](https://github.com/backstage/backstage/issues/33693), [block/elasticgraph#1103](https://github.com/block/elasticgraph/issues/1103))
@@ -121,7 +124,7 @@ Add `secure-registry: true` to your Harden-Runner step and keep it first in the 
 ```yaml
 steps:
   - name: Harden Runner
-    uses: step-security/harden-runner@rc-49
+    uses: step-security/harden-runner@v2
     with:
       egress-policy: audit
       secure-registry: true
@@ -159,11 +162,11 @@ For policy configuration and setup details, see the [Secure Registry documentati
 ---
 ## Why Choose Harden-Runner?
 
-- **Protect Package Downloads:** Use Secure Registry to hold newly published versions during a cooldown, block known compromised packages, and inspect package requests in Harden-Runner Insights.
 - **Prevent Exfiltration:** Prevent the exfiltration of CI/CD secrets and source code.
 - **Detect Tampering:** Identify source code modifications during builds.
 - **Anomaly Detection:** Spot unusual dependencies and workflow behaviors.
 - **Simplify Permissions:** Determine the minimum required `GITHUB_TOKEN` permissions.
+- **Protect Package Downloads:** Use Secure Registry to hold newly published versions during a cooldown, block known compromised packages, and inspect package requests in Harden-Runner Insights.
 
 
 ---
