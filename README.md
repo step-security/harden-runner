@@ -119,6 +119,8 @@ StepSecurity hosts and operates the registry. There is no registry infrastructur
 
 ### Enable package protection
 
+The setup below enables the Secure Registry community tier. Enterprise integration through `secure-registry: true` is not yet available.
+
 Add `secure-registry: true` to your Harden-Runner step and keep it first in the job:
 
 ```yaml
@@ -134,7 +136,7 @@ steps:
 
 Harden-Runner automatically configures supported package managers to use Secure Registry. For a standard npm workflow, keep your existing `npm install` or `npm ci` command.
 
-The community tier initially supports the JavaScript ecosystem, including npm, pnpm, and Bun. See the [Secure Registry documentation](https://docs.stepsecurity.io/packages/secure-registry) for setup and supported ecosystems.
+The community tier initially supports the JavaScript ecosystem, including npm, pnpm, and Bun. See the [Community tier documentation](https://docs.stepsecurity.io/packages/secure-registry/community-tier) for setup and supported ecosystems.
 
 With `secure-registry: true`, the default package policy provides:
 
@@ -156,7 +158,7 @@ Explore an [example workflow run](https://github.com/step-community-org/int-test
 
 The test job succeeds because it checks for the expected blocks. The blocked packages are not installed. These two tests request archive URLs directly; they do not demonstrate metadata version filtering or installation from an existing lockfile.
 
-For policy configuration and setup details, see the [Secure Registry documentation](https://docs.stepsecurity.io/packages/secure-registry).
+For policy configuration and setup details, see the [Community tier documentation](https://docs.stepsecurity.io/packages/secure-registry/community-tier).
 
 
 ---
