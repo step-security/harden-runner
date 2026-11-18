@@ -31979,6 +31979,14 @@ function utils_getAnnotationLogs(platform) {
             throw new Error("platform not supported");
     }
 }
+// Replaces the query string of signed S3 URLs, which carries the request's
+// credentials and signature, before agent output is printed to the job log.
+// Other URLs and all other text are left unchanged.
+const URL_WITH_QUERY = /(https?:\/\/[^\s"'?\\]+)\?((?:[^\s"'\\]|\\u0026)*)/g;
+const SIGNED_QUERY = /X-Amz-(Signature|Credential|Security-Token)=/i;
+function redactSignedUrls(text) {
+    return text.replace(URL_WITH_QUERY, (match, base, query) => SIGNED_QUERY.test(query) ? `${base}?REDACTED` : match);
+}
 
 ;// CONCATENATED MODULE: ./src/common.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -32151,6 +32159,8 @@ const STEPSECURITY_ENV = "agent"; // agent or int
 const configs_STEPSECURITY_API_URL = (/* unused pure expression or super */ null && (`https://${STEPSECURITY_ENV}.api.stepsecurity.io/v1`));
 const STEPSECURITY_TELEMETRY_URL = "https://prod.app-api.stepsecurity.io/v1";
 const STEPSECURITY_WEB_URL = "https://app.stepsecurity.io";
+// OIDC audience the secure-registry session API accepts.
+const SECURE_REGISTRY_AUDIENCE = "stepsecurity-secure-registry";
 
 ;// CONCATENATED MODULE: ./src/tls-inspect.ts
 var tls_inspect_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {

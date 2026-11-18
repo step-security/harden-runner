@@ -56,6 +56,14 @@ inputs:
     description: "GHES server name registered with StepSecurity. Required in GitHub Enterprise Server (GHES) environments for TLS checks, policy fetching, and direct self-hosted VM agent installation."
     required: false
     default: ""
+  secure-registry:
+    description: "Route npm installs in this job through StepSecurity secure-registry. Set to true for the default settings, or to a YAML block: `ecosystems` (all, the default, or a list such as [npm]) picks which ecosystems are routed, `ecosystem-defaults` holds settings shared by every ecosystem, and a block per ecosystem (for example `npm:`) overrides them. id-token: write permission is recommended so GitHub verifies the job's identity. Leave empty or set to false to disable."
+    required: false
+    default: ""
+  check-run-id:
+    description: "Internal, do not set. The job's check run ID, used by secure-registry to identify the job when no OIDC token is available."
+    required: false
+    default: ${{ job.check_run_id }}
 
 branding:
   icon: "check-square"
