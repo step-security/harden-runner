@@ -22,7 +22,11 @@ import { GetCacheEntryDownloadURLRequest } from "@actions/cache/lib/generated/re
 import { getCacheServiceVersion } from "@actions/cache/lib/internal/config";
 
 import * as utils from "@actions/cache/lib/internal/cacheUtils";
-import { isARCRunner, sendAllowedEndpoints } from "./arc-runner";
+import {
+  isARCRunner,
+  normalizeEndpoints,
+  sendAllowedEndpoints,
+} from "./arc-runner";
 import { postMonitor } from "./monitor";
 import {
   STEPSECURITY_API_URL,
@@ -172,8 +176,8 @@ async function resolveCacheHost(): Promise<string | undefined> {
       working_directory: process.env["GITHUB_WORKSPACE"],
       api_url: api_url,
       telemetry_url: STEPSECURITY_TELEMETRY_URL,
-      allowed_endpoints: core.getInput("allowed-endpoints"),
-      denied_endpoints: core.getInput("denied-endpoints"),
+      allowed_endpoints: normalizeEndpoints(core.getInput("allowed-endpoints")),
+      denied_endpoints: normalizeEndpoints(core.getInput("denied-endpoints")),
       egress_policy: core.getInput("egress-policy"),
       disable_telemetry: core.getBooleanInput("disable-telemetry"),
       disable_sudo: core.getBooleanInput("disable-sudo"),

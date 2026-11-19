@@ -32183,9 +32183,14 @@ function isSecondaryPod() {
     let hasKubeEnv = process.env["KUBERNETES_PORT"] !== undefined;
     return external_fs_.existsSync(workDir) && hasKubeEnv;
 }
+function normalizeEndpoints(value) {
+    return value.split(/\s+/).filter(Boolean).join(" ");
+}
 function sendAllowedEndpoints(endpoints) {
     const startTime = Date.now();
-    const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
+    // Endpoints are space separated. Normalize first so a YAML literal block
+    // (`|`), which keeps its newlines, does not collapse into a single endpoint.
+    const allowedEndpoints = normalizeEndpoints(endpoints).split(" ");
     let sent = 0;
     for (let endpoint of allowedEndpoints) {
         endpoint = endpoint.trim();

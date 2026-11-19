@@ -22,9 +22,15 @@ function isSecondaryPod(): boolean {
   return fs.existsSync(workDir) && hasKubeEnv;
 }
 
+export function normalizeEndpoints(value: string): string {
+  return value.split(/\s+/).filter(Boolean).join(" ");
+}
+
 export function sendAllowedEndpoints(endpoints: string): void {
   const startTime = Date.now();
-  const allowedEndpoints = endpoints.split(" "); // endpoints are space separated
+  // Endpoints are space separated. Normalize first so a YAML literal block
+  // (`|`), which keeps its newlines, does not collapse into a single endpoint.
+  const allowedEndpoints = normalizeEndpoints(endpoints).split(" ");
 
   let sent = 0;
   for (let endpoint of allowedEndpoints) {
