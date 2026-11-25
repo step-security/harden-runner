@@ -31,11 +31,21 @@ test("tls-inspect enabled", async () => {
 test("tls-inspect not enabled", async () => {
   const owner = "step-security";
 
-  mockFetch(async () => new Response("unauthorized", { status: 401 }));
+  mockFetch(async () => new Response("", { status: 403 }));
 
   const got = await isTLSEnabled(owner);
   expect(got).toBe(false);
 });
+
+test.each([429, 500, 502, 503, 504, 401, 404])(
+  "tls-inspect defaults to enabled when the API fails with %p",
+  async (status: number) => {
+    mockFetch(async () => new Response("", { status }));
+
+    const got = await isTLSEnabled("throttled-org");
+    expect(got).toBe(true);
+  }
+);
 
 test("tls-inspect qualifies owner in GHES", async () => {
   const owner = "ghes-org";
