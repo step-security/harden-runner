@@ -11,6 +11,7 @@ import {
   ArtifactCacheEntry,
   cacheKey,
   cacheFile,
+  getCacheMode,
   isValidEvent,
 } from "./cache";
 import { Configuration, PolicyResponse } from "./interfaces";
@@ -103,8 +104,15 @@ async function lookupCacheHost(): Promise<string | undefined> {
 // misleading reservation failure on every subsequent run. Returns undefined
 // when the host cannot be resolved; callers must not change the egress policy
 // in that case, the agent allows the cache endpoints implicitly and this
-// lookup is defense-in-depth only.
+// lookup is defense-in-depth only. cache-mode "none" denies all cache calls
+// and "read" denies the seed save; denied calls would only log warnings.
 async function resolveCacheHost(): Promise<string | undefined> {
+  const cacheMode = getCacheMode();
+  if (cacheMode === "none") {
+    core.info("Skipping Actions cache host lookup: cache-mode is none");
+    return undefined;
+  }
+
   core.info(`cache version: ${getCacheServiceVersion()}`);
 
   try {
@@ -114,6 +122,11 @@ async function resolveCacheHost(): Promise<string | undefined> {
     }
   } catch (e) {
     core.info(`Unable to fetch cacheURL ${e}`);
+  }
+
+  if (cacheMode === "read") {
+    core.info("Skipping cache entry seed: cache-mode is read");
+    return undefined;
   }
 
   // First run in this cache scope: seed the entry, then look up again. If a

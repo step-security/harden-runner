@@ -85370,6 +85370,11 @@ const RefKey = "GITHUB_REF";
 function isValidEvent() {
     return RefKey in process.env && Boolean(process.env[RefKey]);
 }
+// The job's cache-mode, set by the runner for JavaScript actions. Empty when
+// unset (older runners).
+function getCacheMode() {
+    return (process.env["ACTIONS_CACHE_MODE"] || "").trim().toLowerCase();
+}
 
 ;// CONCATENATED MODULE: ./src/configs.ts
 const STEPSECURITY_ENV = "agent"; // agent or int
@@ -86660,9 +86665,15 @@ function lookupCacheHost() {
 // misleading reservation failure on every subsequent run. Returns undefined
 // when the host cannot be resolved; callers must not change the egress policy
 // in that case, the agent allows the cache endpoints implicitly and this
-// lookup is defense-in-depth only.
+// lookup is defense-in-depth only. cache-mode "none" denies all cache calls
+// and "read" denies the seed save; denied calls would only log warnings.
 function resolveCacheHost() {
     return setup_awaiter(this, void 0, void 0, function* () {
+        const cacheMode = getCacheMode();
+        if (cacheMode === "none") {
+            lib_core.info("Skipping Actions cache host lookup: cache-mode is none");
+            return undefined;
+        }
         lib_core.info(`cache version: ${(0,config.getCacheServiceVersion)()}`);
         try {
             const host = yield lookupCacheHost();
@@ -86672,6 +86683,10 @@ function resolveCacheHost() {
         }
         catch (e) {
             lib_core.info(`Unable to fetch cacheURL ${e}`);
+        }
+        if (cacheMode === "read") {
+            lib_core.info("Skipping cache entry seed: cache-mode is read");
+            return undefined;
         }
         // First run in this cache scope: seed the entry, then look up again. If a
         // concurrent job wins the reservation race, saveCache fails harmlessly and
