@@ -10,6 +10,8 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment:
+      name: releaseNewActionVersion
     permissions:
       contents: read
       id-token: write
@@ -23,6 +25,7 @@ jobs:
 
       - name: Checking out
         uses: actions/checkout@v4
+
       - name: Publish
         id: publish
         uses: actions/publish-immutable-action@0.0.4
