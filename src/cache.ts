@@ -20,3 +20,9 @@ const RefKey = "GITHUB_REF";
 export function isValidEvent(): boolean {
   return RefKey in process.env && Boolean(process.env[RefKey]);
 }
+
+// The job's cache-mode, set by the runner for JavaScript actions. Empty when
+// unset (older runners).
+export function getCacheMode(): string {
+  return (process.env["ACTIONS_CACHE_MODE"] || "").trim().toLowerCase();
+}

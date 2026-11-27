@@ -8,8 +8,8 @@ export const CHECKSUMS = {
     arm64: "f9732189aed33feec7f1927891ac8e8fe1d15df1d5895dcfcc02e0939a0d0b5e", // v1.9.6
   },
   non_tls: {
-    amd64: "9db01a8e795ffa77e0220de75c37f3fde83ec8e411e1fad8932977a13d49e8d0", // v0.18.1
-    arm64: "82e2311147ea22346d62472c8c897b5fbb9cdbb4d6fe3bcd97298f1637d56935", // v0.18.1
+    amd64: "804116410d1a061f68de628c1554aeb5033aa1fb39d8458bc8c14bc4db9d75de", // v0.18.2
+    arm64: "c7ca7039e0c4ce062fa6a1e17895975fae9b6f0b76039b3c7bd5f92ce7b6ab50", // v0.18.2
   },
   bravo: {
     amd64: "1ddf2b2846b3c6c4b6b9d3ed5a09bc75f52124aef478c5038e41c70896e2e3d3", // v1.9.6

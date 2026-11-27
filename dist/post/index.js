@@ -32243,8 +32243,14 @@ function isTLSEnabled(owner) {
                 core.info(`[!] TLS_ENABLED: ${owner}`);
                 return true;
             }
-            core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
-            return false;
+            // The API answers 403 when TLS inspection is not enabled. Any other
+            // status (429, 5xx, ...) means the API could not answer, not "disabled".
+            if (resp.status === 403) {
+                core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
+                return false;
+            }
+            core.info(`[!] TLS_STATUS returned ${resp.status}. Defaulting to TLS enabled.`);
+            return true;
         }
         catch (e) {
             core.info(`[!] Unable to check TLS_STATUS. Defaulting to TLS enabled.`);

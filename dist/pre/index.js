@@ -85370,6 +85370,11 @@ const RefKey = "GITHUB_REF";
 function isValidEvent() {
     return RefKey in process.env && Boolean(process.env[RefKey]);
 }
+// The job's cache-mode, set by the runner for JavaScript actions. Empty when
+// unset (older runners).
+function getCacheMode() {
+    return (process.env["ACTIONS_CACHE_MODE"] || "").trim().toLowerCase();
+}
 
 ;// CONCATENATED MODULE: ./src/configs.ts
 const STEPSECURITY_ENV = "agent"; // agent or int
@@ -85649,8 +85654,14 @@ function isTLSEnabled(owner) {
                 lib_core.info(`[!] TLS_ENABLED: ${owner}`);
                 return true;
             }
-            lib_core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
-            return false;
+            // The API answers 403 when TLS inspection is not enabled. Any other
+            // status (429, 5xx, ...) means the API could not answer, not "disabled".
+            if (resp.status === 403) {
+                lib_core.info(`[!] TLS_NOT_ENABLED: ${owner}`);
+                return false;
+            }
+            lib_core.info(`[!] TLS_STATUS returned ${resp.status}. Defaulting to TLS enabled.`);
+            return true;
         }
         catch (e) {
             lib_core.info(`[!] Unable to check TLS_STATUS. Defaulting to TLS enabled.`);
@@ -85677,8 +85688,8 @@ const CHECKSUMS = {
         arm64: "f9732189aed33feec7f1927891ac8e8fe1d15df1d5895dcfcc02e0939a0d0b5e", // v1.9.6
     },
     non_tls: {
-        amd64: "9db01a8e795ffa77e0220de75c37f3fde83ec8e411e1fad8932977a13d49e8d0", // v0.18.1
-        arm64: "82e2311147ea22346d62472c8c897b5fbb9cdbb4d6fe3bcd97298f1637d56935", // v0.18.1
+        amd64: "804116410d1a061f68de628c1554aeb5033aa1fb39d8458bc8c14bc4db9d75de", // v0.18.2
+        arm64: "c7ca7039e0c4ce062fa6a1e17895975fae9b6f0b76039b3c7bd5f92ce7b6ab50", // v0.18.2
     },
     bravo: {
         amd64: "1ddf2b2846b3c6c4b6b9d3ed5a09bc75f52124aef478c5038e41c70896e2e3d3", // v1.9.6
@@ -85758,7 +85769,7 @@ function installAgent(isTLS, configStr) {
             downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent-ebpf/releases/download/v1.9.6/harden-runner_1.9.6_linux_${variant}.tar.gz`, undefined, auth);
         }
         else {
-            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent/releases/download/v0.18.1/agent_0.18.1_linux_${variant}.tar.gz`, undefined, auth);
+            downloadPath = yield tool_cache.downloadTool(`https://github.com/step-security/agent/releases/download/v0.18.2/agent_0.18.2_linux_${variant}.tar.gz`, undefined, auth);
         }
         if (!verifyChecksum(downloadPath, isTLS, variant, "linux")) {
             return false;
@@ -86654,9 +86665,15 @@ function lookupCacheHost() {
 // misleading reservation failure on every subsequent run. Returns undefined
 // when the host cannot be resolved; callers must not change the egress policy
 // in that case, the agent allows the cache endpoints implicitly and this
-// lookup is defense-in-depth only.
+// lookup is defense-in-depth only. cache-mode "none" denies all cache calls
+// and "read" denies the seed save; denied calls would only log warnings.
 function resolveCacheHost() {
     return setup_awaiter(this, void 0, void 0, function* () {
+        const cacheMode = getCacheMode();
+        if (cacheMode === "none") {
+            lib_core.info("Skipping Actions cache host lookup: cache-mode is none");
+            return undefined;
+        }
         lib_core.info(`cache version: ${(0,config.getCacheServiceVersion)()}`);
         try {
             const host = yield lookupCacheHost();
@@ -86666,6 +86683,10 @@ function resolveCacheHost() {
         }
         catch (e) {
             lib_core.info(`Unable to fetch cacheURL ${e}`);
+        }
+        if (cacheMode === "read") {
+            lib_core.info("Skipping cache entry seed: cache-mode is read");
+            return undefined;
         }
         // First run in this cache scope: seed the entry, then look up again. If a
         // concurrent job wins the reservation race, saveCache fails harmlessly and
