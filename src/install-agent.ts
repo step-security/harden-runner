@@ -32,7 +32,7 @@ export async function installAgent(
     );
   } else {
     downloadPath = await tc.downloadTool(
-      `https://github.com/step-security/agent/releases/download/v0.18.1/agent_0.18.1_linux_${variant}.tar.gz`,
+      `https://github.com/step-security/agent/releases/download/v0.18.2/agent_0.18.2_linux_${variant}.tar.gz`,
       undefined,
       auth
     );
